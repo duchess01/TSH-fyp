@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Chat from "./Pages/Chat";
 import LoginPage from "./Pages/Login";
 import DashboardPage from "./Pages/Dashboard";
+import "./styles/tailwind.css";
 
 function App() {
   return (
