@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
-import './LoginPage.css'; // Import the CSS file for styling
+import React, { useState } from "react";
+import "../styles/loginstyle.css"; // Import the CSS file for styling
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
     // Add your login logic here
-    console.log('Email:', email);
-    console.log('Password:', password);
+    console.log("Email:", email);
+    console.log("Password:", password);
   };
 
   return (
