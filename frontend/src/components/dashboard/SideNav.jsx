@@ -1,11 +1,20 @@
-import React, { useState } from "react";
+import React from "react";
+import Settings from "../common/Settings";
+import { BiSolidUserCircle } from "react-icons/bi";
+
+const Profile = () => {
+  return (
+    <div className="rounded-full text-center grid content-center mt-10 cursor-pointer">
+      <BiSolidUserCircle size={"56px"} color={"#cbd5e1"} />
+    </div>
+  );
+};
 
 const SideNavBar = () => {
   return (
-    <div className="bg-white rounded-r-lg">
-      <div className="rounded-full border-solid border-2 border-indigo-600 w-12 h-12 text-center bottom-0 absolute text-black">
-        U
-      </div>
+    <div className="bg-white rounded-r-lg flex flex-col justify-end items-center h-screen py-10">
+      <Settings />
+      <Profile />
     </div>
   );
 };

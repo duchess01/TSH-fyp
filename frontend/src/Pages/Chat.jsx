@@ -154,7 +154,7 @@ function Chat() {
 
   return (
     <>
-      <div className="container">
+      <div className="container chat">
         <section className={`sidebar ${isShowSidebar ? "open" : ""}`}>
           <div className="sidebar-header" onClick={createNewChat} role="button">
             <BiPlus size={20} />
