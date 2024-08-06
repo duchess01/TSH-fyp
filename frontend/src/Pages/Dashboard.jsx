@@ -5,13 +5,19 @@ import FAQSection from "../components/dashboard/FAQSection";
 const DashboardPage = () => {
   const [faqs, setFaqs] = useState([
     {
-      question: "What is React?",
-      answer: "React is a JavaScript library for building user interfaces.",
+      category: "Error Code",
+      question: "What does error code 230 mean on machine X?",
+      answer: "XXX",
     },
     {
-      question: "How does React work?",
-      answer:
-        "React creates a virtual DOM and efficiently updates the real DOM.",
+      category: "Maintenance",
+      question: "What are the maintenance procedures on machine y?",
+      answer: "XXX",
+    },
+    {
+      category: "Settings",
+      question: "How to change color to pink on CMC machine?",
+      answer: "XXX",
     },
   ]);
 
@@ -29,8 +35,22 @@ const DashboardPage = () => {
     <div className="text-black bg-slate-300 min-w-screen min-h-screen grid grid-cols-12">
       <SideNavBar />
       <div className="col-span-11 p-10">
-        <div className="bg-white w-full h-full rounded-lg p-5">
+        <div className="bg-white w-full min-h-full rounded-lg p-5">
           <FAQSection faqs={faqs} />
+          <div className="grid grid-cols-2 grid-rows-2 gap-4 min-h-screen mt-5">
+            <div className="bg-gray-200 flex items-center justify-center">
+              1
+            </div>
+            <div className="bg-gray-200 flex items-center justify-center">
+              2
+            </div>
+            <div className="bg-gray-200 flex items-center justify-center">
+              3
+            </div>
+            <div className="bg-gray-200 flex items-center justify-center">
+              4
+            </div>
+          </div>
         </div>
       </div>
     </div>
