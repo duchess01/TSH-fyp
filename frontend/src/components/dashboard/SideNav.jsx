@@ -12,7 +12,14 @@ const Profile = () => {
 
 const SideNavBar = () => {
   return (
-    <div className="bg-white rounded-r-lg flex flex-col justify-end items-center h-screen py-10">
+    <div
+      className="bg-white rounded-r-lg flex flex-col justify-end items-center h-screen py-10"
+      style={{
+        position: "-webkit - sticky" /* Safari */,
+        position: "sticky",
+        top: 0,
+      }}
+    >
       <Settings />
       <Profile />
     </div>
