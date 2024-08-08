@@ -317,7 +317,7 @@ body{
   height: 100vh;
 
 }
-
+ 
 .login-main{
   display: flex;
 }
@@ -376,6 +376,7 @@ body{
 
 .login-center h2{
   font-size: 3.5rem;
+  color: black;
 }
 
 .login-center{
@@ -386,6 +387,7 @@ body{
   font-weight: 400;
   font-size: 2rem;
   margin-bottom: 40px;
+  color: black;
 }
 
 form input[type='email'],
@@ -429,12 +431,14 @@ form button[type='button'] {
 .login-center-options{
   display: flex;
   justify-content: space-between;
+  color: black;
 }
 
 .remember-div{
   display:flex;
   align-items: center;
   column-gap: 5px;
+  color: black;
 }
 
 .remember-div label{
@@ -442,6 +446,7 @@ form button[type='button'] {
   font-weight: 500;
   cursor: pointer;
   margin-top: 2px;
+  color: black;
 }
 
 .forgot-pass-link{
@@ -458,6 +463,7 @@ form button[type='button'] {
   display: flex;
   flex-direction: column;
   row-gap: 10px;
+  color: black;
 }
 
 .login-center-buttons button:nth-child(1){
@@ -491,6 +497,7 @@ form button[type='button'] {
   text-align: center;
   font-size: 1.5rem;
   padding-bottom: 40px;
+  color: black;
 }
 
 .login-bottom-p a{
