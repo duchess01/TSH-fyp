@@ -4,31 +4,31 @@ import {
   useRef,
   useCallback,
   useLayoutEffect,
-} from "react";
-import { BiPlus, BiUser, BiSend, BiSolidUserCircle } from "react-icons/bi";
-import { MdOutlineArrowLeft, MdOutlineArrowRight } from "react-icons/md";
+} from 'react';
+import { BiPlus, BiUser, BiSend, BiSolidUserCircle } from 'react-icons/bi';
+import { MdOutlineArrowLeft, MdOutlineArrowRight } from 'react-icons/md';
 
-function Chat() {
-  const [text, setText] = useState("");
+function App() {
+  const [text, setText] = useState('');
   const [message, setMessage] = useState(null);
   const [previousChats, setPreviousChats] = useState([]);
   const [localChats, setLocalChats] = useState([]);
   const [currentTitle, setCurrentTitle] = useState(null);
   const [isResponseLoading, setIsResponseLoading] = useState(false);
-  const [errorText, setErrorText] = useState("");
+  const [errorText, setErrorText] = useState('');
   const [isShowSidebar, setIsShowSidebar] = useState(false);
   const scrollToLastItem = useRef(null);
 
   const createNewChat = () => {
     setMessage(null);
-    setText("");
+    setText('');
     setCurrentTitle(null);
   };
 
   const backToHistoryPrompt = (uniqueTitle) => {
     setCurrentTitle(uniqueTitle);
     setMessage(null);
-    setText("");
+    setText('');
   };
 
   const toggleSidebar = useCallback(() => {
@@ -37,17 +37,17 @@ function Chat() {
 
   const submitHandler = async (e) => {
     e.preventDefault();
-    return setErrorText("My billing plan is gone because of many requests.");
+    return setErrorText('My billing plan is gone because of many requests.');
     if (!text) return;
 
     setIsResponseLoading(true);
-    setErrorText("");
+    setErrorText('');
 
     const options = {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
-        Authorization: import.meta.env.VITE_AUTH_TOKEN,
+        'Content-Type': 'application/json',
+        'Authorization': import.meta.env.VITE_AUTH_TOKEN,
       },
       body: JSON.stringify({
         message: text,
@@ -61,28 +61,28 @@ function Chat() {
       );
 
       if (response.status === 429) {
-        return setErrorText("Too many requests, please try again later.");
+        return setErrorText('Too many requests, please try again later.');
       }
 
       const data = await response.json();
 
       if (data.error) {
         setErrorText(data.error.message);
-        setText("");
+        setText('');
       } else {
         setErrorText(false);
       }
 
       if (!data.error) {
-        setErrorText("");
+        setErrorText('');
         setMessage(data.choices[0].message);
         setTimeout(() => {
           scrollToLastItem.current?.lastElementChild?.scrollIntoView({
-            behavior: "smooth",
+            behavior: 'smooth',
           });
         }, 1);
         setTimeout(() => {
-          setText("");
+          setText('');
         }, 2);
       }
     } catch (e) {
@@ -99,15 +99,15 @@ function Chat() {
     };
     handleResize();
 
-    window.addEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
 
     return () => {
-      window.removeEventListener("resize", handleResize);
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
 
   useEffect(() => {
-    const storedChats = localStorage.getItem("previousChats");
+    const storedChats = localStorage.getItem('previousChats');
 
     if (storedChats) {
       setLocalChats(JSON.parse(storedChats));
@@ -122,7 +122,7 @@ function Chat() {
     if (currentTitle && text && message) {
       const newChat = {
         title: currentTitle,
-        role: "user",
+        role: 'user',
         content: text,
       };
 
@@ -136,7 +136,7 @@ function Chat() {
       setLocalChats((prevChats) => [...prevChats, newChat, responseMessage]);
 
       const updatedChats = [...localChats, newChat, responseMessage];
-      localStorage.setItem("previousChats", JSON.stringify(updatedChats));
+      localStorage.setItem('previousChats', JSON.stringify(updatedChats));
     }
   }, [message, currentTitle]);
 
@@ -154,23 +154,23 @@ function Chat() {
 
   return (
     <>
-      <div className="container chat">
-        <section className={`sidebar ${isShowSidebar ? "open" : ""}`}>
-          <div className="sidebar-header" onClick={createNewChat} role="button">
+      <div className='container'>
+        <section className={`sidebar ${isShowSidebar ? 'open' : ''}`}>
+          <div className='sidebar-header' onClick={createNewChat} role='button'>
             <BiPlus size={20} />
             <button>New Question</button>
           </div>
-          <div className="sidebar-history">
+          <div className='sidebar-history'>
             {uniqueTitles.length > 0 && previousChats.length !== 0 && (
               <>
                 <p>Ongoing</p>
                 <ul>
                   {uniqueTitles?.map((uniqueTitle, idx) => {
-                    const listItems = document.querySelectorAll("li");
+                    const listItems = document.querySelectorAll('li');
 
                     listItems.forEach((item) => {
                       if (item.scrollWidth > item.clientWidth) {
-                        item.classList.add("li-overflow-shadow");
+                        item.classList.add('li-overflow-shadow');
                       }
                     });
 
@@ -191,11 +191,11 @@ function Chat() {
                 <p>Previous</p>
                 <ul>
                   {localUniqueTitles?.map((uniqueTitle, idx) => {
-                    const listItems = document.querySelectorAll("li");
+                    const listItems = document.querySelectorAll('li');
 
                     listItems.forEach((item) => {
                       if (item.scrollWidth > item.clientWidth) {
-                        item.classList.add("li-overflow-shadow");
+                        item.classList.add('li-overflow-shadow');
                       }
                     });
 
@@ -212,26 +212,26 @@ function Chat() {
               </>
             )}
           </div>
-          <div className="sidebar-info">
-            <div className="sidebar-info-upgrade">
+          <div className='sidebar-info'>
+            <div className='sidebar-info-upgrade'>
               <BiUser size={20} />
               <p>FAQs</p>
             </div>
-            <div className="sidebar-info-user">
+            <div className='sidebar-info-user'>
               <BiSolidUserCircle size={20} />
               <p>User</p>
             </div>
           </div>
         </section>
 
-        <section className="main">
+        <section className='main'>
           {!currentTitle && (
-            <div className="empty-chat-container">
+            <div className='empty-chat-container'>
               <img
-                src="images/tsh-logo.PNG"
+                src='images/tsh-logo.PNG'
                 width={45}
                 height={45}
-                alt="ChatGPT"
+                alt='ChatGPT'
               />
               <h1>TSH intelligent Chatbot</h1>
               <h3>How can I help you today?</h3>
@@ -240,21 +240,21 @@ function Chat() {
 
           {isShowSidebar ? (
             <MdOutlineArrowRight
-              className="burger"
+              className='burger'
               size={28.8}
               onClick={toggleSidebar}
             />
           ) : (
             <MdOutlineArrowLeft
-              className="burger"
+              className='burger'
               size={28.8}
               onClick={toggleSidebar}
             />
           )}
-          <div className="main-header">
+          <div className='main-header'>
             <ul>
               {currentChat?.map((chatMsg, idx) => {
-                const isUser = chatMsg.role === "user";
+                const isUser = chatMsg.role === 'user';
 
                 return (
                   <li key={idx} ref={scrollToLastItem}>
@@ -263,16 +263,16 @@ function Chat() {
                         <BiSolidUserCircle size={28.8} />
                       </div>
                     ) : (
-                      <img src="images/tsh-logo.PNG" alt="ChatGPT" />
+                      <img src='images/tsh-logo.PNG' alt='ChatGPT' />
                     )}
                     {isUser ? (
                       <div>
-                        <p className="role-title">You</p>
+                        <p className='role-title'>You</p>
                         <p>{chatMsg.content}</p>
                       </div>
                     ) : (
                       <div>
-                        <p className="role-title">ChatGPT</p>
+                        <p className='role-title'>ChatGPT</p>
                         <p>{chatMsg.content}</p>
                       </div>
                     )}
@@ -281,27 +281,31 @@ function Chat() {
               })}
             </ul>
           </div>
-          <div className="main-bottom">
-            {errorText && <p className="errorText">{errorText}</p>}
-            {errorText && <p id="errorTextHint"></p>}
-            <form className="form-container" onSubmit={submitHandler}>
+          <div className='main-bottom'>
+            {errorText && <p className='errorText'>{errorText}</p>}
+            {errorText && (
+              <p id='errorTextHint'>
+                
+              </p>
+            )}
+            <form className='form-container' onSubmit={submitHandler}>
               <input
-                type="text"
-                placeholder="Ask a question."
-                spellCheck="false"
-                value={isResponseLoading ? "Processing..." : text}
+                type='text'
+                placeholder='Ask a question.'
+                spellCheck='false'
+                value={isResponseLoading ? 'Processing...' : text}
                 onChange={(e) => setText(e.target.value)}
                 readOnly={isResponseLoading}
               />
               {!isResponseLoading && (
-                <button type="submit">
+                <button type='submit'>
                   <BiSend size={20} />
                 </button>
               )}
             </form>
             <p>
-              TSH intelligent chatbot can make mistakes. Consider checking
-              important information.
+              TSH intelligent chatbot can make mistakes. Consider checking important
+              information.
             </p>
           </div>
         </section>
@@ -310,4 +314,4 @@ function Chat() {
   );
 }
 
-export default Chat;
+export default App;
