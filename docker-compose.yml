@@ -1,6 +1,24 @@
 name: langchain-extract-entities
 
 services:
+  postgres:
+    image: postgres:16
+    expose:
+      - "5432"
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: langchain
+      POSTGRES_USER: langchain
+      POSTGRES_PASSWORD: langchain
+    # healthcheck:
+    #   test: ["CMD-SHELL", "pg_isready -U langchain -d langchain -W langchain"]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   backend:
     build:
       context: ./llm/ner-llm
