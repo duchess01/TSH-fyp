@@ -1,7 +1,8 @@
 from fastapi import APIRouter
 from uuid import uuid4
 from server.models.extractors_model import CreateExtractor, CreateExtractorResponse, ExtractorData
-
+from db.dbconfig import get_session
+from db.models import Extractor
 
 router = APIRouter(
     prefix = "/extractors",
@@ -20,7 +21,6 @@ def get():
 
 
 @router.post("")
-
 def create_extractor(
     create_request : CreateExtractor
 ) -> CreateExtractorResponse:
