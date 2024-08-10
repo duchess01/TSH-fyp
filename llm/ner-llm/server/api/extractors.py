@@ -1,6 +1,7 @@
 from fastapi import APIRouter
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from typing import Any, Dict
+from server.validators import validate_json_schema
 
 
 router = APIRouter(
@@ -21,6 +22,14 @@ class CreateExtractor(BaseModel) :
         ... , description = "JSON schema for the extractor. REQUIRED", alias ="schema"
     )
     instruction : str = Field(..., description = "instructor for the extractor. REQUIRED")
+    
+    @validator("json_schema")
+    def validate_schema(cls, v: Any) -> Dict[str, Any]:
+        # cls is the class itself
+        # validates the schema and returns the validated schema
+        validate_json_schema(v)
+        return v
+        
 
 @router.get("/")
 def get():
