@@ -1,0 +1,24 @@
+name: langchain-extract-entities
+
+services:
+  backend:
+    build:
+      context: ./llm/ner-llm
+      dockerfile: ./Dockerfile
+      target: development
+    env_file:
+      - .local.env
+    environment:
+      - PG_HOST=postgres
+
+        # Define CORS origins for dev work on UI
+      - CORS_ORIGINS=http://localhost:3000
+    ports:
+      - "8000:8000" # Backend is accessible on localhost:8100
+    depends_on:
+      - postgres
+    volumes:
+      - ./llm/ner-llm:/ner-llm
+
+volumes:
+  postgres_data:
