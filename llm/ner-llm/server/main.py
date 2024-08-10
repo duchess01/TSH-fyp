@@ -2,6 +2,7 @@ from fastapi import FastAPI
 import logging
 from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
+from server.api import extractors
 
 
 
@@ -40,6 +41,8 @@ app.add_middleware(
 @app.get("/ready")
 def ready():
     return {"status" : "ok"}
+
+app.include_router(extractors.router)
 
 if __name__ == "__main__":
     import uvicorn
