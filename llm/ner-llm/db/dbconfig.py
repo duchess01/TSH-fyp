@@ -5,6 +5,7 @@ from sqlalchemy import (
 
 )
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import SQLAlchemyError
 
 
 # create connection URL for postgresql
@@ -35,12 +36,15 @@ SessionClass = sessionmaker(bind=ENGINE)
 
 def get_session():
     """Create a new session."""
+        # request continues and uses the db , it'll only close the session when the request is done or an exception is raised
     session = SessionClass()
 
     try:
         yield session
-    except:
+    except SQLAlchemyError as e:
+        # handles SQLAlchemy errors
         session.rollback()
-        raise
+        raise HTTPException(status_code=500, detail=f"Postgresql error : {str(e)}")
+    
     finally:
         session.close()
