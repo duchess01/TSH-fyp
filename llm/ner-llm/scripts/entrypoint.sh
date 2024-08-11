@@ -7,4 +7,6 @@
 # -o pipefail : fails the entire pipeline if any command fails
 set -euxo pipefail
 
+python -m scripts.initialize_db
+
 uvicorn server.main:app --host 0.0.0.0 --port 8000 --reload
