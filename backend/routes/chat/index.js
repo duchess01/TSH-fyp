@@ -3,7 +3,7 @@ import { Router } from "express";
 
 const router = Router();
 
-router.post("/chat", async (req, res) => {
+router.post("/", async (req, res) => {
   res.send("Hello from chat");
 });
 
