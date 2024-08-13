@@ -23,7 +23,7 @@ Follow these steps to quickly get the application up and running locally.
 - [npm](https://www.npmjs.com/) (comes with Node.js)
 - [Git](https://git-scm.com/)
 
-### Installation and Running the Project
+### Installation and Running the Project Locally
 
 1. **Clone the Repository:**
 
@@ -45,7 +45,12 @@ Follow these steps to quickly get the application up and running locally.
   npm install
   ```
 
-3. **Run the application:**
+3. **Set up the PostgreSQL database:**
+
+- Install PostgreSQL in your local machine
+-
+
+4. **Run the application:**
 
 - backend server:
   ```
