@@ -34,7 +34,7 @@ export default function CategoryBarChart({}) {
           },
           title: {
             display: true,
-            text: "% returns by year",
+            text: "Distribution of Questions by Category",
           },
         },
       };
@@ -46,7 +46,6 @@ export default function CategoryBarChart({}) {
 
   return (
     <div className="mb-4 w-full h-full p-5">
-      <div className="font-bold">Categorical Breakdown of Questions</div>
       <div className="chart-area w-full h-full">
         {errorMessage && (
           <div className="alert text-danger" role="alert">
