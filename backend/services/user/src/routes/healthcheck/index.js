@@ -1,11 +1,13 @@
 import express from "express";
 import { Router } from "express";
-import db from "../../configs/db.js";
 
 const router = Router();
 
-router.post("/", async (req, res) => {
-  res.send("Hello from chat");
+router.get("/", async (req, res) => {
+  res.status(200).json({
+    status: "UP",
+    timestamp: new Date(),
+  });
 });
 
 export default router;
