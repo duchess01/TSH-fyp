@@ -1,6 +1,6 @@
 FROM python:3.11-slim as base
 
-WORKDIR /ner-llm
+WORKDIR /usr/src/app
 
 # set the default shell to bash rather than sh
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -17,20 +17,27 @@ RUN set -eux && \
       python3-dev
     #   libmagic1
 
-COPY ./requirements.txt /ner-llm/requirements.txt
+COPY requirements.txt requirements.txt
 
 # RUN pip install -r requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 
-COPY . /ner-llm
+COPY . .
+
+
 
 EXPOSE 8000
 
+
 CMD ["uvicorn", "app.main:app", "--host", ]
+# CMD ["uvicorn", "server.main:app", "--host", "0.0.0.0" ]
+
+# RUN ["chmod", "+x", "scripts/entrypoint.sh"]
+
+RUN sed -i 's/\r$//g' ./scripts/entrypoint.sh
 
 ENTRYPOINT ["bash", "./scripts/entrypoint.sh"]
-
 
 
 # development staging

@@ -49,6 +49,26 @@ services:
     networks:
       - my-network
 
+  ner-llm:
+    build:
+      context: ./services/ner-llm
+      dockerfile: ./Dockerfile
+      target: development
+    env_file:
+      - .local.env
+    environment:
+      - PG_HOST=db_ner_llm
+      - CORS_ORIGINS=http://localhost:3000
+
+    ports:
+      - "8000:8000"
+
+    depends_on:
+      - db_ner_llm
+
+    volumes:
+      - ./ner-llm:/ner-llm
+
   #################################
   # PostgreSQL for User microservice
   #################################
@@ -85,6 +105,23 @@ services:
       - db_chat_data:/var/lib/postgresql/data
     restart: always
 
+  db_ner_llm:
+    image: postgres:16
+
+    expose:
+      - "5432"
+    ports:
+      - "5435:5432"
+
+    environment:
+      POSTGRES_DB: langchain
+      POSTGRES_USER: langchain
+      POSTGRES_PASSWORD: langchain
+
+    volumes:
+      - db_ner:/var/lib/postgresql/data
+
 volumes:
   db_user_data:
   db_chat_data:
+  db_ner:

@@ -1,3 +1,6 @@
+#!/bin/bash
+
+
 
 # ensures that errors are caught and that the script exits if one occurs
 
@@ -8,5 +11,8 @@
 set -euxo pipefail
 
 python -m scripts.initialize_db
+
+
+echo "current working directory : $(pwd)"
 
 uvicorn server.main:app --host 0.0.0.0 --port 8000 --reload
