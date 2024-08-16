@@ -4,21 +4,63 @@ from server.models.extractors_model import CreateExtractor, CreateExtractorRespo
 from db.dbconfig import get_session
 from db.models import Extractor
 from sqlalchemy.orm import Session
+from sqlalchemy import select
+
+import json
 
 
 router = APIRouter(
     prefix = "/extractors",
     tags = ["create extractors for NER using LLM based on different features required"],
-    responses = {404 : {"description" : "Not found"}}
 )
 
 
 
 
 @router.get("/")
-def get():
-    return {"message" : "Get all extractors"}
-
+def get(
+    
+    session : Session = Depends(get_session)
+):
+    
+    try : 
+        
+        stmt = select(Extractor)
+        
+        
+        result = session.execute(stmt)
+        
+        print(result)
+        
+        for row in result : 
+            print(f"row : {row.name}")
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        return {f"message" : f"Get all extractors {row}"}
+    
+    except Exception as e:
+        # handle other exceptions
+        raise HTTPException(
+            status_code = 500, detail = f"Internal server error : {str(e)}"
+        )    
+        
+    
+    
+@router.get("/{name}")
+async def getExtractorByName(name, session : Session = Depends(get_session)) : 
+    
+    stmt = select(Extractor).where(Extractor.name == name.lower())
+    
+    result = session.execute(stmt)
+    
+    print(result.scalars().all())
 
 
 
@@ -31,6 +73,10 @@ def createExtractor(
 ) -> CreateExtractorResponse:
     
     # TODO : post to postgresql db, create extractor and return the uuid
+    
+    # check if extractor exist
+    
+    
     
     try :
         instance = Extractor(

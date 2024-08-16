@@ -23,6 +23,16 @@ class CreateExtractor(BaseModel) :
         # validates the schema and returns the validated schema
         validate_json_schema(v)
         return v
+    
+    
+    # validator will run first, and even if value not provided
+    @validator("name", pre=True, always=True)
+    def to_lowercase(cls, v : Any) -> str : 
+        
+        if isinstance(v, str):
+            return v.lower()
+        
+        return v
 
 
 class ExtractorData(BaseModel):
