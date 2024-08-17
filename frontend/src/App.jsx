@@ -5,6 +5,7 @@ import Chat from "./Pages/Chat";
 import LoginPage from "./Pages/Login";
 import DashboardPage from "./Pages/Dashboard";
 import SignupPage from "./Pages/Signup";
+
 import "./styles/tailwind.css";
 
 function App() {
