@@ -3,7 +3,7 @@ import cors from "cors";
 import rateLimit from "express-rate-limit";
 import { Resend } from "resend";
 import dotenv from "dotenv";
-import router from "./routes/index.js";
+import router from "./src/routes/index.js";
 dotenv.config();
 
 const app = express();

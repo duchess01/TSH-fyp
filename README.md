@@ -1,23 +1,73 @@
+# TSH FYP Project
 
-## Installation
+## Table of Contents
 
-Copy all variables from `.env.example` to new created `.env` file and change the appropriate variables with your values. 
+- [Project Overview](#project-overview)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation and Running the Project](#installation-and-running-the-project)
+- [Features](#features)
+- [Contributing](#contributing)
 
-Install dependencies.
+## Project Overview
 
-```bash
-  npm i
-```
+This project is a full-stack web application that consists of an Express.js backend and a React.js frontend. The application is a chatbot that allows users to query about the machines.
 
-Start backend server with nodemon.
+## Getting Started
 
-```bash
-  npm run dev:back
-```
+Follow these steps to quickly get the application up and running locally.
 
-Start frontend server with vite.
+### Prerequisites
 
-```bash
-  npm run dev:front
-```
+- [Node.js](https://nodejs.org/) (v20 or later)
+- [npm](https://www.npmjs.com/) (comes with Node.js)
+- [Git](https://git-scm.com/)
 
+### Installation and Running the Project Locally
+
+1. **Clone the Repository:**
+
+   ```bash
+   git clone https://github.com/duchess01/TSH-fyp.git
+   cd TSH-fyp
+   ```
+
+2. **Install the dependencies:**
+
+- backend dependencies:
+  ```
+  cd backend
+  npm install
+  ```
+- frontend dependencies:
+  ```
+  cd frontend
+  npm install
+  ```
+
+3. **Set up the PostgreSQL database:**
+
+- Install PostgreSQL in your local machine
+-
+
+4. **Run the application:**
+
+- backend server:
+  ```
+  npm run dev
+  ```
+- frontend:
+  ```
+   npm run dev
+  ```
+
+## Features
+
+- Chatbot to ask about machines
+- Dashboard to view analytics
+- Login
+- Sign up
+
+## Contributing
+
+Team Duchess

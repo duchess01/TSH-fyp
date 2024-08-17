@@ -62,7 +62,6 @@ export default function QuestionsReceivedLineGraph({}) {
 
   return (
     <div className="mb-4 w-full h-full p-5">
-      <div className="font-bold">Number of Questions Received per Month</div>
       <div className="chart-area w-full h-full">
         {errorMessage && (
           <div className="alert text-danger" role="alert">

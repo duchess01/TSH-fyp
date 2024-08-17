@@ -4,7 +4,7 @@ import { BiSolidUserCircle } from "react-icons/bi";
 
 const Profile = () => {
   return (
-    <div className="rounded-full text-center grid content-center mt-10 cursor-pointer">
+    <div className="rounded-full w-20 h-20 text-center grid content-center mt-10 cursor-pointer">
       <BiSolidUserCircle size={"56px"} color={"#cbd5e1"} />
     </div>
   );
