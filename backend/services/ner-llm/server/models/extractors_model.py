@@ -1,7 +1,8 @@
 from pydantic import BaseModel, Field, validator
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 from server.validators import validate_json_schema
+from server.llm_models import DEFAULT_MODEL
 
 
 
@@ -34,6 +35,14 @@ class CreateExtractor(BaseModel) :
         
         return v
 
+class ExtractResponse(BaseModel):
+    """Response body for the extract endpoint."""
+
+    data: List[Any]
+    
+    # for potential future chunking
+    content_too_long: Optional[bool]
+
 
 class ExtractorData(BaseModel):
     uuid : UUID = Field(..., description = "UUID of the extractor")
@@ -43,5 +52,14 @@ class ExtractorData(BaseModel):
 class GenericResponse(BaseModel):
     
     status_code : int = Field(default = 201, description = "HTTP status code")
-    message : str = Field(default = "Extractor created successfully", description = "Message")
+    message : str = Field(..., description = "Message")
     data : Any = Field(..., description = "Data fields")
+
+class ExtractEndpoint(BaseModel) :
+    extractor_id : str = Field(... , description = "id of the extractor" ),
+    text : str = Field(..., description = "a text provided by the user to be extracted")
+    model_name : str = Field(default = DEFAULT_MODEL, description = "name of the model, possible values include :  gpt-3.5-turbo, gpt-4-0125-preview, fireworks, together-ai-mistral-8x7b-instruct-v0.1, claude-3-sonnet-20240229 , groq-llama3-8b-8192")
+    
+    
+class ExtractRequest(CustomUserType) : 
+    

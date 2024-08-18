@@ -30,7 +30,7 @@ def get(
         
         res = session.query(Extractor).all()
         
-        return GenericResponse(data = res)
+        return GenericResponse(message="GET Extractor success", data = res)
         
         
     except Exception as e:
@@ -65,7 +65,7 @@ def createExtractor(
     session : Session = Depends(get_session), 
 ) -> GenericResponse:
     
-    # TODO : post to postgresql db, create extractor and return the uuid
+    # TODO : 
     
     # check if extractor exist
     
@@ -83,7 +83,7 @@ def createExtractor(
         
         session.add(instance)
         session.commit()
-        return GenericResponse(data = ExtractorData(uuid = instance.uuid, extractor_data = create_request))
+        return GenericResponse(message = "Extractor created successfully", data = ExtractorData(uuid = instance.uuid, extractor_data = create_request))
         
     except Exception as e:
         # handle other exceptions

@@ -7,6 +7,7 @@ import logging
 from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 from server.api import extractors
+from server.api import extract
 
 from utils.exception import UnicornException
 
@@ -50,6 +51,7 @@ def ready():
     return {"status" : "ok"}
 
 app.include_router(extractors.router)
+app.include_router(extract.router)
 
 
 
