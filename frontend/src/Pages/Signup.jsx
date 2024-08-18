@@ -99,8 +99,7 @@ const Register = () => {
             <p>Please enter your details</p>
             <form onSubmit={handleSubmit}>
                         <label htmlFor="username">
-                            Username:
-
+                           <b>Username:</b> 
                         </label>
                         <input
                             type="text"
@@ -124,8 +123,7 @@ const Register = () => {
 
 
                         <label htmlFor="password">
-                            Password:
-
+                        <b>Password:</b> 
                         </label>
                         <input
                             type="password"
@@ -147,7 +145,7 @@ const Register = () => {
 
 
                         <label htmlFor="confirm_pwd">
-                            Confirm Password:
+                        <b>Confirm Password:</b> 
 
                         </label>
                         <input
@@ -166,7 +164,7 @@ const Register = () => {
                             Must match the first password input field.
                         </p>
 
-                        <button disabled={!validName || !validPwd || !validMatch ? true : false}>Sign Up</button>
+                        <button  disabled={!validName || !validPwd || !validMatch ? true : false}>Sign Up</button>
                     </form>
           </div>
 
