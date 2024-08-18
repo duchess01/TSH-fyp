@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from uuid import uuid4
-from server.models.extractors_model import CreateExtractor, GenericResponse, ExtractorData
+from server.models.extractors_model import CreateExtractor, GenericResponse, ExtractorData, ExtractorResponse
 from db.dbconfig import get_session
 from db.models import Extractor
 from sqlalchemy.orm import Session
@@ -12,13 +12,13 @@ import json
 
 router = APIRouter(
     prefix = "/extractors",
-    tags = ["create extractors for NER using LLM based on different features required"],
+    tags = ["Extractor Objects"],
 )
 
 
 
 
-@router.get("")
+@router.get("", summary="get all extractors")
 def get(
     
     session : Session = Depends(get_session)
@@ -57,13 +57,13 @@ async def getExtractorByName(name, session : Session = Depends(get_session)) :
 
 
 
-@router.post("")
+@router.post("", summary = "create an extraction", description="create an extractor from a pydantic model. \n\n schema can be defined using a pydantic function (class.schema())")
 def createExtractor(
     create_request : CreateExtractor,
     
     # depends allows to use the same session in the same request
     session : Session = Depends(get_session), 
-) -> GenericResponse:
+) -> ExtractorResponse:
     
     # TODO : 
     
@@ -83,7 +83,7 @@ def createExtractor(
         
         session.add(instance)
         session.commit()
-        return GenericResponse(message = "Extractor created successfully", data = ExtractorData(uuid = instance.uuid, extractor_data = create_request))
+        return ExtractorResponse(message = "Extractor created successfully", data = ExtractorData(uuid = instance.uuid, extractor_data = create_request))
         
     except Exception as e:
         # handle other exceptions

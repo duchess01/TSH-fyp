@@ -14,7 +14,7 @@ import logging
 
 router = APIRouter(
     prefix="/extract",
-    tags=["extract"],
+    tags=["using instructions and data from extractors in postgresdb, extract entities from text given"],
 )
 
 
