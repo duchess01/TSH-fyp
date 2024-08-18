@@ -6,6 +6,7 @@ from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
 from langchain_anthropic import ChatAnthropic
 from langchain_core.language_models.chat_models import BaseChatModel
+from typing import Optional
 
 def getModels () :
     
@@ -57,7 +58,30 @@ def getModels () :
 
     return models
 
-allSupportedModels = getModels()
-DEFAULT_MODEL = "gpt-3.5-turbo"
+
+ALL_MODELS = getModels()
+
+def getChatModel(model_name : Optional[str] = None ) -> BaseChatModel  : 
+    # depending on which model, get its chat model
     
+    
+    if model_name is None : 
+        return ALL_MODELS[DEFAULT_MODEL]["chat_model"]
+    
+    else :
+        # validate whether the model exist in supported models
+        ALL_MODELS_KEYS = ALL_MODELS.keys()
+        
+        if model_name not in ALL_MODELS_KEYS:
+            raise ValueError(
+                f"Model {model_name} not found"
+            )
+            
+        else :
+            
+            return ALL_MODELS[model_name]["chat_model"]
+    
+allSupportedModels = ALL_MODELS
+DEFAULT_MODEL = "gpt-3.5-turbo"
+
     

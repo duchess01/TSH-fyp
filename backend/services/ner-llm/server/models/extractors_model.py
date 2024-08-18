@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional
 from uuid import UUID
 from server.validators import validate_json_schema
 from server.llm_models import DEFAULT_MODEL
+from langserve import CustomUserType
 
 
 
@@ -63,3 +64,21 @@ class ExtractEndpoint(BaseModel) :
     
 class ExtractRequest(CustomUserType) : 
     
+    text: str = Field(..., description="text provided by user to be extracted from")
+    json_schema: Dict[str, Any] = Field(
+        ...,
+        description="JSON schema obtained from extractor, describes what content to be extracted from the text.",
+        alias="schema",
+    )
+    instructions: Optional[str] = Field(
+        None, description="Supplemental system instructions."
+    )
+    # examples: Optional[List[ExtractionExample]] = Field(
+    #     None, description="Examples of extractions."
+    # )
+    model_name: Optional[str] = Field("gpt-3.5-turbo", description="Chat model to use.")
+
+    @validator("json_schema")
+    def validate_schema(cls, v: Any) -> Dict[str, Any]:
+        validate_json_schema(v)
+        return v

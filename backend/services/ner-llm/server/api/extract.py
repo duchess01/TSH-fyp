@@ -43,7 +43,7 @@ async def extractWithExtractor(
         
         retrievalResponse = await extractUsingExtractor(text, extractor, model_name)
         
-        return GenericResponse(message="success", data="test")
+        return GenericResponse(message="success", data=retrievalResponse)
         
         
     except Exception as e:
