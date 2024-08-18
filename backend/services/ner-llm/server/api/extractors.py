@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from uuid import uuid4
-from server.models.extractors_model import CreateExtractor, CreateExtractorResponse, ExtractorData
+from server.models.extractors_model import CreateExtractor, GenericResponse, ExtractorData
 from db.dbconfig import get_session
 from db.models import Extractor
 from sqlalchemy.orm import Session
 from sqlalchemy import select
+from typing import List
 
 import json
 
@@ -17,39 +18,31 @@ router = APIRouter(
 
 
 
-@router.get("/")
+@router.get("")
 def get(
     
     session : Session = Depends(get_session)
-):
+) -> GenericResponse:
     
-    try : 
-        
-        stmt = select(Extractor)
-        
-        
-        result = session.execute(stmt)
-        
-        print(result)
-        
-        for row in result : 
-            print(f"row : {row.name}")
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        return {f"message" : f"Get all extractors {row}"}
+
     
+    try :
+        
+        res = session.query(Extractor).all()
+        
+        return GenericResponse(data = res)
+        
+        
     except Exception as e:
         # handle other exceptions
         raise HTTPException(
             status_code = 500, detail = f"Internal server error : {str(e)}"
-        )    
+        )
+            
+    
+    
+    
+
         
     
     
@@ -70,7 +63,7 @@ def createExtractor(
     
     # depends allows to use the same session in the same request
     session : Session = Depends(get_session), 
-) -> CreateExtractorResponse:
+) -> GenericResponse:
     
     # TODO : post to postgresql db, create extractor and return the uuid
     
@@ -90,7 +83,7 @@ def createExtractor(
         
         session.add(instance)
         session.commit()
-        return CreateExtractorResponse(data = ExtractorData(uuid = instance.uuid, extractor_data = create_request))
+        return GenericResponse(data = ExtractorData(uuid = instance.uuid, extractor_data = create_request))
         
     except Exception as e:
         # handle other exceptions

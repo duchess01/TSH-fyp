@@ -40,8 +40,8 @@ class ExtractorData(BaseModel):
     extractor_data : CreateExtractor = Field(..., description = "Extractor data")
     
     
-class CreateExtractorResponse(BaseModel):
+class GenericResponse(BaseModel):
     
     status_code : int = Field(default = 201, description = "HTTP status code")
     message : str = Field(default = "Extractor created successfully", description = "Message")
-    data : ExtractorData = Field(..., description = "Data fields")
+    data : Any = Field(..., description = "Data fields")
