@@ -37,7 +37,7 @@ function Chat() {
 
   const submitHandler = async (e) => {
     e.preventDefault();
-    return setErrorText("My billing plan is gone because of many requests.");
+    return setErrorText("The TSH intelligent Chatbot is currently down, please try again later.");
     if (!text) return;
 
     setIsResponseLoading(true);
