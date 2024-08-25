@@ -1,34 +1,28 @@
 from models.base import BaseResponseModel
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from typing import Any, List, Dict, Optional
 from server.validators import validate_json_schema
  
 class SparseValues(BaseModel):
-    indices : List[Any] = Field(default=[], descriptions = "list of indices")
-    values : List[float] = Field(default=[], description="List of values")
-    
-    
-    
-
+    indices: Optional[List[Any]] = None
+    values: Optional[List[float]] = None
 
 class MatchesData(BaseModel) :
-     id_ : str = Field(..., description='match id')
-     metadata_ : Optional[Any] = Field(default=None, description = "metadata of match")
+     id : str = Field(..., description='match id')
+     metadata : Any = Field(default=None, description = "metadata of match")
      score : float = Field(..., description = "similarity score")
      sparse_values : SparseValues = Field(...,description="Sparse values")
      values : List[float] = Field(..., description = "list of embedding values")
     
-    
-
 class returnMatches(BaseResponseModel) : 
     data : List[MatchesData] = Field(..., description  ="text response generated from the model")
 
-    @validator("data")
-    def validate_schema(cls, v: Any) -> Dict[str, Any]:
-        # cls is the class itself
-        # validates the schema and returns the validated schema
-        validate_json_schema(v)
-        return v
+    # @field_validator("data")
+    # def validate_schema(cls, v: Any) -> Dict[str, Any]:
+    #     # cls is the class itself
+    #     # validates the schema and returns the validated schema
+    #     validate_json_schema(v)
+    #     return v
     
     
 class findMatches(BaseModel):
