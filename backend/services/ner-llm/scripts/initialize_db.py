@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-"""Run migrations."""
 import click
 
 from db.models import Base

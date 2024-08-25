@@ -8,6 +8,7 @@ from db.models import Base
 from sqlalchemy.engine import URL
 import os
 from sqlalchemy.orm import sessionmaker
+from db.dbconfig import get_session
 
 
 @pytest.fixture(scope = "module") 
@@ -47,12 +48,12 @@ def set_up_db(create_mock_postgres_db):
     
     ENGINE = create_mock_postgres_db
     
+    
     # create mock data 
     
-    Base.metadata.create_all(bind=ENGINE)
     
     
-    SessionClass = sessionmaker(bind=ENGINE)
+    
     
     session = SessionClass()
   
@@ -92,19 +93,37 @@ def create_mock_postgres_db() :
         drivername = "postgresql+psycopg2",
         username = os.environ.get("PG_USER", "langchain"),
         password = os.environ.get("PG_PASSWORD", "langchain"),
-        host = os.environ.get("PG_HOST", "db_ner_llm"),
+        host = os.environ.get("PG_HOST", "localhost"),
         database = os.environ.get("PG_DATABASE", "langchain_test"),
-        port = 5435, 
+        port = 5432, 
     )
     
     ENGINE = create_engine(url)
+    
+    TestingSessionLocal = sessionmaker(bind=ENGINE)
+    
+    
+    Base.metadata.create_all(bind=ENGINE)
+    
+    
+    def override_get_db():
+        try : 
+            db = TestingSessionLocal()
+            yield db
+        finally : 
+            db.close()
+            
+    app.dependency_overrides[get_session] = override_get_db
+    
+    client = TestClient(app)
+    
     
     
     
 
     
     try :
-        yield ENGINE
+        yield client, db
         
         
     except SQLALchemyError as e :

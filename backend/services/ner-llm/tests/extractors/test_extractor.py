@@ -4,9 +4,9 @@ import sys
 
 
     
-def test_get_all_extractor(self, set_up_db, tear_down):
+def test_get_all_extractor(create_mock_postgres_db, tear_down):
 
-    (client, session) = set_up_db()
+    (client, session) = create_mock_postgres_db()
     # add some test extractors
     instances, userId = add_mock_data(session) 
     

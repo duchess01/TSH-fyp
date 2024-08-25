@@ -20,6 +20,7 @@ RUN set -eux && \
 
 COPY requirements.txt requirements.txt
 
+
 # RUN pip install -r requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -42,8 +43,18 @@ RUN dos2unix ./ner-llm/scripts/entrypoint.sh
 RUN chmod +x ./ner-llm/scripts/entrypoint.sh
 
 
-ENTRYPOINT ["bash", "./ner-llm/scripts/entrypoint.sh"]
 
 
 # development staging
 FROM base as development
+
+
+ENTRYPOINT ["bash", "./ner-llm/scripts/entrypoint.sh"]
+
+# testing staging
+
+FROM base as testing
+
+RUN pip install --no-cache-dir pytest pytest-cov
+
+ENTRYPOINT ["bash", "./ner-llm/scripts/test_entrypoint.sh"]
