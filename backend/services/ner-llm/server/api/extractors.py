@@ -6,7 +6,6 @@ from db.models import Extractor
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from typing import List
-
 import json
 
 
