@@ -1,14 +1,14 @@
 from uuid import uuid4
 from fastapi.testclient import TestClient
 from tests.extractors.mock_data import add_mock_data
-import pytest
+# import pytest
 
 # IMPORTANT: THESE TESTS WILL ONLY WORK IF THE ENV VARIABLES ARE SET
 # OPENAI_API_KEY, GROQ_API_KEY
 
 
-@pytest.mark.asyncio
-async def test_extract_with_extractor_success(client, 
+# @pytest.mark.asyncio
+def test_extract_with_extractor_success(client, 
                            set_up_db,
                            session
 ):
@@ -17,7 +17,14 @@ async def test_extract_with_extractor_success(client,
     db = set_up_db
     TestClient = client
     
-    instances, userIds = await add_mock_data(session) 
+    instances, userIds = add_mock_data(session) 
+    
+    print(userIds, 'userIds')
+    
+    response = TestClient.get('/extractors')
+    
+    print(response.json(), 'response')
+    
     
     
 
