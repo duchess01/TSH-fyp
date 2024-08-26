@@ -7,6 +7,8 @@ CREATE TABLE chat (
     id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,
     message TEXT NOT NULL,
+    response TEXT,  -- To store the application response
+    topic VARCHAR(255),  -- To store the identified topic
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
