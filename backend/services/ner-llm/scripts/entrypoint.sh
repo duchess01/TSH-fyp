@@ -10,6 +10,9 @@
 # -o pipefail : fails the entire pipeline if any command fails
 set -euxo pipefail
 
+cd ner-llm
+
+
 python -m scripts.initialize_db
 
 

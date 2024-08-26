@@ -12,6 +12,7 @@ RUN set -eux && \
     apt-get update && \
     apt-get install -y \
       build-essential \
+      dos2unix\
     #   curl \
       libpq-dev \
       python3-dev
@@ -19,11 +20,12 @@ RUN set -eux && \
 
 COPY requirements.txt requirements.txt
 
+
 # RUN pip install -r requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 
-COPY . .
+COPY . ./ner-llm
 
 
 
@@ -35,10 +37,24 @@ CMD ["uvicorn", "app.main:app", "--host", ]
 
 # RUN ["chmod", "+x", "scripts/entrypoint.sh"]
 
-RUN sed -i 's/\r$//g' ./scripts/entrypoint.sh
+RUN dos2unix ./ner-llm/scripts/entrypoint.sh
 
-ENTRYPOINT ["bash", "./scripts/entrypoint.sh"]
+
+RUN chmod +x ./ner-llm/scripts/entrypoint.sh
+
+
 
 
 # development staging
 FROM base as development
+
+
+ENTRYPOINT ["bash", "./ner-llm/scripts/entrypoint.sh"]
+
+# testing staging
+
+FROM base as testing
+
+RUN pip install --no-cache-dir pytest pytest-cov
+
+ENTRYPOINT ["bash", "./ner-llm/scripts/test_entrypoint.sh"]

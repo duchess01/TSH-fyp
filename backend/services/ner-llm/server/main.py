@@ -7,6 +7,7 @@ import logging
 from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 from server.api import extractors
+from server.api import extract
 
 from utils.exception import UnicornException
 
@@ -50,6 +51,7 @@ def ready():
     return {"status" : "ok"}
 
 app.include_router(extractors.router)
+app.include_router(extract.router)
 
 
 
@@ -72,7 +74,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         status_code=exc.status_code,
         content=jsonable_encoder({
             "status_code" : exc.status_code,
-            "message" : exc.detail,
+            "message" : str(exc.detail),
         })
     )
 
@@ -81,4 +83,4 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 if __name__ == "__main__":
     import uvicorn
     
-    uvicorn.run(app, host="localhost", port=8000)
+    uvicorn.run(app, host="localhost", port=8000, reload=True)

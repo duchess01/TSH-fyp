@@ -67,7 +67,7 @@ services:
       - db_ner_llm
 
     volumes:
-      - ./ner-llm:/ner-llm
+      - ./services/ner-llm:/usr/src/app/ner-llm
 
   #################################
   # PostgreSQL for User microservice

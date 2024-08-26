@@ -1,36 +1,74 @@
 from fastapi import APIRouter, Depends, HTTPException
 from uuid import uuid4
-from server.models.extractors_model import CreateExtractor, CreateExtractorResponse, ExtractorData
+from server.models.extractors_model import CreateExtractor, GenericResponse, ExtractorData, ExtractorResponse
 from db.dbconfig import get_session
 from db.models import Extractor
 from sqlalchemy.orm import Session
+from sqlalchemy import select
+from typing import List
+import json
 
 
 router = APIRouter(
     prefix = "/extractors",
-    tags = ["create extractors for NER using LLM based on different features required"],
-    responses = {404 : {"description" : "Not found"}}
+    tags = ["Extractor Objects"],
 )
 
 
 
 
-@router.get("/")
-def get():
-    return {"message" : "Get all extractors"}
+@router.get("", summary="get all extractors")
+def get(
+    
+    session : Session = Depends(get_session)
+) -> GenericResponse:
+    
+
+    
+    try :
+        
+        res = session.query(Extractor).all()
+        
+        return GenericResponse(message="GET Extractor success", data = res)
+        
+        
+    except Exception as e:
+        # handle other exceptions
+        raise HTTPException(
+            status_code = 500, detail = f"Internal server error : {str(e)}"
+        )
+            
+    
+    
+    
+
+        
+    
+    
+@router.get("/{name}")
+async def getExtractorByName(name, session : Session = Depends(get_session)) : 
+    
+    stmt = select(Extractor).where(Extractor.name == name.lower())
+    
+    result = session.execute(stmt)
+    
+    print(result.scalars().all())
 
 
 
-
-@router.post("")
+@router.post("", summary = "create an extraction", description="create an extractor from a pydantic model. \n\n schema can be defined using a pydantic function (class.schema())")
 def createExtractor(
     create_request : CreateExtractor,
     
     # depends allows to use the same session in the same request
     session : Session = Depends(get_session), 
-) -> CreateExtractorResponse:
+) -> ExtractorResponse:
     
-    # TODO : post to postgresql db, create extractor and return the uuid
+    # TODO : 
+    
+    # check if extractor exist
+    
+    
     
     try :
         instance = Extractor(
@@ -44,7 +82,7 @@ def createExtractor(
         
         session.add(instance)
         session.commit()
-        return CreateExtractorResponse(data = ExtractorData(uuid = instance.uuid, extractor_data = create_request))
+        return ExtractorResponse(message = "Extractor created successfully", data = ExtractorData(uuid = instance.uuid, extractor_data = create_request))
         
     except Exception as e:
         # handle other exceptions
