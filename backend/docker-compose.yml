@@ -67,7 +67,7 @@ services:
     depends_on:
       - db_ner_llm
     volumes:
-      - ./ner-llm:/ner-llm
+      - ./services/ner-llm:/usr/src/app/ner-llm
 
   #################################
   # Analytics microservice
