@@ -4,15 +4,16 @@ from sqlalchemy.orm import Session
 from uuid import uuid4
 from db.models import Extractor
 from db.dbconfig import get_session
-from tests.extractors.test_extractor_models import test_extractor_models_1, test_extractor_models_2
+from tests.extractors.example_extractor_models import test_extractor_models_1, test_extractor_models_2
+from sqlalchemy.exc import SQLAlchemyError
 
 
 def add_mock_data(session) :
     schema_1 = test_extractor_models_1.schema()
     schema_2 = test_extractor_models_2.schema()
     
-    user_id_1 = str(uuid4())
-    user_id_2 = str(uuid4())
+    user_id_1 = uuid4()
+    user_id_2 = uuid4()
     
     
 
@@ -34,10 +35,10 @@ def add_mock_data(session) :
    
     
     try :
-        session.add(instances[0])
+        session.add_all(instances)
         session.commit()
-        return instances, (user_id_1, user_id_2)
+        return instances, [str(user_id_1), str(user_id_2)]
     
-    except :
-        raise HTTPException(status_code=500, detail="error adding mock data")
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail=f"error adding mock data: {str(e)}")
         

@@ -36,5 +36,5 @@ echo "$(ls)"
 cd ner-llm/tests 
 
 
-python -m pytest -v
+python -m pytest -v -rs
 
