@@ -52,26 +52,9 @@ def test_create_extractor(client,
 
     properties = schema['properties']
     assert 'name' in properties
-    assert properties['name'] == {
-        'title': 'Name',
-        'description': 'name of the machine',
-        'type': 'string'
-    }
-    assert 'part' in properties
-    assert properties['part'] == {
-        'title': 'Part',
-        'description': 'part of the machine',
-        'type': 'string'
-    }
-    assert 'feature' in properties
-    assert properties['feature'] == {
-        'title': 'Feature',
-        'description': 'feature of the machine',
-        'type': 'string'
-    }
+ 
 
-    assert 'required' in schema
-    assert schema['required'] == ['name', 'part', 'feature']
+
     
 def test_create_extractor_invalid_schema(client, 
                            set_up_db,

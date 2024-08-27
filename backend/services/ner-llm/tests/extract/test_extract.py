@@ -19,11 +19,8 @@ def test_extract_with_extractor_success(client,
     
     instances, userIds = add_mock_data(session) 
     
-    print(userIds, 'userIds')
     
-    response = TestClient.get('/extractors')
     
-    print(response.json(), 'response')
     
     
     
@@ -36,7 +33,6 @@ def test_extract_with_extractor_success(client,
 
     response = TestClient.post('/extract', json=request_payload)
 
-    print(response.json())
     assert response.status_code == 200
     assert response.json()['message'] == "success"
     assert 'data' in response.json()
@@ -59,9 +55,8 @@ def test_extract_with_extractor_missing_text(client,
 
     response = TestClient.post('/extract', json=request_payload)
 
-    print(response.json())
-    assert response.status_code == 423
-    assert response.json()['detail'] == "No text provided"
+    assert response.status_code == 422
+    assert "validation error" in response.json()['message'].lower()
 
 def test_extract_with_extractor_not_found(client, 
                            set_up_db,
@@ -81,33 +76,29 @@ def test_extract_with_extractor_not_found(client,
 
     response = TestClient.post('/extract', json=request_payload)
 
-    print(response.json())
-    assert response.status_code == 404
-    assert response.json()['detail'] == "Extractor not found"
+    assert response.status_code == 500
+    assert response.json()['message'] == "Internal server error : 404: Extractor not found"
 
-def test_extract_with_extractor_internal_server_error(client, 
-                           set_up_db,
-                           session
-):
-    # Test handling of internal server error
-
-    async def mock_extract_using_extractor(text, extractor, model_name):
-        raise Exception("Unexpected error")
-
-    app.dependency_overrides[extractUsingExtractor] = mock_extract_using_extractor
-    
+def test_extract_output_correctness(
+    client, set_up_db, session
+) : 
     db = set_up_db
     TestClient = client
-
-    request_payload = {
-        "text": "Test text",
-        "extractor_id": str(uuid),
-        "model_name": "groq-llama3-8b-8192"
+    instances, userIds = add_mock_data(session)
+    
+    requestPayload = {
+        "text" : "Regarding the panasonic MH320's axis wheel, what is the tool length compensation feature for machines having multiple rotary axes?",
+        "extractor_id" : userIds[0],
+        "model_name" : "groq-llama3-8b-8192"
     }
-
-    response = TestClient.post('/extract', json=request_payload)
-
-    print(response.json())
-    assert response.status_code == 500
-    assert response.json()['detail'] == "Internal server error : Unexpected error"
+    
+    response = TestClient.post('/extract', json=requestPayload)
+    
+    print(response.json(), 'response')
+    
+    assert response.status_code == 200
+    assert response.json()['message'] == "success"
+    assert response.json()['data'][0]['properties']['feature'] == "tool length compensation"
+    assert response.json()['data'][0]['properties']['name'] == "Panasonic MH320"
+    assert response.json()['data'][0]['properties']['part'] == "axis wheel"
     

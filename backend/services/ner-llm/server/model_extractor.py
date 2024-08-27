@@ -36,6 +36,8 @@ async def extractionRun(req: ExtractRequest) -> ExtractResponse :
     # runnable = 
     
     
+    
+    
     # chain prompt to model
     runnable = (prompt | model.with_structured_output(schema = schema).with_config(
         {"run_name" : "extraction"}
@@ -56,7 +58,11 @@ def makePromptTemplate(instructions: Optional[str]) -> ChatPromptTemplate :
         "Only extract information that is relevant to the provided text. "
         "If no information is relevant, use the schema and output "
         "an empty list where appropriate."
-    )
+        "Please provide the extracted information in the format specified by the schema."
+        "DO NOT include any information that is not relevant to the text."
+        "DO NOT include any field names in the output e.g. 'rotary axis part' where 'part' is one of the field names"
+        "Please provide the extracted information in the format specified by the schema, without additional field names or irrelevant data. "
+    )   
     
     if instructions : 
         system_message = ( "system", f"{prefix}\n\n{instructions}")
@@ -144,6 +150,8 @@ async def handleLength(text : str , extractor : Extractor, model_name : str) :
 async def extractUsingExtractor(text : str, extractor : Extractor, model_name : str)  :
     
     extractionRequests : List[ExtractRequest] = await handleLength(text, extractor ,  model_name ) 
+    
+ 
     
     
     extractResponse : List[ExtractResponse] = await extractionRun.abatch(

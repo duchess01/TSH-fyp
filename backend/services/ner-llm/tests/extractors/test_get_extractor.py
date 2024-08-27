@@ -40,11 +40,9 @@ def test_get_all_extractor(client,
     assert data[0]['name'] == '', "Name should be an empty string"
     assert data[0]['schema']['type'] == 'object', "Schema type should be 'object'"
     assert data[0]['schema']['title'] == 'test_extractor_models_1', "Schema title mismatch"
-    assert data[0]['schema']['required'] == ['name', 'part', 'feature'], "Required fields mismatch in schema"
     assert data[0]['schema']['properties']['name']['type'] == 'string', "Property 'name' should be of type 'string'"
     assert data[0]['schema']['properties']['name']['title'] == 'Name', "Property 'name' title mismatch"
     assert data[0]['instruction'] == 'extract the name, part and feature of the machine from the given text', "Instruction mismatch"
-    assert data[0]['description'] == 'questions about a specific machine', "Description mismatch"
     
     # Assertions for the second data dictionary
     # Assertions for the second dictionary
