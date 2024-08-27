@@ -12,8 +12,12 @@ CREATE TABLE chat (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insert a sample chat message
-INSERT INTO chat (user_id, message)
+-- Insert sample chat messages
+INSERT INTO chat (user_id, message, response, topic)
 VALUES 
-(1, 'Hello, world!'),
-(2, 'Hi there!');
+(1, 'why is machine x breaking down so often?', '', 'machine x'),
+(2, 'Hi there!', NULL, NULL),
+(3, 'why is machine y breaking down so often?', 'replace y with z', 'machine y'),
+(4, 'what is the status of machine x?', 'machine x is working fine', 'machine x'),
+(5, 'what is the status of machine y?', 'machine y is broken', 'machine y'),
+(6, 'what is the status of machine z?', 'machine z is working fine', 'machine z');
