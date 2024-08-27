@@ -87,7 +87,7 @@ def test_extract_output_correctness(
     instances, userIds = add_mock_data(session)
     
     requestPayload = {
-        "text" : "Regarding the panasonic MH320's axis wheel, what is the tool length compensation feature for machines having multiple rotary axes?",
+        "text" : "What is the maximum speed of the CNC Milling Machine when using the automatic tool changer feature to swap the spindle?",
         "extractor_id" : userIds[0],
         "model_name" : "groq-llama3-8b-8192"
     }
@@ -98,7 +98,7 @@ def test_extract_output_correctness(
     
     assert response.status_code == 200
     assert response.json()['message'] == "success"
-    assert response.json()['data'][0]['properties']['feature'] == "tool length compensation"
-    assert response.json()['data'][0]['properties']['name'] == "Panasonic MH320"
-    assert response.json()['data'][0]['properties']['part'] == "axis wheel"
+    assert response.json()['data'][0]['properties']['feature'] == "automatic tool changer"
+    assert response.json()['data'][0]['properties']['name'] == "CNC Milling Machine"
+    assert response.json()['data'][0]['properties']['part'] == "spindle"
     

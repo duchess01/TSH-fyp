@@ -60,7 +60,7 @@ def makePromptTemplate(instructions: Optional[str]) -> ChatPromptTemplate :
         "an empty list where appropriate."
         "Please provide the extracted information in the format specified by the schema."
         "DO NOT include any information that is not relevant to the text."
-        "DO NOT include any field names in the output e.g. 'rotary axis part' where 'part' is one of the field names"
+        "DO NOT include any field names (properties) in the output e.g. 'rotary axis part' where 'part' is one of the field names"
         "Please provide the extracted information in the format specified by the schema, without additional field names or irrelevant data. "
     )   
     
@@ -76,8 +76,7 @@ def makePromptTemplate(instructions: Optional[str]) -> ChatPromptTemplate :
     promptComponents.append(
         (
             "human",
-            "I need to extract information from "
-            "the following text: ```\n{text}\n```\n",
+            "I need to extract information from the following text: ```\n{text}\n```\n",
         ), 
     )
     return ChatPromptTemplate.from_messages(promptComponents)

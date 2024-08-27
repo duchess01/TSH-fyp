@@ -5,8 +5,9 @@ from typing import Optional
 class test_extractor_models_1(BaseModel):
 # test machine model
     name : str = Field(default="", description="name of the machine, e.g. Dyson FH320, Sony PS5")
-    part : str = Field(default="", description="part of the machine, e.g. motor, battery, screen")
+    part : str = Field(default="", description="part of the machine, e.g. motor, battery, screen, spindle")
     feature : str = Field(default="", description = "feature of the machine, but DO NOT include the word 'feature' if given e.g. 4K display, 5G connectivity, 20MP camera")
+
         
 class test_extractor_models_2(BaseModel):
     # Extended extractor model with additional fields
