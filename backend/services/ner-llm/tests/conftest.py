@@ -1,6 +1,6 @@
 from server.main import app 
 from fastapi.testclient import TestClient
-from tests.extractors.test_extractor_models import test_extractor_models_1, test_extractor_models_2
+from tests.extractors.example_extractor_models import test_extractor_models_1, test_extractor_models_2
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.pool import StaticPool
@@ -19,10 +19,11 @@ from db.models import Extractor
 
 
 
-
+# scoped to function so that the database is set up and torn down for each test, 
+# if speed is a concern,  scope to module and restructure the tests accordingly
     
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def engine():
     url = URL.create(
     drivername = "postgresql+psycopg2",
@@ -34,7 +35,7 @@ def engine():
     
     return create_engine(url)
     
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def session(engine):
     TestingSessionLocal = sessionmaker(bind=engine)
     
@@ -46,7 +47,7 @@ def session(engine):
     finally : 
         session.close()
     
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def client(session) : 
     def override_get_db():
         try : 
@@ -65,7 +66,7 @@ def client(session) :
     
 
 
-@pytest.fixture(scope="module")  
+@pytest.fixture(scope="function")  
 def set_up_db(engine, session) :
     Base.metadata.create_all(bind=engine)
     

@@ -43,16 +43,16 @@ def get(
     
 
         
+#TODO: if needed
     
+# @router.get("/{name}")
+# async def getExtractorByName(name, session : Session = Depends(get_session)) : 
     
-@router.get("/{name}")
-async def getExtractorByName(name, session : Session = Depends(get_session)) : 
+#     stmt = select(Extractor).where(Extractor.name == name.lower())
     
-    stmt = select(Extractor).where(Extractor.name == name.lower())
+#     result = session.execute(stmt)
     
-    result = session.execute(stmt)
-    
-    print(result.scalars().all())
+#     print(result.scalars().all())
 
 
 

@@ -35,7 +35,7 @@ async def extractWithExtractor(
     try :
         
         
-        extractor = session.query(Extractor).filter_by(uuid=uuid).scalar()
+        extractor = session.query(Extractor).filter_by(extractor_id=uuid).scalar()
         
         if extractor is None:
             raise HTTPException(status_code=404, detail="Extractor not found")

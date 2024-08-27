@@ -23,7 +23,7 @@ class TimestampedModel(Base):
         UUID(as_uuid=True),
         primary_key=True, 
         # lambda instantiates a new uuid4 object only when a new record is created
-        default= lambda : str(uuid4()),
+        default= lambda : uuid4(),
         comment = "UUID of the record",
     )
     
