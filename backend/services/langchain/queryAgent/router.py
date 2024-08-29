@@ -15,9 +15,10 @@ query_router = APIRouter(
     response_model_exclude_none=True,
     description="gets LangChain agent response based on user query"
 )
-def get_response(query: Query):
+async def get_response(query: Query):
     try:
         user_query = query.query
+
         response = QueryResponseModel(
             status_code=201,
             topic="test",
