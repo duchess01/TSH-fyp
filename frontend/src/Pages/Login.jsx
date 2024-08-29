@@ -1,123 +1,66 @@
-import React, { useEffect, useState } from "react";
-import Image from "../Assets/image.png";
-import Logo from "../Assets/logo.png";
-import GoogleSvg from "../Assets/icons8-google.svg";
-import { FaEye } from "react-icons/fa6";
-import { FaEyeSlash } from "react-icons/fa6";
-import { useRef, useContext } from 'react';
-
-
-
+import React, { useState } from 'react';
+import axios from 'axios';
 
 const Login = () => {
-  const [ showPassword, setShowPassword ] = useState(false);
-  const userRef = useRef();
-  const errRef = useRef();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
 
-  const [user, setUser] = useState('');
-  const [pwd, setPwd] = useState('');
-  const [errMsg, setErrMsg] = useState('');
-  const [success, setSuccess] = useState(false);
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      const response = await axios.post('https://example.com/api/login', {
+        email,
+        password,
+      });
+      console.log('Login successful:', response.data);
+      // Handle successful login here (e.g., redirect to a dashboard)
+    } catch (err) {
+      setError('Invalid email or password');
+    }
+  };
 
-
-
-  useEffect(() => {
-      setErrMsg('');
-  }, [user, pwd])
-
-  const handleSubmit = async (e) => {
-      e.preventDefault();
-
-      try {
-          const response = await axios.post(LOGIN_URL,
-              JSON.stringify({ user, pwd }),
-              {
-                  headers: { 'Content-Type': 'application/json' },
-                  withCredentials: true
-              }
-          );
-          console.log(JSON.stringify(response?.data));
-          //console.log(JSON.stringify(response));
-          const accessToken = response?.data?.accessToken;
-          const roles = response?.data?.roles;
-          setAuth({ user, pwd, roles, accessToken });
-          setUser('');
-          setPwd('');
-          setSuccess(true);
-      } catch (err) {
-          if (!err?.response) {
-              setErrMsg('No Server Response');
-          } else if (err.response?.status === 400) {
-              setErrMsg('Missing Username or Password');
-          } else if (err.response?.status === 401) {
-              setErrMsg('Unauthorized');
-          } else {
-              setErrMsg('Login Failed');
-          }
-          errRef.current.focus();
-      }
-  }
-  
   return (
-    <div className="login-main">
-      <div className="login-left">
-        <img src={Image} alt="" />
-      </div>
-      <div className="login-right">
-        <div className="login-right-container">
-          <div className="login-logo">
-            <img src={Logo} alt="" />
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+        <h2 className="text-2xl font-bold mb-4">Login</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
+              Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              required
+            />
           </div>
-          <div className="login-center">
-            <h2>Welcome back!</h2>
-            <p>Please enter your details</p>
-            
-            <form  onSubmit={handleSubmit}>
-                        <label htmlFor="username"><b>Username:</b></label>
-                        <input
-                            type="text"
-                            id="username"
-                            ref={userRef}
-                            autoComplete="off"
-                            onChange={(e) => setUser(e.target.value)}
-                            value={user}
-                            required
-                        />
-
-                        <label htmlFor="password"><b>Password:</b></label>
-                        <input
-                            type="password"
-                            id="password"
-                            onChange={(e) => setPwd(e.target.value)}
-                            value={pwd}
-                            required
-                        />
-             
-              <div className="login-center-options">
-                <div className="remember-div">
-                  <input type="checkbox" id="remember-checkbox" />
-                  <label htmlFor="remember-checkbox">
-                    Remember for 30 days
-                  </label>
-                </div>
-                <a href="#" className="forgot-pass-link">
-                  Forgot password?
-                </a>
-              </div>
-              <div className="login-center-buttons">
-                <button type="button">Log In</button>
-                <button type="button">
-                  <img src={GoogleSvg} alt="" />
-                  Log In with Google
-                </button>
-              </div>
-            </form>
+          <div className="mb-6">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+              required
+            />
           </div>
-
-          <p className="login-bottom-p">
-            Don't have an account? <a href="#">Sign Up</a>
-          </p>
-        </div>
+          {error && <p className="text-red-500 text-xs italic mb-4">{error}</p>}
+          <div className="flex items-center justify-between">
+            <button
+              type="submit"
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            >
+              Sign In
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
