@@ -25,4 +25,20 @@ router.put("/:id", async (req, res) => {
   res.status(200).json(rows[0]);
 });
 
+// getting last 3 chat messages
+router.get("/history", async (req, res) => {
+  const { userId, chatSessionId } = req.query;
+  const { rows } = await db.query(
+    "SELECT * FROM chat WHERE chat_session_id = $1 AND user_id = $2 ORDER BY id DESC LIMIT 3",
+    [chatSessionId, userId]
+  );
+  if (rows.length === 0) {
+    res.status(404).json({ message: "No chat history found" });
+  } else {
+    res
+      .status(200)
+      .json(rows.map(({ message, response }) => ({ message, response })));
+  }
+});
+
 export default router;
