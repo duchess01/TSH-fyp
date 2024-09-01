@@ -1,11 +1,12 @@
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy import Column, String, DateTime, Text
+from sqlalchemy import Column, String, DateTime, Text, alias
 from sqlalchemy.exc import SQLAlchemyError
 
 import datetime
 from uuid import uuid4
 
 from sqlalchemy.dialects.postgresql import JSONB, UUID
+
 
 
 class Base(DeclarativeBase):
@@ -23,7 +24,7 @@ class TimestampedModel(Base):
         UUID(as_uuid=True),
         primary_key=True, 
         # lambda instantiates a new uuid4 object only when a new record is created
-        default= lambda : uuid4(),
+        default= lambda: uuid4(),
         comment = "UUID of the record",
     )
     

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from uuid import uuid4
+from uuid import uuid4, UUID
 from server.models.extractors_model import CreateExtractor, GenericResponse, ExtractorData, ExtractorResponse
 from db.dbconfig import get_session
 from db.models import Extractor
@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 from typing import List
 import json
+from sqlalchemy.exc import SQLAlchemyError
 
 
 router = APIRouter(
@@ -17,9 +18,10 @@ router = APIRouter(
 
 
 
+
+
 @router.get("", summary="get all extractors")
 def get(
-    
     session : Session = Depends(get_session)
 ) -> GenericResponse:
     
@@ -32,7 +34,7 @@ def get(
         return GenericResponse(message="GET Extractor success", data = res)
         
         
-    except Exception as e:
+    except SQLAlchemyError as e:
         # handle other exceptions
         raise HTTPException(
             status_code = 500, detail = f"Internal server error : {str(e)}"
@@ -43,16 +45,24 @@ def get(
     
 
         
-#TODO: if needed
     
-# @router.get("/{name}")
-# async def getExtractorByName(name, session : Session = Depends(get_session)) : 
+@router.get("/{extractor_name}")
+async def getExtractorByName(extractor_name, session : Session = Depends(get_session)) -> GenericResponse: 
     
-#     stmt = select(Extractor).where(Extractor.name == name.lower())
+    try  :
+        stmt = select(Extractor).where(Extractor.name == extractor_name.lower())
+        
+        result = session.execute(stmt)
+        
+        res = result.scalars().first()
+        
+        
+        return GenericResponse(message = "GET Extractor by name success", data = res)
     
-#     result = session.execute(stmt)
-    
-#     print(result.scalars().all())
+    except SQLAlchemyError as e :
+        raise HTTPException(
+            status_code = 500, detail = f"Internal server error : {str(e)}"
+        )
 
 
 
@@ -68,6 +78,9 @@ def createExtractor(
     
     # check if extractor exist
     
+   
+    
+    
     
     
     try :
@@ -82,9 +95,9 @@ def createExtractor(
         
         session.add(instance)
         session.commit()
-        return ExtractorResponse(message = "Extractor created successfully", data = ExtractorData(uuid = instance.uuid, extractor_data = create_request))
+        return ExtractorResponse(message = "Extractor created successfully", data = ExtractorData(uuid = UUID(str(instance.uuid)), extractor_data = create_request))
         
-    except Exception as e:
+    except SQLAlchemyError as e:
         # handle other exceptions
         raise HTTPException(
             status_code = 500, detail = f"Internal server error : {str(e)}"
