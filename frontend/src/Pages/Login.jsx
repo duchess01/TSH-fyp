@@ -40,7 +40,7 @@ const Login = () => {
         )}
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="email" className="block text-sm font-bold text-gray-700">
               Email address
             </label>
             <input
@@ -51,12 +51,13 @@ const Login = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
-              className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:ring-[#2f3185] focus:border-[#2f3185] sm:text-sm"
+              className="mt-2 block w-full rounded-md border border-[#2f3185] bg-gray-50 shadow-sm focus:ring-[#2f3185] focus:border-[#2f3185] sm:text-sm py-3 px-4"
+              style={{ height: '2.6rem' }} // Increase height by 40%
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="password" className="block text-sm font-bold text-gray-700">
               Password
             </label>
             <input
@@ -67,13 +68,14 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
-              className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:ring-[#2f3185] focus:border-[#2f3185] sm:text-sm"
+              className="mt-2 block w-full rounded-md border border-[#2f3185] bg-gray-50 shadow-sm focus:ring-[#2f3185] focus:border-[#2f3185] sm:text-sm py-3 px-4"
+              style={{ height: '2.6rem' }} // Increase height by 40%
             />
           </div>
 
           <div className="flex items-center justify-between">
             <div className="text-sm">
-              <a href="#" className="font-medium text-[#2c4888] hover:text-[#2f3185]">
+              <a href="#" className="font-medium text-[#2f3185] hover:text-[#1f2058]">
                 Forgot your password?
               </a>
             </div>
