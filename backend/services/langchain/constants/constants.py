@@ -11,6 +11,12 @@ OPENAI_KEY = os.getenv("OPENAI_KEY")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 PINECONE_ENVIRONMENT = os.getenv("PINECONE_ENVIRONMENT")
 PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX_NAME")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+llm = ChatGroq(
+    model="llama3-8b-8192",
+    api_key=GROQ_API_KEY
+)
 
 
 def getModels():

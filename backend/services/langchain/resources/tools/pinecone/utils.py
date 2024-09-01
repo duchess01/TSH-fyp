@@ -1,4 +1,6 @@
 import os
+import numpy as np
+
 
 from dotenv import load_dotenv
 from pinecone import Pinecone, ServerlessSpec
@@ -26,5 +28,6 @@ async def initialize_pinecone_index(pinecone_index_name):
     return index
 
 
-async def encode_string(query):
-    return model.encode(query)
+def encode_string(query):
+    query_vector = model.encode(query)
+    return query_vector.tolist()

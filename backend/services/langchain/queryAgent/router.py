@@ -1,7 +1,8 @@
+import inspect
 from fastapi import APIRouter
 
 from backend.services.langchain.queryAgent.interface import Query, QueryResponseModel
-
+from backend.services.langchain.utils.agent.agent_utils import initialize_agent_executor
 prefix = "/queryAgent"
 
 query_router = APIRouter(
@@ -18,12 +19,22 @@ query_router = APIRouter(
 async def get_response(query: Query):
     try:
         user_query = query.query
+        agent_executor = await initialize_agent_executor()
+        # agent_response = await agent_executor.run(user_query)
+
+        agent_response = agent_executor.run(user_query)
+
+        # Check if the result is awaitable
+        if inspect.isawaitable(agent_response):
+            agent_response = await agent_response
+
+        print(agent_response)
 
         response = QueryResponseModel(
             status_code=201,
             topic="test",
             user_query=user_query,
-            agent_response="test",
+            agent_response=agent_response,
             message="success",
             data=None
         )
