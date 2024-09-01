@@ -1,6 +1,7 @@
 import os
 from langchain_openai import ChatOpenAI
 from langchain_groq import ChatGroq
+from langchain_fireworks import ChatFireworks
 from langchain_core.language_models.chat_models import BaseChatModel
 from typing import Optional
 
@@ -26,6 +27,15 @@ def getModels() :
                 temperature=0,
             ),
             "description": "GROQ Llama 3 8B",
+        }
+        
+    if "FIREWORKS_API_KEY" in os.environ:
+        models["fireworks"] = {
+        "chat_model": ChatFireworks(
+            model="accounts/fireworks/models/firefunction-v1",
+            temperature=0,
+        ),
+        "description": "Fireworks Firefunction-v1",
         }
         
     return models

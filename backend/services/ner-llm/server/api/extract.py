@@ -95,9 +95,22 @@ async def extractKeywords(
         print(extractor, 'this is a extracotr')
         keywordResponse = await extractUsingExtractor(text, extractor, model_name)
         
-        print(keywordResponse)
+        keywordArrays = [res.data for res in keywordResponse]
+        print(keywordArrays, 'keyword arrays')
         
-        return GenericResponse(message="success", data=ExtractKeywordsReturn(keywords=['test']))
+        # returnObject = {}
+        # for chunki, chunk in enumerate(keywordArrays):
+            
+        #     chunkArray = []
+        #     for resi, res in enumerate(chunk):
+                
+            
+            
+        
+        
+        
+        
+        return GenericResponse(message="success", data=keywordArrays)
             
         
     except SQLAlchemyError as e: 

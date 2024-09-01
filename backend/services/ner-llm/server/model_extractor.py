@@ -168,8 +168,7 @@ async def extractUsingExtractor(text : str, extractor : Extractor, model_name : 
     
     extractRes : Sequence[ExtractResponse] = [
         ExtractResponse(
-            data = response.data,
-            content_too_long = response.content_too_long
+            data = response['data']
         )
         for response in extractResponse
     ]
