@@ -26,6 +26,7 @@ export default function CategoryBarChart({}) {
           },
         ],
       };
+      console.log("this is data,", data);
       let options = {
         responsive: true,
         plugins: {

@@ -1,32 +1,30 @@
-// import axios from "axios";
+import axios from "axios";
 
-const BASE_URL = "http://localhost:8080";
+const ANALYTICS_BASE_URL = "http://localhost:3002";
 
 export async function getDataAPI() {
   try {
-    //     const config = {
-    //       headers: {
-    //         Authorization: `Bearer ${token}`,
-    //         "Content-Type": "application/json",
-    //       },
-    //     };
-    //     const response = await axios.post(
-    //       BASE_URL + "/portfolio/createPortfolio/" + userId,
-    //       requestBody,
-    //       config
-    //     );
-    //     return response;
-    return {
-      status: 200,
-      data: {
-        Maintenance: 10,
-        "Error Code": 20,
-        Settings: 30,
-        Others: 40,
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
       },
     };
+    const response = await axios.get(
+      ANALYTICS_BASE_URL + "/api/v1/dashboard/topic",
+      config
+    );
+    return response;
+    // return {
+    //   status: 200,
+    //   data: {
+    //     Maintenance: 10,
+    //     "Error Code": 20,
+    //     Settings: 30,
+    //     Others: 40,
+    //   },
+    // };
   } catch (error) {
-    console.log("Error in createPortfolio API: ", error);
+    console.log("Error in get topic frequency API: ", error);
     return {
       status: error.response.status,
       data: error.response.data.message,

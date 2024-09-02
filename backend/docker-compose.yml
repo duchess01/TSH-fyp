@@ -49,6 +49,9 @@ services:
     networks:
       - my-network
 
+  #################################
+  # ner microservice
+  #################################
   ner-llm:
     build:
       context: ./services/ner-llm
@@ -59,15 +62,29 @@ services:
     environment:
       - PG_HOST=db_ner_llm
       - CORS_ORIGINS=http://localhost:3000
-
     ports:
       - "8000:8000"
-
     depends_on:
       - db_ner_llm
-
     volumes:
       - ./services/ner-llm:/usr/src/app/ner-llm
+
+  #################################
+  # Analytics microservice
+  #################################
+  analytics:
+    build:
+      context: ./services/analytics
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
+    restart: always
+    environment:
+      - DOCKER_ENV=true
+    depends_on:
+      - chat
+    networks:
+      - my-network
 
   #################################
   # PostgreSQL for User microservice
@@ -105,6 +122,9 @@ services:
       - db_chat_data:/var/lib/postgresql/data
     restart: always
 
+  #################################
+  # PostgreSQL for ner microservice
+  #################################
   db_ner_llm:
     image: postgres:16
 

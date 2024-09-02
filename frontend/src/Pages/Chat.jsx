@@ -158,7 +158,7 @@ function Chat() {
         <section className={`sidebar ${isShowSidebar ? "open" : ""}`}>
           <div className="sidebar-header" onClick={createNewChat} role="button">
             <BiPlus size={20} />
-            <button>New Question</button>
+            <button class="border-none bg-transparent cursor-pointer">New Question</button>
           </div>
           <div className="sidebar-history">
             {uniqueTitles.length > 0 && previousChats.length !== 0 && (
