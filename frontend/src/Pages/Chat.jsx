@@ -7,6 +7,7 @@ import {
 } from "react";
 import { BiPlus, BiUser, BiSend, BiSolidUserCircle } from "react-icons/bi";
 import { MdOutlineArrowLeft, MdOutlineArrowRight } from "react-icons/md";
+import { sendMessageAPI } from "../api/chat";
 
 function Chat() {
   const [text, setText] = useState("");
@@ -37,45 +38,27 @@ function Chat() {
 
   const submitHandler = async (e) => {
     e.preventDefault();
-    return setErrorText("The TSH intelligent Chatbot is currently down, please try again later.");
+    // return setErrorText(
+    //   "The TSH intelligent Chatbot is currently down, please try again later."
+    // );
     if (!text) return;
 
     setIsResponseLoading(true);
     setErrorText("");
 
-    const options = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: import.meta.env.VITE_AUTH_TOKEN,
-      },
-      body: JSON.stringify({
-        message: text,
-      }),
-    };
-
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/completions`,
-        options
-      );
-
-      if (response.status === 429) {
-        return setErrorText("Too many requests, please try again later.");
-      }
-
-      const data = await response.json();
-
-      if (data.error) {
-        setErrorText(data.error.message);
+      // TODO: to pass in the correct chatSessionId and userId
+      const response = await sendMessageAPI("1", "1", text);
+      if (response.status != 201) {
+        setErrorText(response.data.message);
         setText("");
       } else {
-        setErrorText(false);
-      }
-
-      if (!data.error) {
         setErrorText("");
-        setMessage(data.choices[0].message);
+        const data = response.data;
+        setMessage({
+          role: "bot",
+          content: data.response,
+        });
         setTimeout(() => {
           scrollToLastItem.current?.lastElementChild?.scrollIntoView({
             behavior: "smooth",
@@ -106,14 +89,18 @@ function Chat() {
     };
   }, []);
 
+  // get previous chats from local storage
   useEffect(() => {
     const storedChats = localStorage.getItem("previousChats");
 
     if (storedChats) {
       setLocalChats(JSON.parse(storedChats));
     }
+
+    // TODO: if localChats is empty, fetch from the backend
   }, []);
 
+  // update local storage with new chats
   useEffect(() => {
     if (!currentTitle && text && message) {
       setCurrentTitle(text);
@@ -154,11 +141,21 @@ function Chat() {
 
   return (
     <>
-      <div className="container chat" style={{ color: "#ececf1" }}>
+      <div
+        className="min-w-full chat h-screen"
+        style={{
+          color: "#ececf1",
+          display: "grid",
+          gridTemplateColumns: "0fr 1fr",
+          backgroundColor: "#343541",
+        }}
+      >
         <section className={`sidebar ${isShowSidebar ? "open" : ""}`}>
           <div className="sidebar-header" onClick={createNewChat} role="button">
             <BiPlus size={20} />
-            <button class="border-none bg-transparent cursor-pointer">New Question</button>
+            <button class="border-none bg-transparent cursor-pointer">
+              New Question
+            </button>
           </div>
           <div className="sidebar-history">
             {uniqueTitles.length > 0 && previousChats.length !== 0 && (
