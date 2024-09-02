@@ -11,7 +11,7 @@ from backend.services.langchain.constants.constants import ALL_MODELS
 
 load_dotenv()
 pinecone_index_name = os.getenv("PINECONE_INDEX_NAME")
-llm = ALL_MODELS["groq-llama3-8b-8192"]["chat_model"]
+llm = ALL_MODELS["gpt-4o-mini"]["chat_model"]
 
 
 class PineconeQueryTool:

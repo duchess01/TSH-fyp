@@ -6,7 +6,7 @@ import os
 
 BASE_URL_PREFIX = "/langchain"
 
-OPENAI_KEY = os.getenv("OPENAI_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 PINECONE_ENVIRONMENT = os.getenv("PINECONE_ENVIRONMENT")
@@ -22,10 +22,9 @@ llm = ChatGroq(
 def getModels():
     models = {}
     if "OPENAI_API_KEY" in os.environ:
-        models['gpt-3.5-turbo'] = {
+        models['gpt-4o-mini'] = {
             "chat_model": ChatOpenAI(
-                openai_api_key=os.environ.get("OPENAI_API_KEY"),
-                model_name="gpt-3.5-turbo",
+                model_name="gpt-4o-mini",
                 temperature=0
             )
         }

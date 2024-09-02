@@ -61,7 +61,7 @@ async def extractWithExtractor(match: findMatches
     # knowledge = PineconeVectorStore.from_existing_index(
     #     index_name = os.environ.get("PINECONE_INDEX_NAME"),
     #     namespace = match.name_space,
-    #     embedding = OpenAIEmbeddings(openai_api_key = os.environ.get("OPENAI_API_KEY"))
+    #     embedding = OpenAIEmbeddings(OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY"))
     # )
 
     # # extract knowledge from pineconeDB

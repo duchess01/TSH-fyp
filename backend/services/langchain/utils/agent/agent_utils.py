@@ -82,17 +82,8 @@ class CustomZeroShotAgent(ZeroShotAgent):
         return CustomMRKLOutputParser()
 
 
-groq_key = os.getenv("GROQ_API_KEY")
-
-llm = ChatGroq(
-    model="llama3-8b-8192",
-    api_key=groq_key
-)
-
-llm = ALL_MODELS["groq-llama3-8b-8192"]["chat_model"]
-
-
 async def initialize_agent_executor():
+    llm = ALL_MODELS["gpt-4o-mini"]["chat_model"]
     pinecool_tool = await setup_pinecone_tool()
     tools = [pinecool_tool]
     print(tools)
