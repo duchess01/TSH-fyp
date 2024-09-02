@@ -38,16 +38,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
 
-      - name: Build and push Docker images
-        run: docker-compose build
+      - name: Build Docker images
+        working-directory: backend
+        run: docker-compose -f docker-compose.yml build
 
       - name: Run Docker Compose
-        run: docker-compose up -d
+        working-directory: backend
+        run: docker-compose -f docker-compose.yml up -d
 
       - name: Run tests
-        run: |
-          docker-compose exec -T ner-llm npm test
+        working-directory: backend
+        run: docker-compose -f docker-compose.test.yml run --rm ner-llm npm test
 
       - name: Stop and remove containers
         if: always()
-        run: docker-compose down
+        working-directory: backend
+        run: docker-compose -f docker-compose.yml down
