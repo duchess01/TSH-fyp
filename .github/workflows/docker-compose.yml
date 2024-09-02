@@ -18,7 +18,7 @@ jobs:
         image: docker:20.10
         options: --privileged
         ports:
-          - 5432:5432 # PostgreSQL default port
+          - 5435:5432 # PostgreSQL port mapped in docker-compose.test.yml
         env:
           DOCKER_BUILDKIT: 1
 
@@ -45,18 +45,14 @@ jobs:
           docker-compose --version
 
       - name: Build Docker images
-        working-directory: backend
-        run: docker-compose -f docker-compose.yml build
+        run: docker-compose -f docker-compose.test.yml build
 
       - name: Run Docker Compose
-        working-directory: backend
-        run: docker-compose -f docker-compose.yml up -d
+        run: docker-compose -f docker-compose.test.yml up -d
 
       - name: Run tests
-        working-directory: backend
-        run: docker-compose -f docker-compose.test.yml run --rm ner-llm npm test
+        run: docker-compose -f docker-compose.test.yml run --rm ner-llm-test npm test
 
       - name: Stop and remove containers
         if: always()
-        working-directory: backend
-        run: docker-compose -f docker-compose.yml down
+        run: docker-compose -f docker-compose.test.yml down
