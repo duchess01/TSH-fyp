@@ -20,7 +20,6 @@ async def get_response(query: Query):
     try:
         user_query = query.query
         agent_executor = await initialize_agent_executor()
-        # agent_response = await agent_executor.run(user_query)
 
         agent_response = agent_executor.run(user_query)
 

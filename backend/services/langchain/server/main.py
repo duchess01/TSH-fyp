@@ -1,3 +1,4 @@
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -6,7 +7,6 @@ from dotenv import load_dotenv
 from os.path import join, dirname
 from starlette.middleware import Middleware
 
-# from backend.services.langchain.server.api import pinecone
 from backend.services.langchain.models.base import BaseResponseModel
 from backend.services.langchain.queryAgent.router import query_router
 from backend.services.langchain.constants.constants import BASE_URL_PREFIX
@@ -24,7 +24,6 @@ middleware = [
 
 app = FastAPI(title="Langchain Microservice", middleware=middleware)
 
-# app.include_router(pinecone.router)
 app.include_router(query_router, prefix=BASE_URL_PREFIX)
 
 
@@ -35,7 +34,6 @@ def ready():
 
 
 if __name__ == "__main__":
-    import uvicorn
 
     uvicorn.run("backend.services.langchain.server.main:app",
                 host="localhost", port=8001, reload=True)
