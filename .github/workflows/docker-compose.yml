@@ -50,10 +50,14 @@ jobs:
 
       - name: Run Docker Compose
         working-directory: backend
+        env:
+          DUCHESS_API_KEY: ${{ secrets.DUCHESS_API_KEY }}
         run: docker-compose -f docker-compose.test.yml up -d
 
       - name: Run tests
         working-directory: backend
+        env:
+          DUCHESS_API_KEY: ${{ secrets.DUCHESS_API_KEY }}
         run: docker-compose -f docker-compose.test.yml run --rm ner-llm-test npm test
 
       - name: Stop and remove containers
