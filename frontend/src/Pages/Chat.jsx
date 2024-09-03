@@ -8,12 +8,14 @@ import {
 import { BiPlus, BiUser, BiSend, BiSolidUserCircle } from "react-icons/bi";
 import { MdOutlineArrowLeft, MdOutlineArrowRight } from "react-icons/md";
 import { sendMessageAPI } from "../api/chat";
+import { getAllChatHistoryAPI } from "../api/chat";
 
 function Chat() {
   const [text, setText] = useState("");
   const [message, setMessage] = useState(null);
   const [previousChats, setPreviousChats] = useState([]);
-  const [localChats, setLocalChats] = useState([]);
+  const [previousTitles, setPreviousTitles] = useState([]);
+  const [currentChat, setCurrentChat] = useState([]);
   const [currentTitle, setCurrentTitle] = useState(null);
   const [isResponseLoading, setIsResponseLoading] = useState(false);
   const [errorText, setErrorText] = useState("");
@@ -27,9 +29,15 @@ function Chat() {
   };
 
   const backToHistoryPrompt = (uniqueTitle) => {
+    setCurrentChat(previousChats.filter((chat) => chat.title === uniqueTitle));
     setCurrentTitle(uniqueTitle);
     setMessage(null);
     setText("");
+    setTimeout(() => {
+      scrollToLastItem.current?.lastElementChild?.scrollIntoView({
+        behavior: "smooth",
+      });
+    }, 1);
   };
 
   const toggleSidebar = useCallback(() => {
@@ -55,10 +63,14 @@ function Chat() {
       } else {
         setErrorText("");
         const data = response.data;
-        setMessage({
-          role: "bot",
-          content: data.response,
-        });
+        setPreviousChats((prev) => [...prev, data]);
+        setCurrentChat((prev) => [
+          ...prev,
+          {
+            message: text,
+            response: data.response,
+          },
+        ]);
         setTimeout(() => {
           scrollToLastItem.current?.lastElementChild?.scrollIntoView({
             behavior: "smooth",
@@ -89,55 +101,36 @@ function Chat() {
     };
   }, []);
 
-  // get previous chats from local storage
   useEffect(() => {
-    const storedChats = localStorage.getItem("previousChats");
+    // fetching user from redux store
+    const user = "1";
 
-    if (storedChats) {
-      setLocalChats(JSON.parse(storedChats));
-    }
+    // fetching previous chats
+    const fetchChats = async () => {
+      try {
+        const response = await getAllChatHistoryAPI(user);
+        console.log("this is response from chat", response);
+        if (response.status === 200) {
+          setPreviousChats(response.data);
 
-    // TODO: if localChats is empty, fetch from the backend
+          const uniqueTitles = response.data.reduce((acc, curr) => {
+            const exists = acc.find((item) => item.title === curr.title);
+            if (!exists) {
+              acc.push({
+                title: curr.title,
+                chat_session_id: curr.chat_session_id,
+              });
+            }
+            return acc;
+          }, []);
+          setPreviousTitles(uniqueTitles);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchChats();
   }, []);
-
-  // update local storage with new chats
-  useEffect(() => {
-    if (!currentTitle && text && message) {
-      setCurrentTitle(text);
-    }
-
-    if (currentTitle && text && message) {
-      const newChat = {
-        title: currentTitle,
-        role: "user",
-        content: text,
-      };
-
-      const responseMessage = {
-        title: currentTitle,
-        role: message.role,
-        content: message.content,
-      };
-
-      setPreviousChats((prevChats) => [...prevChats, newChat, responseMessage]);
-      setLocalChats((prevChats) => [...prevChats, newChat, responseMessage]);
-
-      const updatedChats = [...localChats, newChat, responseMessage];
-      localStorage.setItem("previousChats", JSON.stringify(updatedChats));
-    }
-  }, [message, currentTitle]);
-
-  const currentChat = (localChats || previousChats).filter(
-    (prevChat) => prevChat.title === currentTitle
-  );
-
-  const uniqueTitles = Array.from(
-    new Set(previousChats.map((prevChat) => prevChat.title).reverse())
-  );
-
-  const localUniqueTitles = Array.from(
-    new Set(localChats.map((prevChat) => prevChat.title).reverse())
-  ).filter((title) => !uniqueTitles.includes(title));
 
   return (
     <>
@@ -158,36 +151,11 @@ function Chat() {
             </button>
           </div>
           <div className="sidebar-history">
-            {uniqueTitles.length > 0 && previousChats.length !== 0 && (
-              <>
-                <p>Ongoing</p>
-                <ul>
-                  {uniqueTitles?.map((uniqueTitle, idx) => {
-                    const listItems = document.querySelectorAll("li");
-
-                    listItems.forEach((item) => {
-                      if (item.scrollWidth > item.clientWidth) {
-                        item.classList.add("li-overflow-shadow");
-                      }
-                    });
-
-                    return (
-                      <li
-                        key={idx}
-                        onClick={() => backToHistoryPrompt(uniqueTitle)}
-                      >
-                        {uniqueTitle}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </>
-            )}
-            {localUniqueTitles.length > 0 && localChats.length !== 0 && (
+            {previousTitles.length !== 0 && (
               <>
                 <p>Previous</p>
                 <ul>
-                  {localUniqueTitles?.map((uniqueTitle, idx) => {
+                  {previousTitles?.map((ele, idx) => {
                     const listItems = document.querySelectorAll("li");
 
                     listItems.forEach((item) => {
@@ -199,9 +167,9 @@ function Chat() {
                     return (
                       <li
                         key={idx}
-                        onClick={() => backToHistoryPrompt(uniqueTitle)}
+                        onClick={() => backToHistoryPrompt(ele.title)}
                       >
-                        {uniqueTitle}
+                        {ele.title}
                       </li>
                     );
                   })}
@@ -251,29 +219,27 @@ function Chat() {
           <div className="main-header">
             <ul>
               {currentChat?.map((chatMsg, idx) => {
-                const isUser = chatMsg.role === "user";
-
                 return (
-                  <li key={idx} ref={scrollToLastItem}>
-                    {isUser ? (
+                  <div key={idx} ref={scrollToLastItem}>
+                    <li>
                       <div>
-                        <BiSolidUserCircle size={28.8} />
+                        <div className="flex mb-1">
+                          <BiSolidUserCircle size={28.8} />
+                          <span className="role-title pl-2">You</span>
+                        </div>
+                        <p>{chatMsg.message}</p>
                       </div>
-                    ) : (
-                      <img src="images/tsh-logo.PNG" alt="ChatGPT" />
-                    )}
-                    {isUser ? (
+                    </li>
+                    <li>
                       <div>
-                        <p className="role-title">You</p>
-                        <p>{chatMsg.content}</p>
+                        <div className="flex mb-1">
+                          <img src="images/tsh-logo.PNG" alt="ChatGPT" />
+                          <span className="role-title pl-2">ChatGPT</span>
+                        </div>
+                        <p>{chatMsg.response}</p>
                       </div>
-                    ) : (
-                      <div>
-                        <p className="role-title">ChatGPT</p>
-                        <p>{chatMsg.content}</p>
-                      </div>
-                    )}
-                  </li>
+                    </li>
+                  </div>
                 );
               })}
             </ul>

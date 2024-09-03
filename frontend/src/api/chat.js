@@ -29,3 +29,18 @@ export async function sendMessageAPI(chatSessionId, userId, message) {
     };
   }
 }
+
+export async function getAllChatHistoryAPI(userId) {
+  try {
+    const response = await axios.get(
+      CHAT_BASE_URL + `/api/v1/chat/allHistory?userId=${userId}`
+    );
+    return response;
+  } catch (error) {
+    console.log("Error in getting chat history from backend: ", error);
+    return {
+      status: error.response ? error.response.status : 500,
+      data: error.response ? error.response.data.message : "Server Error",
+    };
+  }
+}

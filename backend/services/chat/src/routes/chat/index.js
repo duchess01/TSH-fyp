@@ -25,7 +25,25 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// getting last 3 chat messages
+// getting all chat history of a user
+router.get("/allHistory", async (req, res) => {
+  try {
+    const { userId } = req.query;
+    const { rows } = await db.query("SELECT * FROM chat WHERE user_id = $1", [
+      userId,
+    ]);
+    if (rows.length === 0) {
+      res.status(404).json({ message: "No chat history found" });
+    } else {
+      res.status(200).json(rows);
+    }
+  } catch (error) {
+    console.log("this iss error", error);
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// getting last 3 chat messages in a chat session
 router.get("/history", async (req, res) => {
   try {
     const { userId, chatSessionId } = req.query;
