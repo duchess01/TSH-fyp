@@ -8,8 +8,8 @@ from langchain_anthropic import ChatAnthropic
 from langchain_core.language_models.chat_models import BaseChatModel
 from typing import Optional
 
-
-def getModels():
+def getModels () :
+    # https://python.langchain.com/v0.1/docs/modules/model_io/chat/structured_output/
 
     # get models if API key exists in ENV
     models = {}
@@ -17,6 +17,10 @@ def getModels():
         models["gpt-3.5-turbo"] = {
             "chat_model": ChatOpenAI(model="gpt-3.5-turbo", temperature=0),
             "description": "GPT-3.5 Turbo",
+        }
+        models["gpt-4o"] = {
+            "chat_model": ChatOpenAI(model="gpt-4o", temperature=0),
+            "description" : "GPT-4o"
         }
         if os.environ.get("DISABLE_GPT4", "").lower() != "true":
             models["gpt-4-0125-preview"] = {

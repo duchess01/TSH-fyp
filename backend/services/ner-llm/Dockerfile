@@ -55,6 +55,6 @@ ENTRYPOINT ["bash", "./ner-llm/scripts/entrypoint.sh"]
 
 FROM base as testing
 
-RUN pip install --no-cache-dir pytest pytest-cov
+RUN pip install --no-cache-dir pytest pytest-cov pytest-asyncio
 
 ENTRYPOINT ["bash", "./ner-llm/scripts/test_entrypoint.sh"]

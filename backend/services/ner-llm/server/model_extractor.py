@@ -1,3 +1,4 @@
+from sqlalchemy import Extract
 from server.models.extractors_model import ExtractResponse
 from langchain_text_splitters import TokenTextSplitter
 from db.models import Extractor
@@ -7,12 +8,14 @@ from jsonschema import Draft202012Validator,exceptions
 from langchain_core.utils.json_schema import dereference_refs
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import chain
-from typing import Optional
+from typing import Optional, Sequence
+from fastapi import HTTPException
 
 @chain
-async def extractionRun(req: ExtractRequest) -> ExtractResponse :
+async def extractionRun(req: ExtractRequest):
     
     schema = updateJson(req.json_schema)
+    
     model = req.model_name
     
     print(schema)
@@ -35,13 +38,22 @@ async def extractionRun(req: ExtractRequest) -> ExtractResponse :
     model = getChatModel(model)
     # runnable = 
     
+    print(prompt.pretty_print(), 'prompt')
     
-    # chain prompt to model
-    runnable = (prompt | model.with_structured_output(schema = schema).with_config(
-        {"run_name" : "extraction"}
-    ))
+    structured_llm = prompt | model.with_structured_output(schema)
     
-    return await runnable.ainvoke({
+    
+    
+    
+    
+    # # chain prompt to model
+    # runnable = (prompt | model.with_structured_output(schema = schema).with_config(
+    #     {"run_name" : "extraction"}
+    # ))
+    
+    
+    
+    return await structured_llm.ainvoke({
         "text" : req.text
     })
     
@@ -56,7 +68,11 @@ def makePromptTemplate(instructions: Optional[str]) -> ChatPromptTemplate :
         "Only extract information that is relevant to the provided text. "
         "If no information is relevant, use the schema and output "
         "an empty list where appropriate."
-    )
+        "Please provide the extracted information in the format specified by the schema."
+        "DO NOT include any information that is not relevant to the text."
+        "DO NOT include any field names (properties) in the output e.g. 'rotary axis part' where 'part' is one of the field names"
+        "Please provide the extracted information in the format specified by the schema, without additional field names or irrelevant data. "
+    )   
     
     if instructions : 
         system_message = ( "system", f"{prefix}\n\n{instructions}")
@@ -67,13 +83,7 @@ def makePromptTemplate(instructions: Optional[str]) -> ChatPromptTemplate :
     
     promptComponents = [system_message]
     
-    promptComponents.append(
-        (
-            "human",
-            "I need to extract information from "
-            "the following text: ```\n{text}\n```\n",
-        ), 
-    )
+    promptComponents.append(("human", "I need to extract information from the following text: ```\n{text}\n```\n"))
     return ChatPromptTemplate.from_messages(promptComponents)
     
     
@@ -82,9 +92,9 @@ def makePromptTemplate(instructions: Optional[str]) -> ChatPromptTemplate :
     
     
 
-def updateJson(schema : dict) -> dict :
+def updateJson(schema : dict) :
     
-    schemaHeader = {
+    schema_ = {
             "type": "object",
             "properties": {
                 "data": {
@@ -94,16 +104,19 @@ def updateJson(schema : dict) -> dict :
             },
             "required": ["data"],
         }
+    schema_["title"] = "extractor"
+    schema_["description"] = "Extract information matching the given schema."
+   
     
-    schema['title'] = "extractor"
-    schema['description'] = "Extract Information matching the given schema"
     
-    return schema
+    
+    
+    return schema_
     
     
     
 
-async def handleLength(text : str , extractor : Extractor, model_name : str) :
+async def handleLength(text : str , extractor , model_name : str) :
     json_schema = updateJson(extractor.schema)
     
     
@@ -141,19 +154,30 @@ async def handleLength(text : str , extractor : Extractor, model_name : str) :
     return extractionRequest
 
 
-async def extractUsingExtractor(text : str, extractor : Extractor, model_name : str)  :
+async def extractUsingExtractor(text : str, extractor : Extractor, model_name : str) -> Sequence[ExtractResponse] :
     
-    extractionRequests : List[ExtractRequest] = await handleLength(text, extractor ,  model_name ) 
+    extractionRequests : Sequence[ExtractRequest] = await handleLength(text, extractor ,  model_name ) 
+    
+ 
     
     
-    extractResponse : List[ExtractResponse] = await extractionRun.abatch(
+    extractResponse = await extractionRun.abatch(
         extractionRequests, {"max_concurrency" : 1}
     )
+    print(extractResponse, 'extractresponse')
+    
+    extractRes : Sequence[ExtractResponse] = [
+        ExtractResponse(
+            data = response['data']
+        )
+        for response in extractResponse
+    ]
     
     
     
     
     
-    return extractResponse
+    
+    return extractRes
     
     
