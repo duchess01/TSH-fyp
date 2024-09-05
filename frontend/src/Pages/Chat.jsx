@@ -11,6 +11,7 @@ import { sendMessageAPI } from "../api/chat";
 import { getAllChatHistoryAPI } from "../api/chat";
 
 function Chat() {
+  const [currentUser, setCurrentUser] = useState({});
   const [text, setText] = useState("");
   const [message, setMessage] = useState(null);
   const [previousChats, setPreviousChats] = useState([]);
@@ -21,15 +22,43 @@ function Chat() {
   const [errorText, setErrorText] = useState("");
   const [isShowSidebar, setIsShowSidebar] = useState(false);
   const scrollToLastItem = useRef(null);
+  const [chatSessionId, setChatSessionId] = useState(null);
+
+  const newChatSessionId = (chats) => {
+    const currHighestChatSessionId = Math.max(
+      ...chats.map((chat) => chat.chat_session_id)
+    );
+    return currHighestChatSessionId + 1;
+  };
+
+  const getUniqueTitles = (chats) => {
+    const uniqueTitles = chats.reduce((acc, curr) => {
+      const exists = acc.find((item) => item.title === curr.title);
+      if (!exists) {
+        acc.push({
+          title: curr.title,
+          chat_session_id: curr.chat_session_id,
+        });
+      }
+      return acc;
+    }, []);
+    return uniqueTitles;
+  };
 
   const createNewChat = () => {
     setMessage(null);
     setText("");
     setCurrentTitle(null);
+    setCurrentChat([]);
+    console.log("this is new chat session id", newChatSessionId(previousChats));
+    setChatSessionId(newChatSessionId(previousChats));
   };
 
   const backToHistoryPrompt = (uniqueTitle) => {
     setCurrentChat(previousChats.filter((chat) => chat.title === uniqueTitle));
+    setChatSessionId(
+      previousChats.find((chat) => chat.title === uniqueTitle).chat_session_id
+    );
     setCurrentTitle(uniqueTitle);
     setMessage(null);
     setText("");
@@ -46,9 +75,6 @@ function Chat() {
 
   const submitHandler = async (e) => {
     e.preventDefault();
-    // return setErrorText(
-    //   "The TSH intelligent Chatbot is currently down, please try again later."
-    // );
     if (!text) return;
 
     setIsResponseLoading(true);
@@ -56,10 +82,17 @@ function Chat() {
 
     try {
       // TODO: to pass in the correct chatSessionId and userId
-      const response = await sendMessageAPI("1", "1", text);
+      const response = await sendMessageAPI(
+        chatSessionId,
+        currentUser.id,
+        text
+      );
       if (response.status != 201) {
         setErrorText(response.data.message);
         setText("");
+        // return setErrorText(
+        //   "The TSH intelligent Chatbot is currently down, please try again later."
+        // );
       } else {
         setErrorText("");
         const data = response.data;
@@ -71,6 +104,8 @@ function Chat() {
             response: data.response,
           },
         ]);
+        setPreviousTitles(getUniqueTitles([...previousChats, data]));
+        setCurrentTitle(data.title);
         setTimeout(() => {
           scrollToLastItem.current?.lastElementChild?.scrollIntoView({
             behavior: "smooth",
@@ -102,27 +137,21 @@ function Chat() {
   }, []);
 
   useEffect(() => {
-    // fetching user from redux store
-    const user = "1";
+    // TODO: to fetch user from redux store
+    const user = { id: "1", role: "user" };
+    setCurrentUser(user);
 
     // fetching previous chats
     const fetchChats = async () => {
       try {
-        const response = await getAllChatHistoryAPI(user);
-        console.log("this is response from chat", response);
+        const response = await getAllChatHistoryAPI(user.id);
         if (response.status === 200) {
           setPreviousChats(response.data);
 
-          const uniqueTitles = response.data.reduce((acc, curr) => {
-            const exists = acc.find((item) => item.title === curr.title);
-            if (!exists) {
-              acc.push({
-                title: curr.title,
-                chat_session_id: curr.chat_session_id,
-              });
-            }
-            return acc;
-          }, []);
+          let newId = newChatSessionId(response.data);
+          setChatSessionId(newId);
+
+          const uniqueTitles = getUniqueTitles(response.data);
           setPreviousTitles(uniqueTitles);
         }
       } catch (e) {
@@ -153,7 +182,6 @@ function Chat() {
           <div className="sidebar-history">
             {previousTitles.length !== 0 && (
               <>
-                <p>Previous</p>
                 <ul>
                   {previousTitles?.map((ele, idx) => {
                     const listItems = document.querySelectorAll("li");
@@ -166,6 +194,7 @@ function Chat() {
 
                     return (
                       <li
+                        className={currentTitle === ele.title ? "active" : ""}
                         key={idx}
                         onClick={() => backToHistoryPrompt(ele.title)}
                       >
