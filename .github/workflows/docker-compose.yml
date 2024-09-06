@@ -18,7 +18,7 @@ jobs:
         image: docker:20.10
         options: --privileged
         ports:
-          - 5435:5432 # PostgreSQL port mapped in docker-compose.test.yml
+          - 5435:5432
         env:
           DOCKER_BUILDKIT: 1
 
@@ -44,19 +44,19 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
           docker-compose --version
 
+      - name: Create .local.env file
+        run: |
+          echo "DUCHESS_API_KEY=${{ secrets.DUCHESS_API_KEY }}" > backend/.local.env
+
       - name: Run Docker Compose
         working-directory: backend
-        env:
-          .local.env: ${{ secrets.DUCHESS_API_KEY }}
         run: docker-compose -f docker-compose.test.yml up --build -d
 
       - name: Run tests
         working-directory: backend
-        env:
-          .local.env: ${{ secrets.DUCHESS_API_KEY }}
-        run: docker-compose.test.yml run --rm ner-llm-test npm test
+        run: docker-compose -f docker-compose.test.yml run --rm ner-llm-test npm test
 
       - name: Stop and remove containers
         if: always()
         working-directory: backend
-        run: docker-compose.test.yml down
+        run: docker-compose -f docker-compose.test.yml down
