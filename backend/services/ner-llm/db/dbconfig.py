@@ -6,6 +6,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
+from fastapi import HTTPException
 
 
 # create connection URL for postgresql

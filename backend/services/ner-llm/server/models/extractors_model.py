@@ -6,8 +6,15 @@ from server.llm_models import DEFAULT_MODEL
 from langserve import CustomUserType
 from server.models.examples import extractorExampleReq1, extractorExampleRes1
 
+# generic response model
+class GenericResponse(BaseModel):
+    
+    status_code : int = Field(default = 200, description = "HTTP status code")
+    message : str = Field(..., description = "Message")
+    data : Any = Field(..., description = "Data fields")
 
 
+# /extractors
 class CreateExtractor(BaseModel) : 
     name : str = Field(default="", description="Name of the extractor e.g. BaseEntityExtractor, MachineEntityExtractor. OPTIONAL")
     description : str = Field(
@@ -46,6 +53,22 @@ class CreateExtractor(BaseModel) :
         
         return v
 
+
+    
+class ExtractorData(BaseModel):
+    uuid : UUID = Field(..., description = "UUID of the extractor")
+    extractor_data : CreateExtractor = Field(..., description = "Extractor data")
+    
+class ExtractorResponse(GenericResponse):
+    data : ExtractorData = Field(..., description = "data provided after POST request")
+    
+# /extract
+class ExtractEndpoint(BaseModel) :
+    extractor_id : str = Field(... , description = "id of the extractor", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6" )
+    text : str = Field(..., description = "a text provided by the user to be extracted", example = "Regarding the m2h12 panasonic, how is the servo able to do a anterior extortion ? ")
+    model_name : str = Field(default = DEFAULT_MODEL, description = "name of the model, possible values include :  gpt-3.5-turbo, gpt-4-0125-preview, fireworks, together-ai-mistral-8x7b-instruct-v0.1, claude-3-sonnet-20240229 , groq-llama3-8b-8192", example = "groq-llama3-8b-8192")
+    
+    
 class ExtractResponse(BaseModel):
     """Response body for the extract endpoint."""
 
@@ -55,26 +78,7 @@ class ExtractResponse(BaseModel):
     content_too_long: Optional[bool]
 
 
-class ExtractorData(BaseModel):
-    uuid : UUID = Field(..., description = "UUID of the extractor")
-    extractor_data : CreateExtractor = Field(..., description = "Extractor data")
-    
-    
-class GenericResponse(BaseModel):
-    
-    status_code : int = Field(default = 200, description = "HTTP status code")
-    message : str = Field(..., description = "Message")
-    data : Any = Field(..., description = "Data fields")
-    
-class ExtractorResponse(GenericResponse):
-    data : ExtractorData = Field(..., description = "data provided after POST request")
 
-class ExtractEndpoint(BaseModel) :
-    extractor_id : str = Field(... , description = "id of the extractor", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6" )
-    text : str = Field(..., description = "a text provided by the user to be extracted", example = "Regarding the m2h12 panasonic, how is the servo able to do a anterior extortion ? ")
-    model_name : str = Field(default = DEFAULT_MODEL, description = "name of the model, possible values include :  gpt-3.5-turbo, gpt-4-0125-preview, fireworks, together-ai-mistral-8x7b-instruct-v0.1, claude-3-sonnet-20240229 , groq-llama3-8b-8192", example = "groq-llama3-8b-8192")
-    
-    
 class ExtractRequest(CustomUserType) : 
     
     text: str = Field(..., description="text provided by user to be extracted from")
@@ -92,6 +96,23 @@ class ExtractRequest(CustomUserType) :
     model_name: Optional[str] = Field("gpt-3.5-turbo", description="Chat model to use.")
 
     @validator("json_schema")
-    def validate_schema(cls, v: Any) -> Dict[str, Any]:
+    def validate_schema(cls, v: Any):
         validate_json_schema(v)
         return v
+    
+
+
+
+# /extract/keywords
+class ExtractKeywordsEndpoint(BaseModel) :
+    text : str = Field(..., description = "a text provided by the user to be extracted", example = " This document is based on information available at the time of its publication.  While efforts have been made to be accurate, the information contained herein does not purport to cover all details or variations in hardware or software")
+    model_name : str = Field(default = DEFAULT_MODEL, description = "name of the model, possible values include :  gpt-3.5-turbo, gpt-4-0125-preview, fireworks, together-ai-mistral-8x7b-instruct-v0.1, claude-3-sonnet-20240229 , groq-llama3-8b-8192", example = "groq-llama3-8b-8192")
+
+class ExtractKeywordsReturn(BaseModel) :
+    keywords : List[str] = Field(..., description = "keywords extracted from the text", example = ["information", "publication", "efforts", "accurate", "information", "contained", "purport", "cover", "details", "variations", "hardware", "software"])
+
+
+class KeywordExtractor(BaseModel) : 
+    keyword : str = Field(..., description = "keyword to be extracted from the text, extract only NOUNS", example = "Battery, Power, Machine, CNC, Emergency stop, Work, Personnel, Safety, Maintenance, Training, Circuits, Cover, Hazard, Shock")
+    
+    
