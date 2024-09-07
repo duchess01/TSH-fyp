@@ -6,7 +6,7 @@ const Settings = () => {
 
   return (
     <div
-      className="rounded-full w-20 h-20 flex justify-center items-center bg-blue-300 cursor-pointer"
+      className="rounded-full p-3 flex justify-center items-center bg-blue-300 cursor-pointer"
       onClick={handleClick}
     >
       <IoSettingsOutline size={"25px"} />
