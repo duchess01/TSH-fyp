@@ -1,7 +1,5 @@
 import express from "express";
 import cors from "cors";
-import rateLimit from "express-rate-limit";
-import { Resend } from "resend";
 import dotenv from "dotenv";
 import router from "./src/routes/index.js";
 dotenv.config();
@@ -9,6 +7,15 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(cors());
+const corsOptions = {
+  origin: "*",
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  allowedHeaders: "Content-Type,Authorization",
+};
+
+// Use CORS middleware with options
+app.use(cors(corsOptions));
+
 const port = process.env.PORT || 3000;
 
 // Use the imported routes

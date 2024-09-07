@@ -175,7 +175,7 @@ function Chat() {
         <section className={`sidebar ${isShowSidebar ? "open" : ""}`}>
           <div className="sidebar-header" onClick={createNewChat} role="button">
             <BiPlus size={20} />
-            <button class="border-none bg-transparent cursor-pointer">
+            <button className="border-none bg-transparent cursor-pointer">
               New Question
             </button>
           </div>
