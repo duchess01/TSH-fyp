@@ -6,6 +6,7 @@ import LoginPage from "./Pages/Login";
 import DashboardPage from "./Pages/Dashboard";
 import LogoutPage from "./Pages/Logout";
 import AdduserPage from "./Pages/Adduser";
+import AdminPage from "./Pages/Admin"
 
 import "./styles/tailwind.css";
 
