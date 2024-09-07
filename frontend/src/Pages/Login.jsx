@@ -27,10 +27,9 @@ const Login = () => {
           role: response.data.role,
         })
       );
-      const user = JSON.parse(sessionStorage.getItem("user"));
-      console.log("User details: ", user);
-      // Handle successful login here (e.g., redirect to a chat)
-      navigate("/");
+      // const user = JSON.parse(sessionStorage.getItem("user"));
+      // console.log("User details: ", user);
+      navigate("/"); // Handle successful login here (e.g., redirect to a chat)
     } catch (err) {
       console.log("Error in login: ", err);
       setError("Error in logging in. Try again later");

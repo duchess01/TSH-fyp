@@ -137,8 +137,9 @@ function Chat() {
   }, []);
 
   useEffect(() => {
-    // TODO: to fetch user from redux store
-    const user = { id: "1", role: "user" };
+    const user = JSON.parse(sessionStorage.getItem("user")); // fetching user details from session storage
+    console.log("User details: ", user);
+
     setCurrentUser(user);
 
     // fetching previous chats
