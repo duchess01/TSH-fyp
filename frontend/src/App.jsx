@@ -6,6 +6,8 @@ import LoginPage from "./Pages/Login";
 import DashboardPage from "./Pages/Dashboard";
 import SignupPage from "./Pages/Signup";
 import LogoutPage from "./Pages/Logout";
+import AdduserPage from "./Pages/Adduser";
+import AdminPage from "./Pages/Admin";
 
 import "./styles/tailwind.css";
 
@@ -19,6 +21,8 @@ function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/Signup" element={<SignupPage />} />
           <Route path="/Logout" element={<LogoutPage />} />
+          <Route path="/Adduser" element={<AdduserPage />} />
+          <Route path="/Admin" element={<AdminPage />} />
           {/* <Route path="*" element={<NotFound />} /> */}
         </Routes>
       </div>
