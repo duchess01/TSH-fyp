@@ -4,7 +4,6 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Chat from "./Pages/Chat";
 import LoginPage from "./Pages/Login";
 import DashboardPage from "./Pages/Dashboard";
-import SignupPage from "./Pages/Signup";
 import LogoutPage from "./Pages/Logout";
 import AdduserPage from "./Pages/Adduser";
 
@@ -18,7 +17,6 @@ function App() {
           <Route path="/" element={<Chat />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/Signup" element={<SignupPage />} />
           <Route path="/Logout" element={<LogoutPage />} />
           <Route path="/Adduser" element={<AdduserPage />} />
           <Route path="/Admin" element={<AdminPage />} />
