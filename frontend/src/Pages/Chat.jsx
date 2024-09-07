@@ -9,8 +9,11 @@ import { BiPlus, BiUser, BiSend, BiSolidUserCircle } from "react-icons/bi";
 import { MdOutlineArrowLeft, MdOutlineArrowRight } from "react-icons/md";
 import { sendMessageAPI } from "../api/chat";
 import { getAllChatHistoryAPI } from "../api/chat";
+import { useNavigate } from "react-router-dom";
 
 function Chat() {
+  const navigate = useNavigate();
+
   const [currentUser, setCurrentUser] = useState({});
   const [text, setText] = useState("");
   const [message, setMessage] = useState(null);
@@ -23,6 +26,36 @@ function Chat() {
   const [isShowSidebar, setIsShowSidebar] = useState(false);
   const scrollToLastItem = useRef(null);
   const [chatSessionId, setChatSessionId] = useState(null);
+
+  useEffect(() => {
+    const user = JSON.parse(sessionStorage.getItem("user")); // fetching user details from session storage
+    if (user === null) {
+      // user not logged in or session expired. Redirect to login page
+      navigate("/login");
+    }
+    console.log("User details: ", user);
+
+    setCurrentUser(user);
+
+    // fetching previous chats
+    const fetchChats = async () => {
+      try {
+        const response = await getAllChatHistoryAPI(user.id);
+        if (response.status === 200) {
+          setPreviousChats(response.data);
+
+          let newId = newChatSessionId(response.data);
+          setChatSessionId(newId);
+
+          const uniqueTitles = getUniqueTitles(response.data);
+          setPreviousTitles(uniqueTitles);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchChats();
+  }, []);
 
   const newChatSessionId = (chats) => {
     const currHighestChatSessionId = Math.max(
@@ -134,32 +167,6 @@ function Chat() {
     return () => {
       window.removeEventListener("resize", handleResize);
     };
-  }, []);
-
-  useEffect(() => {
-    const user = JSON.parse(sessionStorage.getItem("user")); // fetching user details from session storage
-    console.log("User details: ", user);
-
-    setCurrentUser(user);
-
-    // fetching previous chats
-    const fetchChats = async () => {
-      try {
-        const response = await getAllChatHistoryAPI(user.id);
-        if (response.status === 200) {
-          setPreviousChats(response.data);
-
-          let newId = newChatSessionId(response.data);
-          setChatSessionId(newId);
-
-          const uniqueTitles = getUniqueTitles(response.data);
-          setPreviousTitles(uniqueTitles);
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    };
-    fetchChats();
   }, []);
 
   return (

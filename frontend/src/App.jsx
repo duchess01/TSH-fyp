@@ -5,7 +5,7 @@ import Chat from "./Pages/Chat";
 import LoginPage from "./Pages/Login";
 import DashboardPage from "./Pages/Dashboard";
 import SignupPage from "./Pages/Signup";
-
+import LogoutPage from "./Pages/Logout";
 
 import "./styles/tailwind.css";
 
@@ -18,6 +18,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/Signup" element={<SignupPage />} />
+          <Route path="/Logout" element={<LogoutPage />} />
           {/* <Route path="*" element={<NotFound />} /> */}
         </Routes>
       </div>
