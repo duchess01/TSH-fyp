@@ -19,8 +19,8 @@ router = APIRouter(
 
 
 
-@router.get("/{namespace}")
-async def getExtractorByName(namespace, session : Session = Depends(get_session)) -> GenericResponse: 
+@router.get("/{namespace}", summary = "get a keyword mapping by namespace", description="get a keyword mapping by namespace")
+async def getMappingByNamespace(namespace, session : Session = Depends(get_session)) -> GenericResponse: 
     
     try  :
         stmt = select(KeywordMapping).where(KeywordMapping.namespace == namespace.lower())
@@ -35,7 +35,7 @@ async def getExtractorByName(namespace, session : Session = Depends(get_session)
             )
         
         
-        return GenericResponse(message = "GET Extractor by name success", data = res)
+        return GenericResponse(message = "GET mapping by namespace success", data = res)
     
     except SQLAlchemyError as e :
         raise HTTPException(
