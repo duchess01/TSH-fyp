@@ -28,7 +28,7 @@ const Users = () => {
         email: 'reyna.long@example.com',
         employeeType: 'Admin',
         phone: '+65 82362929',
-        privileges: 'Admin Dashboard',
+        privileges: 'System Admin',
     },
     // Add more sample users here
   ];
@@ -37,7 +37,7 @@ const Users = () => {
   const [selectedEmployeeType, setSelectedEmployeeType] = useState('');
   const [selectedPrivileges, setSelectedPrivileges] = useState('');
 
-  const privilegesOptions = ['Questions', 'Input Answers', 'Manager Dashboard', 'Admin Dashboard'];
+  const privilegesOptions = ['Questions', 'Input Answers', 'Manager Dashboard', 'System Admin'];
   const employeeTypeOptions = ['Operator', 'Supervisor', 'Manager', 'Admin'];
 
   // Filter function
