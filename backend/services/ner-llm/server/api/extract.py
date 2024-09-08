@@ -92,17 +92,20 @@ async def extractKeywords(
             
             
         
-        print(extractor, 'this is a extracotr')
         keywordResponse = await extractUsingExtractor(text, extractor, model_name)
         
         keywordArrays = [res.data for res in keywordResponse]
-        print(keywordArrays, 'keyword arrays')
         
-        # returnObject = {}
-        # for chunki, chunk in enumerate(keywordArrays):
+        keywords = []
+        for outer_list in keywordArrays:
+            for inner_list in outer_list:
+                for item_dict in inner_list["data"]:
+                    if item_dict["keyword"].lower() not in keywords:
+                        keywords.append(item_dict["keyword"].lower())
             
-        #     chunkArray = []
-        #     for resi, res in enumerate(chunk):
+        
+        
+        
                 
             
             
@@ -110,7 +113,7 @@ async def extractKeywords(
         
         
         
-        return GenericResponse(message="success", data=keywordArrays)
+        return GenericResponse(message="success", data=ExtractKeywordsReturn(keywords=keywords))
             
         
     except SQLAlchemyError as e: 

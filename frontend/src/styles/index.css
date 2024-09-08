@@ -121,6 +121,12 @@ button {
   z-index: 1;
 }
 
+.active {
+  background-color: #343541;
+  border-radius: 0.3rem;
+  cursor: pointer;
+}
+
 .sidebar-info {
   width: 100%;
   padding-top: 1rem;

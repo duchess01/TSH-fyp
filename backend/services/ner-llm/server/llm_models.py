@@ -18,6 +18,10 @@ def getModels () :
             "chat_model": ChatOpenAI(model="gpt-3.5-turbo", temperature=0),
             "description": "GPT-3.5 Turbo",
         }
+        models["gpt-4o"] = {
+            "chat_model": ChatOpenAI(model="gpt-4o", temperature=0),
+            "description" : "GPT-4o"
+        }
         if os.environ.get("DISABLE_GPT4", "").lower() != "true":
             models["gpt-4-0125-preview"] = {
                 "chat_model": ChatOpenAI(model="gpt-4-0125-preview", temperature=0),
