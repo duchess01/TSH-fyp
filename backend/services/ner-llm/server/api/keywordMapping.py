@@ -10,7 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 router = APIRouter(
     prefix = "/keywords",
-    tags = ["Extractor Objects"],
+    tags = ["Keyword Mapping Objects [CRUD] to postgres DB"],
 )
 
 

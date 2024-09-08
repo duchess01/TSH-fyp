@@ -17,7 +17,7 @@ class KeywordMappingRequest(BaseModel):
     keywordArray: List[Dict[str, KeywordMapping]] = Field(
         ..., 
         description="Array of keyword mappings", 
-        example=[{"namespace": {"__root__": ["value1", "value2"]}}]
+        example=[{"testnamespace": ["value1", "value2"]}]
     )
 
     
