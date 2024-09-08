@@ -8,6 +8,7 @@ from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 from server.api import extractors
 from server.api import extract
+from server.api import keywordMapping
 
 from utils.exception import UnicornException
 
@@ -52,6 +53,7 @@ def ready():
 
 app.include_router(extractors.router)
 app.include_router(extract.router)
+app.include_router(keywordMapping.router)
 
 
 
