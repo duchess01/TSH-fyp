@@ -1,13 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
-from uuid import uuid4, UUID
 from server.models.extractors_model import GenericResponse
 from server.models.keywords import KeywordMappingRequest
 from db.dbconfig import get_session
 from db.models import KeywordMapping
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-from typing import List
-import json
 from sqlalchemy.exc import SQLAlchemyError
 
 
@@ -21,32 +18,7 @@ router = APIRouter(
 
 
 
-# @router.get("", summary="get all extractors")
-# def get(
-#     session : Session = Depends(get_session)
-# ) -> GenericResponse:
-    
 
-    
-#     try :
-        
-#         res = session.query(Extractor).all()
-        
-#         return GenericResponse(message="GET Extractor success", data = res)
-        
-        
-#     except SQLAlchemyError as e:
-#         # handle other exceptions
-#         raise HTTPException(
-#             status_code = 500, detail = f"Internal server error : {str(e)}"
-#         )
-            
-    
-    
-    
-
-        
-    # get keyword array by key (namespace)
 @router.get("/{namespace}")
 async def getExtractorByName(namespace, session : Session = Depends(get_session)) -> GenericResponse: 
     

@@ -1,17 +1,8 @@
-from pydantic import BaseModel, Field, validator
-from typing import Any, Dict, List, Optional
-from uuid import UUID
-from server.validators import validate_json_schema
-from server.llm_models import DEFAULT_MODEL
-from langserve import CustomUserType
-from server.models.examples import extractorExampleReq1, extractorExampleRes1
+from pydantic import BaseModel, Field
+from typing import Dict, List
 
 
-# class KeywordMapping(BaseModel):
-#     __root__ : List[str] = Field(..., description = "Keyword mapping", example = ["value1", "value2"])
-
-# class KeywordMappingRequest(BaseModel):
-#     keywordArray : List[Dict[str,KeywordMapping]]  = Field(..., description = "Array of keyword mappings", example = [{"__root__": KeywordMapping(["value1", "value2"])}])   
+ 
     
 class KeywordMapping(BaseModel):
     __root__: List[str] = Field(..., description="List of keyword values", example=["value1", "value2"])
