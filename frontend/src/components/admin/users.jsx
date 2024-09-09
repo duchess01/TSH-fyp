@@ -1,64 +1,56 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from "react";
 
 const Users = () => {
-  const usersData = [
-    {
-      name: 'John Doe',
-      email: 'john.doe@example.com',
-      employeeType: 'Operator',
-      phone: '+65 92983921',
-      privileges: 'Questions',
-    },
-    {
-      name: 'Jane Smith',
-      email: 'jane.smith@example.com',
-      employeeType: 'Manager',
-      phone: '+65 93829383',
-      privileges: 'Manager Dashboard',
-    },
-    {
-        name: 'Jaden Smith',
-        email: 'jaden.smith@example.com',
-        employeeType: 'Supervisor',
-        phone: '+65 93242421',
-        privileges: 'Input Answers',
-    },
-    {
-        name: 'Reyna Long',
-        email: 'reyna.long@example.com',
-        employeeType: 'Admin',
-        phone: '+65 82362929',
-        privileges: 'System Admin',
-    },
-    // Add more sample users here
+  const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [selectedEmployeeType, setSelectedEmployeeType] = useState("");
+  const [selectedPrivileges, setSelectedPrivileges] = useState("");
+
+  const privilegesOptions = [
+    "Ask Questions",
+    "Input Answers",
+    "Manager Dashboard",
+    "Admin Dashboard",
   ];
+  const employeeTypeOptions = ["Operator", "Supervisor", "Manager", "Admin"];
 
-  const [filteredUsers, setFilteredUsers] = useState(usersData);
-  const [selectedEmployeeType, setSelectedEmployeeType] = useState('');
-  const [selectedPrivileges, setSelectedPrivileges] = useState('');
+  // Fetch users from API
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/v1/");
+        const data = await response.json();
+        setUsers(data);
+        setFilteredUsers(data);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
 
-  const privilegesOptions = ['Questions', 'Input Answers', 'Manager Dashboard', 'System Admin'];
-  const employeeTypeOptions = ['Operator', 'Supervisor', 'Manager', 'Admin'];
+    fetchUsers();
+  }, []);
 
   // Filter function
   const filterUsers = () => {
-    let tempUsers = usersData;
+    let tempUsers = users;
 
     if (selectedEmployeeType) {
-      tempUsers = tempUsers.filter(user => user.employeeType === selectedEmployeeType);
+      tempUsers = tempUsers.filter(
+        (user) => user.employee_type === selectedEmployeeType
+      );
     }
 
     if (selectedPrivileges) {
-      tempUsers = tempUsers.filter(user => user.privileges === selectedPrivileges);
+      tempUsers = tempUsers.filter((user) => user.privileges === selectedPrivileges);
     }
 
     setFilteredUsers(tempUsers);
   };
 
   const resetFilters = () => {
-    setSelectedEmployeeType('');
-    setSelectedPrivileges('');
-    setFilteredUsers(usersData);
+    setSelectedEmployeeType("");
+    setSelectedPrivileges("");
+    setFilteredUsers(users);
   };
 
   return (
@@ -127,12 +119,24 @@ const Users = () => {
         <table className="min-w-full bg-white rounded-lg shadow overflow-hidden">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Name</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Email</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Employee Type</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Phone</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Privileges</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Action</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
+                Name
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
+                Email
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
+                Employee Type
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
+                Phone
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
+                Privileges
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
+                Action
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -140,7 +144,7 @@ const Users = () => {
               <tr key={index} className="border-t hover:bg-gray-50">
                 <td className="px-6 py-4">{user.name}</td>
                 <td className="px-6 py-4">{user.email}</td>
-                <td className="px-6 py-4">{user.employeeType}</td>
+                <td className="px-6 py-4">{user.employee_type}</td>
                 <td className="px-6 py-4">{user.phone}</td>
                 <td className="px-6 py-4">
                   <select

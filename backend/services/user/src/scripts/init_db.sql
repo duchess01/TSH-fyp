@@ -13,6 +13,7 @@ CREATE TABLE users (
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(20) DEFAULT 'user',
+    privilege VARCHAR(20) DEFAULT 'ask questions'
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -20,5 +21,6 @@ CREATE TABLE users (
 -- Insert a sample user with a hashed password
 INSERT INTO users (name, email, password, role)
 VALUES 
-('John Doe', 'john@example.com', crypt('password123', gen_salt('bf')), 'admin'),
-('Jane Smith', 'jane@example.com', crypt('securepassword', gen_salt('bf')), 'user');
+('John Doe', 'john@example.com', crypt('password123', gen_salt('bf')), 'admin', 'system admin'),
+('Jane Smith', 'jane@example.com', crypt('securepassword', gen_salt('bf')), 'user', 'questions');
+('Jaden Smith', 'jaden@example.com', crypt('securepassword34', gen_salt('bf')), 'supervisor', 'input answers');
