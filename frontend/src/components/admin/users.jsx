@@ -18,7 +18,7 @@ const Users = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/v1/");
+        const response = await fetch("http://localhost:3000/api/v1/users");
         const data = await response.json();
         setUsers(data);
         setFilteredUsers(data);

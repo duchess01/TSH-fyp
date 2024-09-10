@@ -4,7 +4,6 @@
 -- Enable the pgcrypto extension (only needs to be done once per database)
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
-
 -- Creating the tables
 -- Create the users table
 CREATE TABLE users (
@@ -13,14 +12,15 @@ CREATE TABLE users (
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(20) DEFAULT 'user',
-    privilege VARCHAR(20) DEFAULT 'ask questions'
+    privilege VARCHAR(20) DEFAULT 'ask questions',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+); 
 
 -- Inserting sample data
--- Insert a sample user with a hashed password
-INSERT INTO users (name, email, password, role)
+-- Insert sample users with hashed passwords
+INSERT INTO users (name, email, password, role, privilege)
 VALUES 
-('John Doe', 'john@example.com', crypt('password123', gen_salt('bf')), 'admin', 'system admin'),
-('Jane Smith', 'jane@example.com', crypt('securepassword', gen_salt('bf')), 'user', 'questions');
-('Jaden Smith', 'jaden@example.com', crypt('securepassword34', gen_salt('bf')), 'supervisor', 'input answers');
+('John Doe', 'john.doe@example.com', crypt('Password!123', gen_salt('bf')), 'admin', 'Admin Dashboard'),
+('Alice Johnson', 'alice.johnson@example.com', crypt('StrongPass2024!', gen_salt('bf')), 'user', 'ask questions'),
+('Michael Scott', 'michael.scott@example.com', crypt('DwightSchruteRules!', gen_salt('bf')), 'supervisor', 'input Answers'),
+('Rebecca Adams', 'rebecca.adams@example.com', crypt('SecurePass3490!', gen_salt('bf')), 'manager', 'manager dashboard');
