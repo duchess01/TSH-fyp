@@ -45,7 +45,7 @@ async def extractWithExtractor(
             raise HTTPException(status_code=404, detail="Extractor not found")
         
         
-        retrievalResponse = await extractUsingExtractor(text, extractor, model_name)
+        retrievalResponse = await extractUsingExtractor(text, extractor, model_name, request.chunk_size, request.chunking)
         
         return GenericResponse(message="success", data=retrievalResponse)
         
@@ -92,7 +92,7 @@ async def extractKeywords(
             
             
         
-        keywordResponse = await extractUsingExtractor(text, extractor, model_name)
+        keywordResponse = await extractUsingExtractor(text, extractor, model_name, chunk_size=request.chunk_size, chunking=request.chunking)
         
         keywordArrays = [res.data for res in keywordResponse]
         
