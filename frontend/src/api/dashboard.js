@@ -14,15 +14,6 @@ export async function getDataAPI() {
       config
     );
     return response;
-    // return {
-    //   status: 200,
-    //   data: {
-    //     Maintenance: 10,
-    //     "Error Code": 20,
-    //     Settings: 30,
-    //     Others: 40,
-    //   },
-    // };
   } catch (error) {
     console.log("Error in get topic frequency API: ", error);
     return {

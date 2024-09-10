@@ -1,22 +1,38 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { login, getUserDetails } from "../api/user";
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      const response = await axios.post('https://example.com/api/login', {
-        email,
-        password,
-      });
-      console.log('Login successful:', response.data);
-      // Handle successful login here (e.g., redirect to a dashboard)
+      const response = await login(email, password);
+      if (response.status != 200) {
+        throw new Error("Invalid email or password");
+      }
+      // storing token and user details in session storage
+      sessionStorage.setItem("token", response.data.token);
+      sessionStorage.setItem(
+        "user",
+        JSON.stringify({
+          id: response.data.id,
+          email: response.data.email,
+          name: response.data.name,
+          role: response.data.role,
+        })
+      );
+      // const user = JSON.parse(sessionStorage.getItem("user"));
+      // console.log("User details: ", user);
+      navigate("/"); // Handle successful login here (e.g., redirect to a chat)
     } catch (err) {
-      setError('Invalid email or password');
+      console.log("Error in login: ", err);
+      setError("Error in logging in. Try again later");
     }
   };
 
@@ -34,13 +50,14 @@ const Login = () => {
           Sign in to your account
         </h2>
         {error && (
-          <div className="mt-4 text-center text-sm text-red-600">
-            {error}
-          </div>
+          <div className="mt-4 text-center text-sm text-red-600">{error}</div>
         )}
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="email" className="block text-sm font-bold text-gray-700">
+            <label
+              htmlFor="email"
+              className="block text-sm font-bold text-gray-700"
+            >
               Email address
             </label>
             <input
@@ -52,12 +69,15 @@ const Login = () => {
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
               className="mt-2 block w-full rounded-md border border-[#2f3185] bg-gray-50 shadow-sm focus:ring-[#2f3185] focus:border-[#2f3185] sm:text-sm py-3 px-4"
-              style={{ height: '2.6rem' }} // Increase height by 40%
+              style={{ height: "2.6rem" }} // Increase height by 40%
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-bold text-gray-700">
+            <label
+              htmlFor="password"
+              className="block text-sm font-bold text-gray-700"
+            >
               Password
             </label>
             <input
@@ -69,13 +89,16 @@ const Login = () => {
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
               className="mt-2 block w-full rounded-md border border-[#2f3185] bg-gray-50 shadow-sm focus:ring-[#2f3185] focus:border-[#2f3185] sm:text-sm py-3 px-4"
-              style={{ height: '2.6rem' }} // Increase height by 40%
+              style={{ height: "2.6rem" }} // Increase height by 40%
             />
           </div>
 
           <div className="flex items-center justify-between">
             <div className="text-sm">
-              <a href="#" className="font-medium text-[#2f3185] hover:text-[#1f2058]">
+              <a
+                href="#"
+                className="font-medium text-[#2f3185] hover:text-[#1f2058]"
+              >
                 Forgot your password?
               </a>
             </div>
@@ -91,9 +114,12 @@ const Login = () => {
           </div>
         </form>
         <p className="mt-6 text-center text-sm text-gray-600">
-          Not a member?{' '}
-          <a href="#" className="font-medium text-[#2f3185] hover:text-[#1f2058]">
-            Sign up now!
+          Not a member?{" "}
+          <a
+            href="#"
+            className="font-medium text-[#2f3185] hover:text-[#1f2058]"
+          >
+            Contact Admin to Sign up!
           </a>
         </p>
       </div>
