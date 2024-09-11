@@ -19,6 +19,7 @@ router.get("/", async (req, res) => {
 
 router.get("/getUserDetails/:id", verifyToken, async (req, res) => {
   try {
+    console.log('hello')
     const { rows } = await db.query("SELECT * FROM users WHERE id = $1", [
       req.params.id,
     ]);

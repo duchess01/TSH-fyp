@@ -119,7 +119,7 @@ const Login = () => {
             href="#"
             className="font-medium text-[#2f3185] hover:text-[#1f2058]"
           >
-            Sign up now!
+            Contact Admin to Sign up!
           </a>
         </p>
       </div>
