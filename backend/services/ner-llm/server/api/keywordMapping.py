@@ -15,7 +15,23 @@ router = APIRouter(
 
 
 
-
+# get all route
+@router.get("", summary = "get all keyword mappings", description="get all keyword mappings")
+async def getAllMappings(session : Session = Depends(get_session)) -> GenericResponse:
+        
+        try:
+            stmt = select(KeywordMapping)
+            
+            result = session.execute(stmt)
+            
+            res = result.scalars().all()
+            
+            return GenericResponse(message = "GET all mappings success", data = res)
+        
+        except SQLAlchemyError as e :
+            raise HTTPException(
+                status_code = 500, detail = f"Internal server error : {str(e)}"
+            )
 
 
 

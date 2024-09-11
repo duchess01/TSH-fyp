@@ -10,6 +10,8 @@ def create():
     """Create all tables."""
     Base.metadata.create_all(ENGINE)
     click.echo("All tables created successfully.")
+    
+    
 
 
 
