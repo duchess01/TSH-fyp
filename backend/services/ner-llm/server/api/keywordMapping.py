@@ -39,7 +39,7 @@ async def getAllMappings(session : Session = Depends(get_session)) -> GenericRes
 async def getMappingByNamespace(namespace, session : Session = Depends(get_session)) -> GenericResponse: 
     
     try  :
-        stmt = select(KeywordMapping).where(KeywordMapping.namespace == namespace.lower())
+        stmt = select(KeywordMapping).where(KeywordMapping.namespace == namespace)
         
         result = session.execute(stmt)
         
