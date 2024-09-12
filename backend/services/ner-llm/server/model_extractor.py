@@ -116,16 +116,16 @@ def updateJson(schema : dict) :
     
     
 
-async def handleLength(text : str , extractor , model_name : str) :
+async def handleLength(text : str , extractor , model_name : str, chunk_size: int = 400, chunking : bool = False) -> Sequence[ExtractRequest] :
     json_schema = updateJson(extractor.schema)
     
     
     # TODO: to define chunk_size in another file
     # TODO: workflow for chunking if required
     
-    if len(text) > 400 : 
+    if (chunking and len(text) > chunk_size): 
         
-        textSplitter = TokenTextSplitter ( chunk_size = 400, chunk_overlap = 0, model_name = DEFAULT_MODEL )
+        textSplitter = TokenTextSplitter ( chunk_size = chunk_size, chunk_overlap = 0, model_name = DEFAULT_MODEL )
         
         texts = textSplitter.split_text(text)
     
@@ -154,9 +154,9 @@ async def handleLength(text : str , extractor , model_name : str) :
     return extractionRequest
 
 
-async def extractUsingExtractor(text : str, extractor : Extractor, model_name : str) -> Sequence[ExtractResponse] :
+async def extractUsingExtractor(text : str, extractor : Extractor, model_name : str, chunk_size: int, chunking : bool) -> Sequence[ExtractResponse] :
     
-    extractionRequests : Sequence[ExtractRequest] = await handleLength(text, extractor ,  model_name ) 
+    extractionRequests : Sequence[ExtractRequest] = await handleLength(text, extractor ,  model_name, chunk_size, chunking) 
     
  
     

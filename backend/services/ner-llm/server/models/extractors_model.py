@@ -1,6 +1,8 @@
 from pydantic import BaseModel, Field, validator
 from typing import Any, Dict, List, Optional
 from uuid import UUID
+
+from sqlalchemy import desc
 from server.validators import validate_json_schema
 from server.llm_models import DEFAULT_MODEL
 from langserve import CustomUserType
@@ -67,7 +69,8 @@ class ExtractEndpoint(BaseModel) :
     extractor_id : str = Field(... , description = "id of the extractor", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6" )
     text : str = Field(..., description = "a text provided by the user to be extracted", example = "Regarding the m2h12 panasonic, how is the servo able to do a anterior extortion ? ")
     model_name : str = Field(default = DEFAULT_MODEL, description = "name of the model, possible values include :  gpt-3.5-turbo, gpt-4-0125-preview, fireworks, together-ai-mistral-8x7b-instruct-v0.1, claude-3-sonnet-20240229 , groq-llama3-8b-8192", example = "groq-llama3-8b-8192")
-    
+    chunk_size : int = Field(default = 400, description = "size of the chunk", example = 400)
+    chunking : bool = Field(default = False, description = "whether to chunk the text or not", example = False)
     
 class ExtractResponse(BaseModel):
     """Response body for the extract endpoint."""
@@ -107,7 +110,9 @@ class ExtractRequest(CustomUserType) :
 class ExtractKeywordsEndpoint(BaseModel) :
     text : str = Field(..., description = "a text provided by the user to be extracted", example = " This document is based on information available at the time of its publication.  While efforts have been made to be accurate, the information contained herein does not purport to cover all details or variations in hardware or software")
     model_name : str = Field(default = DEFAULT_MODEL, description = "name of the model, possible values include :  gpt-3.5-turbo, gpt-4-0125-preview, fireworks, together-ai-mistral-8x7b-instruct-v0.1, claude-3-sonnet-20240229 , groq-llama3-8b-8192", example = "groq-llama3-8b-8192")
-
+    chunk_size : int = Field(default = 400, description = "size of the chunk", example = 400)
+    chunking : bool = Field(default = False, description = "whether to chunk the text or not", example = False)
+    
 class ExtractKeywordsReturn(BaseModel) :
     keywords : List[str] = Field(..., description = "keywords extracted from the text", example = ["information", "publication", "efforts", "accurate", "information", "contained", "purport", "cover", "details", "variations", "hardware", "software"])
 

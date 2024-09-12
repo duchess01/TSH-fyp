@@ -1,5 +1,5 @@
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy import Column, String, DateTime, Text, alias
+from sqlalchemy import Column, String, DateTime, Text, alias, ARRAY
 from sqlalchemy.exc import SQLAlchemyError
 
 import datetime
@@ -50,3 +50,9 @@ class Extractor(TimestampedModel) :
         # text to store large strings, no predefined length
         Text, nullable=False, comment = "Instructions for the extractor, or prompt for the llm"
     )
+    
+class KeywordMapping(TimestampedModel) :
+    __tablename__ = "keyword_mapping"
+    keyword_id = Column(UUID(as_uuid=True), primary_key=True, default = lambda: uuid4(), comment = "UUID of the keyword map")
+    namespace = Column(String(255), nullable=False, comment = "Namespace of the keyword")
+    keywordArray = Column(ARRAY(String(255)), nullable=False, comment = "Array of keywords that belongs to the namespace")
