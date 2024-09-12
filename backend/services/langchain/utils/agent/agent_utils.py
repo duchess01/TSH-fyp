@@ -1,6 +1,6 @@
-from backend.services.langchain.resources.tools.pinecone.pineconeTool import setup_pinecone_tool
-from backend.services.langchain.utils.agent.agent_prompt import agent_prefix, create_agent_suffix
-from backend.services.langchain.constants.constants import ALL_MODELS
+from resources.tools.pinecone.pineconeTool import setup_pinecone_tool
+from utils.agent.agent_prompt import agent_prefix, create_agent_suffix
+from constants.constants import ALL_MODELS
 
 import re
 import os

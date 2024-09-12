@@ -1,9 +1,9 @@
 import inspect
 from fastapi import APIRouter
 
-from backend.services.langchain.queryAgent.interface import Query, QueryResponseModel
-from backend.services.langchain.utils.agent.agent_utils import initialize_agent_executor
-from backend.services.langchain.services.chat.chat import ChatService
+from queryAgent.interface import Query, QueryResponseModel
+from utils.agent.agent_utils import initialize_agent_executor
+from services.chat.chat import ChatService
 prefix = "/queryAgent"
 
 query_router = APIRouter(

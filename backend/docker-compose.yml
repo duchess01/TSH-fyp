@@ -87,6 +87,21 @@ services:
       - my-network
 
   #################################
+  # The Langchain microservice
+  #################################
+  langchain:
+    build:
+      context: ./services/langchain
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - my-network
+
+  #################################
   # PostgreSQL for User microservice
   #################################
   db_user:
@@ -140,21 +155,6 @@ services:
 
     volumes:
       - db_ner:/var/lib/postgresql/data
-
-  #################################
-  # The Langchain microservice
-  #################################
-  langchain:
-    build:
-      context: .
-      dockerfile: ./services/langchain/Dockerfile
-    ports:
-      - "8001:8001"
-    restart: always
-    env_file:
-      - .env
-    networks:
-      - my-network
 
 volumes:
   db_user_data:

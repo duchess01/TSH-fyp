@@ -1,5 +1,5 @@
 import requests
-from backend.services.langchain.constants.constants import ENVIRONMENT
+from constants.constants import ENVIRONMENT
 
 
 class ChatService:

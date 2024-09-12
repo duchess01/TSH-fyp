@@ -15,4 +15,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 8001
 
 # Command to run the application using the same command as localhost development
-CMD ["python", "-m", "backend.services.langchain.server.main"]
+CMD ["python", "-m", "server.main"]

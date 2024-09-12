@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 
-from backend.services.langchain.models.base import BaseResponseModel
+from models.base import BaseResponseModel
 
 
 class Query(BaseModel):
