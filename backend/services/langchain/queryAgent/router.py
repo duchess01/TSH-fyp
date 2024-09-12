@@ -3,6 +3,7 @@ from fastapi import APIRouter
 
 from backend.services.langchain.queryAgent.interface import Query, QueryResponseModel
 from backend.services.langchain.utils.agent.agent_utils import initialize_agent_executor
+from backend.services.langchain.services.chat.chat import ChatService
 prefix = "/queryAgent"
 
 query_router = APIRouter(
@@ -19,8 +20,11 @@ query_router = APIRouter(
 async def get_response(query: Query):
     try:
         user_query = query.query
-        agent_executor = await initialize_agent_executor()
+        user_id = query.userId
+        session_id = query.chatSessionId
+        chat_history = ChatService().get_chat_history(user_id, session_id)
 
+        agent_executor = await initialize_agent_executor(chat_history)
         agent_response = agent_executor.run(user_query)
 
         # Check if the result is awaitable
@@ -31,7 +35,7 @@ async def get_response(query: Query):
 
         response = QueryResponseModel(
             status_code=201,
-            topic="test",
+            topic="test",  # TODO get topic based off a match
             user_query=user_query,
             agent_response=agent_response,
             message="success",

@@ -52,7 +52,7 @@ router.get("/history", async (req, res) => {
       [chatSessionId, userId]
     );
     if (rows.length === 0) {
-      res.status(404).json({ message: "No chat history found" });
+      res.status(200).send("");
     } else {
       res
         .status(200)

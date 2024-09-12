@@ -1,5 +1,5 @@
 from backend.services.langchain.resources.tools.pinecone.pineconeTool import setup_pinecone_tool
-from backend.services.langchain.utils.agent.agent_prompt import agent_prefix, agent_suffix
+from backend.services.langchain.utils.agent.agent_prompt import agent_prefix, create_agent_suffix
 from backend.services.langchain.constants.constants import ALL_MODELS
 
 import re
@@ -13,7 +13,6 @@ from langchain.agents.mrkl.output_parser import MRKLOutputParser
 from langchain.schema import AgentAction, AgentFinish, OutputParserException
 from langchain.chains import LLMChain
 from langchain_groq import ChatGroq
-from langchain.chains import ConversationChain
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -82,17 +81,17 @@ class CustomZeroShotAgent(ZeroShotAgent):
         return CustomMRKLOutputParser()
 
 
-async def initialize_agent_executor():
+async def initialize_agent_executor(chat_history):
     llm = ALL_MODELS["gpt-4o-mini"]["chat_model"]
     pinecool_tool = await setup_pinecone_tool()
     tools = [pinecool_tool]
-    print(tools)
 
+    agent_suffix = create_agent_suffix(chat_history)
     prompt = CustomZeroShotAgent.create_prompt(
         tools=tools,
         prefix=agent_prefix,
         suffix=agent_suffix,
-        input_variables=["input", "agent_scratchpad"]
+        input_variables=["input", "agent_scratchpad",]
     )
     print("PROMPT", prompt)
 
