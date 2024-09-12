@@ -20,8 +20,9 @@ CREATE TABLE qna (
     topic VARCHAR(255),
     title VARCHAR(255),
     solution TEXT,
+    solution_image BYTEA,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
+);
 
 -- Insert sample chat messages
 INSERT INTO chat (user_id, chat_session_id, title, message, response, topic)
