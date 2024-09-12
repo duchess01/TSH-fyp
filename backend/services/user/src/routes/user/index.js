@@ -1,7 +1,7 @@
 import express from "express";
 import { Router } from "express";
 import db from "../../db/db.js";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { verifyToken } from "../../middleware/authMiddleware.js";
 
@@ -19,7 +19,6 @@ router.get("/", async (req, res) => {
 
 router.get("/getUserDetails/:id", verifyToken, async (req, res) => {
   try {
-    console.log('hello')
     const { rows } = await db.query("SELECT * FROM users WHERE id = $1", [
       req.params.id,
     ]);
