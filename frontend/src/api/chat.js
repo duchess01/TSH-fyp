@@ -1,8 +1,9 @@
 import axios from "axios";
+import { BiLeftTopArrowCircle } from "react-icons/bi";
 
 const CHAT_BASE_URL = "http://localhost:3001";
 
-export async function sendMessageAPI(chatSessionId, userId, message) {
+export async function sendMessageAPI(chatSessionId, userId, message, machine) {
   try {
     const config = {
       headers: {
@@ -13,6 +14,7 @@ export async function sendMessageAPI(chatSessionId, userId, message) {
       chatSessionId: chatSessionId,
       userId: userId,
       message: message,
+      machine: machine,
     };
 
     const response = await axios.post(
