@@ -4,15 +4,16 @@ const Users = () => {
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [selectedRole, setSelectedRole] = useState("");
-  const [selectedPrivileges, setSelectedPrivileges] = useState("");
+  const [selectedPrivilege, setSelectedPrivilege] = useState("");
+  const [editUser, setEditUser] = useState(null);
 
-  const privilegesOptions = [
-    "ask questions",
-    "input Answers",
-    "manager dashboard",
-    "Admin Dashboard",
+  const privilegeOptions = [
+    "Ask Questions",
+    "Input Answers",
+    "Manager Dashboard",
+    "System Admin",
   ];
-  const roleOptions = ["user", "supervisor", "manager", "admin"];
+  const roleOptions = ["Operator", "Supervisor", "Manager", "Admin"];
 
   // Fetch users from API
   useEffect(() => {
@@ -38,8 +39,8 @@ const Users = () => {
       tempUsers = tempUsers.filter((user) => user.role === selectedRole);
     }
 
-    if (selectedPrivileges) {
-      tempUsers = tempUsers.filter((user) => user.privilege === selectedPrivileges);
+    if (selectedPrivilege) {
+      tempUsers = tempUsers.filter((user) => user.privilege === selectedPrivilege);
     }
 
     setFilteredUsers(tempUsers);
@@ -47,8 +48,73 @@ const Users = () => {
 
   const resetFilters = () => {
     setSelectedRole("");
-    setSelectedPrivileges("");
+    setSelectedPrivilege("");
     setFilteredUsers(users);
+  };
+
+  // Handle Edit Modal and Save Function
+  const handleEdit = (user) => {
+    setEditUser(user);
+  };
+
+  const handleSave = async () => {
+    const token = localStorage.getItem("token"); // Adjust as needed
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/v1/users/update/${editUser.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`, // Include token
+          },
+          body: JSON.stringify(editUser),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
+      }
+
+      const updatedUser = await response.json();
+      const updatedUsers = users.map((user) =>
+        user.id === updatedUser.id ? updatedUser : user
+      );
+      setUsers(updatedUsers);
+      setFilteredUsers(updatedUsers);
+      setEditUser(null); // Close modal
+    } catch (error) {
+      console.error("Error saving user:", error);
+    }
+  };
+
+  const handleDelete = async (userId) => {
+    const token = localStorage.getItem("token"); // Adjust as needed
+
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/v1/users/delete/${userId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`, // Include token
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
+      }
+
+      const updatedUsers = users.filter((user) => user.id !== userId);
+      setUsers(updatedUsers);
+      setFilteredUsers(updatedUsers);
+    } catch (error) {
+      console.error("Error deleting user:", error);
+    }
   };
 
   return (
@@ -61,7 +127,9 @@ const Users = () => {
             src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
             className="h-12 w-12"
           />
-          <h2 className="text-2xl font-bold font-sans tracking-wide">Manage Users</h2>
+          <h2 className="text-2xl font-bold font-sans tracking-wide">
+            Manage Users
+          </h2>
         </div>
         <button className="bg-purple-500 text-white py-2 px-4 rounded-lg hover:bg-purple-600">
           + Add User
@@ -84,12 +152,12 @@ const Users = () => {
         </select>
 
         <select
-          value={selectedPrivileges}
-          onChange={(e) => setSelectedPrivileges(e.target.value)}
+          value={selectedPrivilege}
+          onChange={(e) => setSelectedPrivilege(e.target.value)}
           className="border border-gray-300 rounded-md py-2 px-4 w-full lg:w-1/3"
         >
-          <option value="">Filter by Privileges</option>
-          {privilegesOptions.map((option, index) => (
+          <option value="">Filter by Privilege</option>
+          {privilegeOptions.map((option, index) => (
             <option key={index} value={option}>
               {option}
             </option>
@@ -113,53 +181,129 @@ const Users = () => {
       </div>
 
       {/* Users Table */}
-      <div className="overflow-x-auto max-h-screen">
-        <div className="min-w-full bg-white rounded-lg shadow overflow-hidden max-h-[60vh] overflow-y-auto">
-          <table className="min-w-full bg-white">
-            <thead className="bg-gray-50 sticky top-0 z-10">
-              <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-                  Email
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-                  Role
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-                  Privileges
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-                  Action
-                </th>
+      <div className="overflow-x-auto mt-6 max-h-screen">
+        <table className="min-w-full bg-white rounded-lg shadow overflow-hidden">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
+                Name
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
+                Email
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
+                Role
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
+                Privilege
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
+                Action
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredUsers.map((user, index) => (
+              <tr key={index} className="border-t hover:bg-gray-50">
+                <td className="px-6 py-4">{user.name}</td>
+                <td className="px-6 py-4">{user.email}</td>
+                <td className="px-6 py-4">{user.role}</td>
+                <td className="px-6 py-4">{user.privilege}</td>
+                <td className="px-6 py-4">
+                  <button
+                    onClick={() => handleEdit(user)}
+                    className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(user.id)}
+                    className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 ml-2"
+                  >
+                    Delete
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.map((user, index) => (
-                <tr key={index} className="border-t hover:bg-gray-50">
-                  <td className="px-6 py-4">{user.name}</td>
-                  <td className="px-6 py-4">{user.email}</td>
-                  <td className="px-6 py-4">{user.role}</td>
-                  <td className="px-6 py-4">{user.privilege}</td>
-                  <td className="px-6 py-4">
-                    <button className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600">
-                      Edit
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      {/* Pagination */}
-      <div className="flex justify-between items-center mt-4 text-gray-500 text-sm">
-        <span>1–{filteredUsers.length} of {users.length}</span>
+      {/* Edit Modal */}
+      {editUser && (
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Edit User</h2>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Name</label>
+              <input
+                type="text"
+                value={editUser.name}
+                onChange={(e) => setEditUser({ ...editUser, name: e.target.value })}
+                className="border border-gray-300 rounded-md py-2 px-4 w-full"
+                />
+              </div>
+  
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">Email</label>
+                <input
+                  type="email"
+                  value={editUser.email}
+                  onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
+                  className="border border-gray-300 rounded-md py-2 px-4 w-full"
+                />
+              </div>
+  
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">Role</label>
+                <select
+                  value={editUser.role}
+                  onChange={(e) => setEditUser({ ...editUser, role: e.target.value })}
+                  className="border border-gray-300 rounded-md py-2 px-4 w-full"
+                >
+                  {roleOptions.map((option, index) => (
+                    <option key={index} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+  
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700">Privilege</label>
+                <select
+                  value={editUser.privilege}
+                  onChange={(e) => setEditUser({ ...editUser, privilege: e.target.value })}
+                  className="border border-gray-300 rounded-md py-2 px-4 w-full"
+                >
+                  {privilegeOptions.map((option, index) => (
+                    <option key={index} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+  
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={() => setEditUser(null)}
+                  className="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
-  );
-};
-
-export default Users;
+    );
+  };
+  
+  export default Users;
+  
