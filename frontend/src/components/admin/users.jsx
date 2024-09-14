@@ -6,6 +6,13 @@ const Users = () => {
   const [selectedRole, setSelectedRole] = useState("");
   const [selectedPrivilege, setSelectedPrivilege] = useState("");
   const [editUser, setEditUser] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newUser, setNewUser] = useState({
+    name: "",
+    email: "",
+    role: "",
+    privilege: "",
+  });
 
   const privilegeOptions = [
     "Ask Questions",
@@ -40,7 +47,9 @@ const Users = () => {
     }
 
     if (selectedPrivilege) {
-      tempUsers = tempUsers.filter((user) => user.privilege === selectedPrivilege);
+      tempUsers = tempUsers.filter(
+        (user) => user.privilege === selectedPrivilege
+      );
     }
 
     setFilteredUsers(tempUsers);
@@ -58,7 +67,8 @@ const Users = () => {
   };
 
   const handleSave = async () => {
-    const token = localStorage.getItem("token"); // Adjust as needed
+    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjcsImlhdCI6MTcyNjMyNTUxNCwiZXhwIjoxNzI2MzI5MTE0fQ.-_UzGyAw2x3xUBXvRvDYUKL9Kp17uJDrQkWDe-Btj9g"
+    //const token = localStorage.getItem("token"); // Adjust as needed
     try {
       const response = await fetch(
         `http://localhost:3000/api/v1/users/update/${editUser.id}`,
@@ -66,7 +76,7 @@ const Users = () => {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`, // Include token
+            Authorization: `Bearer ${token}`, // Include token
           },
           body: JSON.stringify(editUser),
         }
@@ -74,7 +84,9 @@ const Users = () => {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
+        throw new Error(
+          `HTTP error! Status: ${response.status} - ${errorText}`
+        );
       }
 
       const updatedUser = await response.json();
@@ -99,14 +111,16 @@ const Users = () => {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`, // Include token
+            Authorization: `Bearer ${token}`, // Include token
           },
         }
       );
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
+        throw new Error(
+          `HTTP error! Status: ${response.status} - ${errorText}`
+        );
       }
 
       const updatedUsers = users.filter((user) => user.id !== userId);
@@ -114,6 +128,38 @@ const Users = () => {
       setFilteredUsers(updatedUsers);
     } catch (error) {
       console.error("Error deleting user:", error);
+    }
+  };
+
+  // Handle Add User Modal
+  const handleAddUser = async () => {
+    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjcsImlhdCI6MTcyNjMyNTUxNCwiZXhwIjoxNzI2MzI5MTE0fQ.-_UzGyAw2x3xUBXvRvDYUKL9Kp17uJDrQkWDe-Btj9g";
+    //const token = localStorage.getItem("token"); // Adjust as needed
+    try {
+      const response = await fetch("http://localhost:3000/api/v1/users/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Include token
+        },
+        body: JSON.stringify(newUser),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `HTTP error! Status: ${response.status} - ${errorText}`
+        );
+      }
+
+      const addedUser = await response.json();
+      const updatedUsers = [...users, addedUser];
+      setUsers(updatedUsers);
+      setFilteredUsers(updatedUsers);
+      setShowAddModal(false); // Close modal
+      setNewUser({ name: "", email: "", role: "", privilege: "" }); // Reset new user form
+    } catch (error) {
+      console.error("Error adding new user:", error);
     }
   };
 
@@ -131,7 +177,10 @@ const Users = () => {
             Manage Users
           </h2>
         </div>
-        <button className="bg-purple-500 text-white py-2 px-4 rounded-lg hover:bg-purple-600">
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="bg-purple-500 text-white py-2 px-4 rounded-lg hover:bg-purple-600"
+        >
           + Add User
         </button>
       </div>
@@ -218,8 +267,7 @@ const Users = () => {
                   </button>
                   <button
                     onClick={() => handleDelete(user.id)}
-                    className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 ml-2"
-                  >
+                    className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red -600 ml-2">
                     Delete
                   </button>
                 </td>
@@ -229,62 +277,59 @@ const Users = () => {
         </table>
       </div>
 
-      {/* Edit Modal */}
+      {/* Edit User Modal */}
       {editUser && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">Edit User</h2>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700">Name</label>
+        <div className="fixed z-10 inset-0 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h3 className="text-xl font-bold mb-4">Edit User</h3>
               <input
                 type="text"
                 value={editUser.name}
-                onChange={(e) => setEditUser({ ...editUser, name: e.target.value })}
-                className="border border-gray-300 rounded-md py-2 px-4 w-full"
-                />
-              </div>
-  
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Email</label>
-                <input
-                  type="email"
-                  value={editUser.email}
-                  onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
-                  className="border border-gray-300 rounded-md py-2 px-4 w-full"
-                />
-              </div>
-  
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Role</label>
-                <select
-                  value={editUser.role}
-                  onChange={(e) => setEditUser({ ...editUser, role: e.target.value })}
-                  className="border border-gray-300 rounded-md py-2 px-4 w-full"
-                >
-                  {roleOptions.map((option, index) => (
-                    <option key={index} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-  
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700">Privilege</label>
-                <select
-                  value={editUser.privilege}
-                  onChange={(e) => setEditUser({ ...editUser, privilege: e.target.value })}
-                  className="border border-gray-300 rounded-md py-2 px-4 w-full"
-                >
-                  {privilegeOptions.map((option, index) => (
-                    <option key={index} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-  
-              <div className="flex justify-end space-x-2">
+                onChange={(e) =>
+                  setEditUser({ ...editUser, name: e.target.value })
+                }
+                className="border border-gray-300 rounded-md py-2 px-4 w-full mb-4"
+                placeholder="Name"
+              />
+              <input
+                type="email"
+                value={editUser.email}
+                onChange={(e) =>
+                  setEditUser({ ...editUser, email: e.target.value })
+                }
+                className="border border-gray-300 rounded-md py-2 px-4 w-full mb-4"
+                placeholder="Email"
+              />
+              <select
+                value={editUser.role}
+                onChange={(e) =>
+                  setEditUser({ ...editUser, role: e.target.value })
+                }
+                className="border border-gray-300 rounded-md py-2 px-4 w-full mb-4"
+              >
+                <option value="">Select Role</option>
+                {roleOptions.map((option, index) => (
+                  <option key={index} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={editUser.privilege}
+                onChange={(e) =>
+                  setEditUser({ ...editUser, privilege: e.target.value })
+                }
+                className="border border-gray-300 rounded-md py-2 px-4 w-full mb-4"
+              >
+                <option value="">Select Privilege</option>
+                {privilegeOptions.map((option, index) => (
+                  <option key={index} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              <div className="flex justify-end space-x-4">
                 <button
                   onClick={() => setEditUser(null)}
                   className="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600"
@@ -300,10 +345,81 @@ const Users = () => {
               </div>
             </div>
           </div>
-        )}
-      </div>
-    );
-  };
-  
-  export default Users;
-  
+        </div>
+      )}
+
+      {/* Add User Modal */}
+      {showAddModal && (
+        <div className="fixed z-10 inset-0 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h3 className="text-xl font-bold mb-4">Add New User</h3>
+              <input
+                type="text"
+                value={newUser.name}
+                onChange={(e) =>
+                  setNewUser({ ...newUser, name: e.target.value })
+                }
+                className="border border-gray-300 rounded-md py-2 px-4 w-full mb-4"
+                placeholder="Name"
+              />
+              <input
+                type="email"
+                value={newUser.email}
+                onChange={(e) =>
+                  setNewUser({ ...newUser, email: e.target.value })
+                }
+                className="border border-gray-300 rounded-md py-2 px-4 w-full mb-4"
+                placeholder="Email"
+              />
+              <select
+                value={newUser.role}
+                onChange={(e) =>
+                  setNewUser({ ...newUser, role: e.target.value })
+                }
+                className="border border-gray-300 rounded-md py-2 px-4 w-full mb-4"
+              >
+                <option value="">Select Role</option>
+                {roleOptions.map((option, index) => (
+                  <option key={index} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={newUser.privilege}
+                onChange={(e) =>
+                  setNewUser({ ...newUser, privilege: e.target.value })
+                }
+                className="border border-gray-300 rounded-md py-2 px-4 w-full mb-4"
+              >
+                <option value="">Select Privilege</option>
+                {privilegeOptions.map((option, index) => (
+                  <option key={index} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddUser}
+                  className="bg-purple-500 text-white py-2 px-4 rounded-lg hover:bg-purple-600"
+                >
+                  Add User
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Users;

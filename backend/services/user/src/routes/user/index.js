@@ -108,4 +108,35 @@ router.delete("/delete/:id", async (req, res) => {
   }
 });
 
+//Add new user
+router.post("/add", verifyToken, async (req, res) => {
+  const { name, email, password, role, privilege } = req.body;
+
+  try {
+    // Check if user already exists by email
+    const { rows: existingUser } = await db.query(
+      "SELECT * FROM users WHERE email = $1",
+      [email]
+    );
+
+    if (existingUser.length > 0) {
+      return res.status(400).json({ error: "User already exists" });
+    }
+
+    // Hash the password before saving
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert new user into the database
+    const newUser = await db.query(
+      "INSERT INTO users (name, email, password, role, privilege) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+      [name, email, hashedPassword, role, privilege]
+    );
+
+    res.status(201).json(newUser.rows[0]);
+  } catch (err) {
+    console.error("Error adding new user", err.stack);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
 export default router;
