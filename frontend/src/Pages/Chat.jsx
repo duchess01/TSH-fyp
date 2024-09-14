@@ -26,6 +26,12 @@ function Chat() {
   const [isShowSidebar, setIsShowSidebar] = useState(false);
   const scrollToLastItem = useRef(null);
   const [chatSessionId, setChatSessionId] = useState(null);
+  const [machines, setMachines] = useState([
+    "machine x",
+    "machine y",
+    "machine z",
+  ]);
+  const [selectedMachine, setSelectedMachine] = useState(null);
 
   useEffect(() => {
     const user = JSON.parse(sessionStorage.getItem("user")); // fetching user details from session storage
@@ -79,6 +85,7 @@ function Chat() {
   };
 
   const createNewChat = () => {
+    setSelectedMachine(null);
     setMessage(null);
     setText("");
     setCurrentTitle(null);
@@ -88,7 +95,9 @@ function Chat() {
   };
 
   const backToHistoryPrompt = (uniqueTitle) => {
-    setCurrentChat(previousChats.filter((chat) => chat.title === uniqueTitle));
+    const currChat = previousChats.filter((chat) => chat.title === uniqueTitle);
+    setCurrentChat(currChat);
+    setSelectedMachine(currChat[0].machine);
     setChatSessionId(
       previousChats.find((chat) => chat.title === uniqueTitle).chat_session_id
     );
@@ -106,6 +115,12 @@ function Chat() {
     setIsShowSidebar((prev) => !prev);
   }, []);
 
+  const handleMachineSelect = (e) => {
+    setSelectedMachine(e.target.value);
+    setPreviousTitles(getUniqueTitles([...previousChats, ""]));
+    setCurrentTitle(e.target.value);
+  };
+
   const submitHandler = async (e) => {
     e.preventDefault();
     if (!text) return;
@@ -118,7 +133,8 @@ function Chat() {
       const response = await sendMessageAPI(
         chatSessionId,
         currentUser.id,
-        text
+        text,
+        selectedMachine
       );
       if (response.status != 201) {
         setErrorText(response.data.message);
@@ -236,7 +252,15 @@ function Chat() {
                 alt="ChatGPT"
               />
               <h1>TSH intelligent Chatbot</h1>
-              <h3>How can I help you today?</h3>
+              <h3>Choose a machine from the dropdown below to start</h3>
+              <select
+                className="p-1 rounded-lg text-black"
+                onChange={handleMachineSelect}
+              >
+                {machines.map((machine, idx) => {
+                  return <option key={idx}>{machine}</option>;
+                })}
+              </select>
             </div>
           )}
 
@@ -255,17 +279,33 @@ function Chat() {
           )}
           <div className="main-header">
             <ul>
+              {selectedMachine != null && (
+                <li>
+                  <div>
+                    <div className="flex mb-1">
+                      <img src="images/tsh-logo.PNG" alt="ChatGPT" />
+                      <span className="role-title pl-2">ChatGPT</span>
+                    </div>
+                    <p>
+                      Selected machine: {selectedMachine}. Please ask a
+                      question.
+                    </p>
+                  </div>
+                </li>
+              )}
               {currentChat?.map((chatMsg, idx) => {
                 return (
                   <div key={idx} ref={scrollToLastItem}>
                     <li>
-                      <div>
-                        <div className="flex mb-1">
-                          <BiSolidUserCircle size={28.8} />
-                          <span className="role-title pl-2">You</span>
+                      {chatMsg.message != "" ? (
+                        <div>
+                          <div className="flex mb-1">
+                            <BiSolidUserCircle size={28.8} />
+                            <span className="role-title pl-2">You</span>
+                          </div>
+                          <p>{chatMsg.message}</p>
                         </div>
-                        <p>{chatMsg.message}</p>
-                      </div>
+                      ) : null}
                     </li>
                     <li>
                       <div>

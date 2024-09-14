@@ -1,7 +1,7 @@
 import express from "express";
 import { Router } from "express";
 import db from "../../db/db.js";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { verifyToken } from "../../middleware/authMiddleware.js";
 
@@ -62,7 +62,6 @@ router.put("/update/:id", verifyToken, async (req, res) => {
   }
 });
 
-
 // User login
 router.post("/login", async (req, res) => {
   try {
@@ -95,9 +94,10 @@ router.post("/login", async (req, res) => {
 // Delete a user
 router.delete("/delete/:id", async (req, res) => {
   try {
-    const { rows } = await db.query("DELETE FROM users WHERE id = $1 RETURNING *", [
-      req.params.id,
-    ]);
+    const { rows } = await db.query(
+      "DELETE FROM users WHERE id = $1 RETURNING *",
+      [req.params.id]
+    );
     if (rows.length === 0) {
       return res.status(404).json({ error: "User not found" });
     }
