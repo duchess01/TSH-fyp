@@ -67,7 +67,7 @@ const Users = () => {
   };
 
   const handleSave = async () => {
-    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjcsImlhdCI6MTcyNjMyNTUxNCwiZXhwIjoxNzI2MzI5MTE0fQ.-_UzGyAw2x3xUBXvRvDYUKL9Kp17uJDrQkWDe-Btj9g"
+    const token = sessionStorage.getItem("token"); 
     //const token = localStorage.getItem("token"); // Adjust as needed
     try {
       const response = await fetch(
@@ -102,7 +102,7 @@ const Users = () => {
   };
 
   const handleDelete = async (userId) => {
-    const token = localStorage.getItem("token"); // Adjust as needed
+    const token = sessionStorage.getItem("token");   // Adjust as needed
 
     try {
       const response = await fetch(
@@ -133,7 +133,7 @@ const Users = () => {
 
   // Handle Add User Modal
   const handleAddUser = async () => {
-    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjcsImlhdCI6MTcyNjMyNTUxNCwiZXhwIjoxNzI2MzI5MTE0fQ.-_UzGyAw2x3xUBXvRvDYUKL9Kp17uJDrQkWDe-Btj9g";
+    const token = sessionStorage.getItem("token");  
     //const token = localStorage.getItem("token"); // Adjust as needed
     try {
       const response = await fetch("http://localhost:3000/api/v1/users/create", {
