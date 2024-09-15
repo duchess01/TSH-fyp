@@ -134,34 +134,41 @@ const Users = () => {
   // Handle Add User Modal
   const handleAddUser = async () => {
     const token = sessionStorage.getItem("token");  
-    //const token = localStorage.getItem("token"); // Adjust as needed
     try {
-      const response = await fetch("http://localhost:3000/api/v1/users/create", {
+      // Ensure all necessary fields (including password) are present
+      if (!newUser.name || !newUser.email || !newUser.password || !newUser.role || !newUser.privilege) {
+        alert("All fields are required.");
+        return;
+      }
+  
+      const response = await fetch("http://localhost:3000/api/v1/users/add", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Include token
+          Authorization: `Bearer ${token}`, // Include token for authorization
         },
-        body: JSON.stringify(newUser),
+        body: JSON.stringify(newUser), // Ensure password is included in the body
       });
-
+  
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(
           `HTTP error! Status: ${response.status} - ${errorText}`
         );
       }
-
+  
       const addedUser = await response.json();
       const updatedUsers = [...users, addedUser];
       setUsers(updatedUsers);
       setFilteredUsers(updatedUsers);
       setShowAddModal(false); // Close modal
-      setNewUser({ name: "", email: "", role: "", privilege: "" }); // Reset new user form
+      // Reset new user form, including password
+      setNewUser({ name: "", email: "", password: "", role: "", privilege: "" });
     } catch (error) {
       console.error("Error adding new user:", error);
     }
   };
+  
 
   return (
     <div className="w-full p-4 bg-gray-50 min-h-screen">
@@ -177,12 +184,6 @@ const Users = () => {
             Manage Users
           </h2>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="bg-purple-500 text-white py-2 px-4 rounded-lg hover:bg-purple-600"
-        >
-          + Add User
-        </button>
       </div>
 
       {/* Filters */}
@@ -226,56 +227,56 @@ const Users = () => {
           >
             Reset Filters
           </button>
+          <button
+          onClick={() => setShowAddModal(true)}
+          className="bg-purple-500 text-white py-2 px-4 rounded-lg hover:bg-purple-600"
+        >
+          + Add New User
+        </button>
         </div>
       </div>
 
       {/* Users Table */}
-      <div className="overflow-x-auto mt-6 max-h-screen">
-        <table className="min-w-full bg-white rounded-lg shadow overflow-hidden">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-                Name
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-                Email
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-                Role
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-                Privilege
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-                Action
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredUsers.map((user, index) => (
-              <tr key={index} className="border-t hover:bg-gray-50">
-                <td className="px-6 py-4">{user.name}</td>
-                <td className="px-6 py-4">{user.email}</td>
-                <td className="px-6 py-4">{user.role}</td>
-                <td className="px-6 py-4">{user.privilege}</td>
-                <td className="px-6 py-4">
-                  <button
-                    onClick={() => handleEdit(user)}
-                    className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(user.id)}
-                    className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red -600 ml-2">
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <div className="overflow-x-auto mt-6">
+      <div className="h-[calc(100vh-250px)] overflow-y-auto">
+      <table className="min-w-full bg-white rounded-lg shadow">
+      <thead className="bg-gray-50">
+        <tr>
+          <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Name</th>
+          <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Email</th>
+          <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Role</th>
+          <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Privilege</th>
+          <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {filteredUsers.map((user, index) => (
+          <tr key={index} className="border-t hover:bg-gray-50">
+            <td className="px-6 py-4">{user.name}</td>
+            <td className="px-6 py-4">{user.email}</td>
+            <td className="px-6 py-4">{user.role}</td>
+            <td className="px-6 py-4">{user.privilege}</td>
+            <td className="px-6 py-4">
+              <button
+                onClick={() => handleEdit(user)}
+                className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => handleDelete(user.id)}
+                className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 ml-2"
+              >
+                Delete
+              </button>
+            </td>
+          </tr>
+        ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 
       {/* Edit User Modal */}
       {editUser && (
@@ -371,6 +372,15 @@ const Users = () => {
                 }
                 className="border border-gray-300 rounded-md py-2 px-4 w-full mb-4"
                 placeholder="Email"
+              />
+              <input
+                type="password"
+                value={newUser.password}
+                onChange={(e) =>
+                  setNewUser({ ...newUser, password: e.target.value })
+                }
+                className="border border-gray-300 rounded-md py-2 px-4 w-full mb-4"
+                placeholder="Password"
               />
               <select
                 value={newUser.role}
