@@ -9,9 +9,7 @@ services:
   # The User microservice
   #################################
   user:
-    build:
-      context: ./services/user
-      dockerfile: Dockerfile
+    image: teamduchess/user:latest
     ports:
       - "3000:3000"
     restart: always
@@ -31,9 +29,7 @@ services:
   # The Chat microservice
   #################################
   chat:
-    build:
-      context: ./services/chat
-      dockerfile: Dockerfile
+    image: teamduchess/chat:latest
     ports:
       - "3001:3001"
     restart: always
@@ -49,33 +45,28 @@ services:
     networks:
       - my-network
 
-  #################################
-  # ner microservice
-  #################################
-  ner-llm:
-    build:
-      context: ./services/ner-llm
-      dockerfile: ./Dockerfile
-      target: development
-    env_file:
-      - .local.env
-    environment:
-      - PG_HOST=db_ner_llm
-      - CORS_ORIGINS=http://localhost:3000
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db_ner_llm
-    volumes:
-      - ./services/ner-llm:/usr/src/app/ner-llm
+  # #################################
+  # # ner microservice
+  # #################################
+  # ner-llm:
+  #   image: your-registry/ner-service:latest
+  #   env_file:
+  #     - .local.env
+  #   environment:
+  #     - PG_HOST=db_ner_llm
+  #     - CORS_ORIGINS=http://localhost:3000
+  #   ports:
+  #     - "8000:8000"
+  #   depends_on:
+  #     - db_ner_llm
+  #   volumes:
+  #     - ./services/ner-llm:/usr/src/app/ner-llm
 
   #################################
   # Analytics microservice
   #################################
   analytics:
-    build:
-      context: ./services/analytics
-      dockerfile: Dockerfile
+    image: teamduchess/analytics:latest
     ports:
       - "3002:3002"
     restart: always
@@ -137,26 +128,23 @@ services:
       - db_chat_data:/var/lib/postgresql/data
     restart: always
 
-  #################################
-  # PostgreSQL for ner microservice
-  #################################
-  db_ner_llm:
-    image: postgres:16
-
-    expose:
-      - "5432"
-    ports:
-      - "5435:5432"
-
-    environment:
-      POSTGRES_DB: langchain
-      POSTGRES_USER: langchain
-      POSTGRES_PASSWORD: langchain
-
-    volumes:
-      - db_ner:/var/lib/postgresql/data
+  # #################################
+  # # PostgreSQL for ner microservice
+  # #################################
+  # db_ner_llm:
+  #   image: postgres:16
+  #   expose:
+  #     - "5432"
+  #   ports:
+  #     - "5435:5432"
+  #   environment:
+  #     POSTGRES_DB: langchain
+  #     POSTGRES_USER: langchain
+  #     POSTGRES_PASSWORD: langchain
+  #   volumes:
+  #     - db_ner:/var/lib/postgresql/data
 
 volumes:
   db_user_data:
   db_chat_data:
-  db_ner:
+  # db_ner:
