@@ -11,6 +11,7 @@ CREATE TABLE chat (
     message TEXT NOT NULL,
     response TEXT,  -- To store the application response
     topic VARCHAR(255),  -- To store the identified topic
+    machine VARCHAR(255), 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -25,11 +26,11 @@ CREATE TABLE qna (
 );
 
 -- Insert sample chat messages
-INSERT INTO chat (user_id, chat_session_id, title, message, response, topic)
+INSERT INTO chat (user_id, chat_session_id, title, message, response, topic, machine)
 VALUES 
-(1, '1', 'why is machine x breaking down so often?', 'why is machine x breaking down so often?','', 'machine x'),
-(2, '1', 'Hi there!', 'Hi there!', NULL, NULL),
-(1, '1', 'why is machine x breaking down so often?', 'why is machine y breaking down so often?', 'replace y with z', 'machine y'),
-(1, '2', 'what is the status of machine x?', 'what is the status of machine x?', 'machine x is working fine', 'machine x'),
-(2, '1', 'Hi there!', 'what is the status of machine y?', 'machine y is broken', 'machine y'),
-(3, '1', 'what is the status of machine z?', 'what is the status of machine z?', 'machine z is working fine', 'machine z');
+(1, '1', 'why is machine x breaking down so often?', 'why is machine x breaking down so often?','', 'top1', 'machine x'),
+(2, '1', 'Hi there!', 'Hi there!', 'Hello! How can I help you today?', 'top2', 'machine y'),
+(1, '1', 'why is machine x breaking down so often?', 'why is machine y breaking down so often?', 'replace y with z', 'top2', 'machine y'),
+(1, '2', 'what is the status of machine x?', 'what is the status of machine x?', 'machine x is working fine', 'top1', 'machine x'),
+(2, '1', 'Hi there!', 'what is the status of machine y?', 'machine y is broken','top1', 'machine y'),
+(3, '1', 'what is the status of machine z?', 'what is the status of machine z?', 'machine z is working fine', 'top2' ,'machine z');

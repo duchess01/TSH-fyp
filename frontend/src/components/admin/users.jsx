@@ -4,15 +4,23 @@ const Users = () => {
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [selectedRole, setSelectedRole] = useState("");
-  const [selectedPrivileges, setSelectedPrivileges] = useState("");
+  const [selectedPrivilege, setSelectedPrivilege] = useState("");
+  const [editUser, setEditUser] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newUser, setNewUser] = useState({
+    name: "",
+    email: "",
+    role: "",
+    privilege: "",
+  });
 
-  const privilegesOptions = [
-    "ask questions",
-    "input Answers",
-    "manager dashboard",
-    "Admin Dashboard",
+  const privilegeOptions = [
+    "Ask Questions",
+    "Input Answers",
+    "Manager Dashboard",
+    "System Admin",
   ];
-  const roleOptions = ["user", "supervisor", "manager", "admin"];
+  const roleOptions = ["Operator", "Supervisor", "Manager", "Admin"];
 
   // Fetch users from API
   useEffect(() => {
@@ -38,8 +46,10 @@ const Users = () => {
       tempUsers = tempUsers.filter((user) => user.role === selectedRole);
     }
 
-    if (selectedPrivileges) {
-      tempUsers = tempUsers.filter((user) => user.privilege === selectedPrivileges);
+    if (selectedPrivilege) {
+      tempUsers = tempUsers.filter(
+        (user) => user.privilege === selectedPrivilege
+      );
     }
 
     setFilteredUsers(tempUsers);
@@ -47,8 +57,110 @@ const Users = () => {
 
   const resetFilters = () => {
     setSelectedRole("");
-    setSelectedPrivileges("");
+    setSelectedPrivilege("");
     setFilteredUsers(users);
+  };
+
+  // Handle Edit Modal and Save Function
+  const handleEdit = (user) => {
+    setEditUser(user);
+  };
+
+  const handleSave = async () => {
+    const token = sessionStorage.getItem("token"); 
+    //const token = localStorage.getItem("token"); // Adjust as needed
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/v1/users/update/${editUser.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Include token
+          },
+          body: JSON.stringify(editUser),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `HTTP error! Status: ${response.status} - ${errorText}`
+        );
+      }
+
+      const updatedUser = await response.json();
+      const updatedUsers = users.map((user) =>
+        user.id === updatedUser.id ? updatedUser : user
+      );
+      setUsers(updatedUsers);
+      setFilteredUsers(updatedUsers);
+      setEditUser(null); // Close modal
+    } catch (error) {
+      console.error("Error saving user:", error);
+    }
+  };
+
+  const handleDelete = async (userId) => {
+    const token = sessionStorage.getItem("token");   // Adjust as needed
+
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/v1/users/delete/${userId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Include token
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `HTTP error! Status: ${response.status} - ${errorText}`
+        );
+      }
+
+      const updatedUsers = users.filter((user) => user.id !== userId);
+      setUsers(updatedUsers);
+      setFilteredUsers(updatedUsers);
+    } catch (error) {
+      console.error("Error deleting user:", error);
+    }
+  };
+
+  // Handle Add User Modal
+  const handleAddUser = async () => {
+    const token = sessionStorage.getItem("token");  
+    //const token = localStorage.getItem("token"); // Adjust as needed
+    try {
+      const response = await fetch("http://localhost:3000/api/v1/users/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Include token
+        },
+        body: JSON.stringify(newUser),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `HTTP error! Status: ${response.status} - ${errorText}`
+        );
+      }
+
+      const addedUser = await response.json();
+      const updatedUsers = [...users, addedUser];
+      setUsers(updatedUsers);
+      setFilteredUsers(updatedUsers);
+      setShowAddModal(false); // Close modal
+      setNewUser({ name: "", email: "", role: "", privilege: "" }); // Reset new user form
+    } catch (error) {
+      console.error("Error adding new user:", error);
+    }
   };
 
   return (
@@ -61,9 +173,14 @@ const Users = () => {
             src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
             className="h-12 w-12"
           />
-          <h2 className="text-2xl font-bold font-sans tracking-wide">Manage Users</h2>
+          <h2 className="text-2xl font-bold font-sans tracking-wide">
+            Manage Users
+          </h2>
         </div>
-        <button className="bg-purple-500 text-white py-2 px-4 rounded-lg hover:bg-purple-600">
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="bg-purple-500 text-white py-2 px-4 rounded-lg hover:bg-purple-600"
+        >
           + Add User
         </button>
       </div>
@@ -84,12 +201,12 @@ const Users = () => {
         </select>
 
         <select
-          value={selectedPrivileges}
-          onChange={(e) => setSelectedPrivileges(e.target.value)}
+          value={selectedPrivilege}
+          onChange={(e) => setSelectedPrivilege(e.target.value)}
           className="border border-gray-300 rounded-md py-2 px-4 w-full lg:w-1/3"
         >
-          <option value="">Filter by Privileges</option>
-          {privilegesOptions.map((option, index) => (
+          <option value="">Filter by Privilege</option>
+          {privilegeOptions.map((option, index) => (
             <option key={index} value={option}>
               {option}
             </option>
@@ -113,51 +230,194 @@ const Users = () => {
       </div>
 
       {/* Users Table */}
-      <div className="overflow-x-auto max-h-screen">
-        <div className="min-w-full bg-white rounded-lg shadow overflow-hidden max-h-[60vh] overflow-y-auto">
-          <table className="min-w-full bg-white">
-            <thead className="bg-gray-50 sticky top-0 z-10">
-              <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-                  Email
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-                  Role
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-                  Privileges
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-                  Action
-                </th>
+      <div className="overflow-x-auto mt-6 max-h-screen">
+        <table className="min-w-full bg-white rounded-lg shadow overflow-hidden">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
+                Name
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
+                Email
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
+                Role
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
+                Privilege
+              </th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
+                Action
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredUsers.map((user, index) => (
+              <tr key={index} className="border-t hover:bg-gray-50">
+                <td className="px-6 py-4">{user.name}</td>
+                <td className="px-6 py-4">{user.email}</td>
+                <td className="px-6 py-4">{user.role}</td>
+                <td className="px-6 py-4">{user.privilege}</td>
+                <td className="px-6 py-4">
+                  <button
+                    onClick={() => handleEdit(user)}
+                    className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(user.id)}
+                    className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red -600 ml-2">
+                    Delete
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.map((user, index) => (
-                <tr key={index} className="border-t hover:bg-gray-50">
-                  <td className="px-6 py-4">{user.name}</td>
-                  <td className="px-6 py-4">{user.email}</td>
-                  <td className="px-6 py-4">{user.role}</td>
-                  <td className="px-6 py-4">{user.privilege}</td>
-                  <td className="px-6 py-4">
-                    <button className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600">
-                      Edit
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      {/* Pagination */}
-      <div className="flex justify-between items-center mt-4 text-gray-500 text-sm">
-        <span>1–{filteredUsers.length} of {users.length}</span>
-      </div>
+      {/* Edit User Modal */}
+      {editUser && (
+        <div className="fixed z-10 inset-0 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h3 className="text-xl font-bold mb-4">Edit User</h3>
+              <input
+                type="text"
+                value={editUser.name}
+                onChange={(e) =>
+                  setEditUser({ ...editUser, name: e.target.value })
+                }
+                className="border border-gray-300 rounded-md py-2 px-4 w-full mb-4"
+                placeholder="Name"
+              />
+              <input
+                type="email"
+                value={editUser.email}
+                onChange={(e) =>
+                  setEditUser({ ...editUser, email: e.target.value })
+                }
+                className="border border-gray-300 rounded-md py-2 px-4 w-full mb-4"
+                placeholder="Email"
+              />
+              <select
+                value={editUser.role}
+                onChange={(e) =>
+                  setEditUser({ ...editUser, role: e.target.value })
+                }
+                className="border border-gray-300 rounded-md py-2 px-4 w-full mb-4"
+              >
+                <option value="">Select Role</option>
+                {roleOptions.map((option, index) => (
+                  <option key={index} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={editUser.privilege}
+                onChange={(e) =>
+                  setEditUser({ ...editUser, privilege: e.target.value })
+                }
+                className="border border-gray-300 rounded-md py-2 px-4 w-full mb-4"
+              >
+                <option value="">Select Privilege</option>
+                {privilegeOptions.map((option, index) => (
+                  <option key={index} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => setEditUser(null)}
+                  className="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add User Modal */}
+      {showAddModal && (
+        <div className="fixed z-10 inset-0 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h3 className="text-xl font-bold mb-4">Add New User</h3>
+              <input
+                type="text"
+                value={newUser.name}
+                onChange={(e) =>
+                  setNewUser({ ...newUser, name: e.target.value })
+                }
+                className="border border-gray-300 rounded-md py-2 px-4 w-full mb-4"
+                placeholder="Name"
+              />
+              <input
+                type="email"
+                value={newUser.email}
+                onChange={(e) =>
+                  setNewUser({ ...newUser, email: e.target.value })
+                }
+                className="border border-gray-300 rounded-md py-2 px-4 w-full mb-4"
+                placeholder="Email"
+              />
+              <select
+                value={newUser.role}
+                onChange={(e) =>
+                  setNewUser({ ...newUser, role: e.target.value })
+                }
+                className="border border-gray-300 rounded-md py-2 px-4 w-full mb-4"
+              >
+                <option value="">Select Role</option>
+                {roleOptions.map((option, index) => (
+                  <option key={index} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={newUser.privilege}
+                onChange={(e) =>
+                  setNewUser({ ...newUser, privilege: e.target.value })
+                }
+                className="border border-gray-300 rounded-md py-2 px-4 w-full mb-4"
+              >
+                <option value="">Select Privilege</option>
+                {privilegeOptions.map((option, index) => (
+                  <option key={index} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddUser}
+                  className="bg-purple-500 text-white py-2 px-4 rounded-lg hover:bg-purple-600"
+                >
+                  Add User
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

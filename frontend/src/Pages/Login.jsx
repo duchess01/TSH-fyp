@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login, getUserDetails } from "../api/user";
+import tshlogo from "../Assets/tsh.png";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -41,13 +42,13 @@ const Login = () => {
       <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-lg">
         <div className="flex justify-center">
           <img
-            alt="Logo"
-            src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
-            className="h-12 w-12"
+            src={tshlogo}
+            alt="TSHlogo"
+            className="h-25 w-25"
           />
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Sign in to your account
+          Welcome back!
         </h2>
         {error && (
           <div className="mt-4 text-center text-sm text-red-600">{error}</div>

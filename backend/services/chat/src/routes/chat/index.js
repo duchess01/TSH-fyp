@@ -66,7 +66,7 @@ router.get("/history", async (req, res) => {
 // sending a message
 router.post("/", async (req, res) => {
   try {
-    const { chatSessionId, userId, message } = req.body;
+    const { chatSessionId, userId, message, machine } = req.body;
 
     // Query to see if chat session already exists in the db
     const { rows: existingChats } = await db.query(
@@ -103,8 +103,8 @@ router.post("/", async (req, res) => {
 
     // Insert the fully populated record into the database
     const insertQuery = `
-      INSERT INTO chat (chat_session_id, user_id, title, message, response, topic)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO chat (chat_session_id, user_id, title, message, response, topic, machine)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *;
     `;
     const insertValues = [
@@ -114,6 +114,7 @@ router.post("/", async (req, res) => {
       message,
       agent_response,
       topic,
+      machine,
     ];
     const { rows } = await db.query(insertQuery, insertValues);
 
