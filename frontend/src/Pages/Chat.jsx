@@ -7,9 +7,16 @@ import {
 } from "react";
 import { BiPlus, BiUser, BiSend, BiSolidUserCircle } from "react-icons/bi";
 import { MdOutlineArrowLeft, MdOutlineArrowRight } from "react-icons/md";
-import { sendMessageAPI } from "../api/chat";
+import { changeRating, sendMessageAPI } from "../api/chat";
 import { getAllChatHistoryAPI } from "../api/chat";
 import { useNavigate } from "react-router-dom";
+import {
+  FaRegThumbsDown,
+  FaRegThumbsUp,
+  FaThumbsDown,
+  FaThumbsUp,
+} from "react-icons/fa";
+import ChatModal from "../components/chat/chatModal";
 
 function Chat() {
   const navigate = useNavigate();
@@ -32,6 +39,8 @@ function Chat() {
     "machine z",
   ]);
   const [selectedMachine, setSelectedMachine] = useState(null);
+  const [thumbs, setThumbs] = useState([]);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     const user = JSON.parse(sessionStorage.getItem("user")); // fetching user details from session storage
@@ -39,7 +48,7 @@ function Chat() {
       // user not logged in or session expired. Redirect to login page
       navigate("/login");
     }
-    console.log("User details: ", user);
+    // console.log("User details: ", user);
 
     setCurrentUser(user);
 
@@ -55,6 +64,7 @@ function Chat() {
 
           const uniqueTitles = getUniqueTitles(response.data);
           setPreviousTitles(uniqueTitles);
+          console.log(response, "THIS IS ALL CHAT HISTORY");
         }
       } catch (e) {
         console.error(e);
@@ -185,8 +195,31 @@ function Chat() {
     };
   }, []);
 
+  const handleThumbsChange = (input, currentRating, msgId) => {
+    //allowed roles, to be confirmed
+    const allowedRoles = ["admin", "supervisor", "manager"];
+    const newRating = input === currentRating ? null : input;
+    const updatedChat = currentChat.map((chat) =>
+      chat.id === msgId ? { ...chat, rating: newRating } : chat
+    );
+    setCurrentChat(updatedChat);
+    changeRating(msgId, newRating);
+    if (
+      allowedRoles.includes(currentUser.role) &&
+      input === "down" &&
+      currentRating !== "down"
+    ) {
+      setIsOpen(true);
+    }
+  };
+
+  const closeModal = () => {
+    setIsOpen(false);
+  };
+
   return (
     <>
+      {isOpen === true ? <ChatModal closeModal={closeModal} /> : null}
       <div
         className="min-w-full chat h-screen"
         style={{
@@ -308,10 +341,46 @@ function Chat() {
                       ) : null}
                     </li>
                     <li>
-                      <div>
-                        <div className="flex mb-1">
-                          <img src="images/tsh-logo.PNG" alt="ChatGPT" />
-                          <span className="role-title pl-2">ChatGPT</span>
+                      <div className="w-full">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center">
+                            <img src="images/tsh-logo.PNG" alt="ChatGPT" />
+                            <span className="role-title pl-2">ChatGPT</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() =>
+                                handleThumbsChange(
+                                  "up",
+                                  chatMsg.rating,
+                                  chatMsg.id
+                                )
+                              }
+                              className="focus:outline-none"
+                            >
+                              {chatMsg.rating === "up" ? (
+                                <FaThumbsUp />
+                              ) : (
+                                <FaRegThumbsUp />
+                              )}
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleThumbsChange(
+                                  "down",
+                                  chatMsg.rating,
+                                  chatMsg.id
+                                )
+                              }
+                              className="focus:outline-none"
+                            >
+                              {chatMsg.rating === "down" ? (
+                                <FaThumbsDown />
+                              ) : (
+                                <FaRegThumbsDown />
+                              )}
+                            </button>
+                          </div>
                         </div>
                         <p>{chatMsg.response}</p>
                       </div>

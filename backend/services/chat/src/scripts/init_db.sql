@@ -12,7 +12,8 @@ CREATE TABLE chat (
     response TEXT,  -- To store the application response
     topic VARCHAR(255),  -- To store the identified topic
     machine VARCHAR(255), 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    rating VARCHAR(255)
 );
 
 CREATE TABLE qna (

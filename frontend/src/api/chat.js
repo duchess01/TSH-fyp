@@ -46,3 +46,29 @@ export async function getAllChatHistoryAPI(userId) {
     };
   }
 }
+
+export async function changeRating(msgId, rating) {
+  try {
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    const data = {
+      id: msgId,
+      rating: rating,
+    };
+    const response = await axios.post(
+      CHAT_BASE_URL + "/api/v1/chat/rating",
+      data,
+      config
+    );
+    return response;
+  } catch (error) {
+    console.log("Error in sending message to backend: ", error);
+    return {
+      status: error.response ? error.response.status : 500,
+      data: error.response ? error.response.data.message : "Server Error",
+    };
+  }
+}
