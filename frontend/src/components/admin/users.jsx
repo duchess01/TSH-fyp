@@ -134,34 +134,41 @@ const Users = () => {
   // Handle Add User Modal
   const handleAddUser = async () => {
     const token = sessionStorage.getItem("token");  
-    //const token = localStorage.getItem("token"); // Adjust as needed
     try {
-      const response = await fetch("http://localhost:3000/api/v1/users/create", {
+      // Ensure all necessary fields (including password) are present
+      if (!newUser.name || !newUser.email || !newUser.password || !newUser.role || !newUser.privilege) {
+        alert("All fields are required.");
+        return;
+      }
+  
+      const response = await fetch("http://localhost:3000/api/v1/users/add", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Include token
+          Authorization: `Bearer ${token}`, // Include token for authorization
         },
-        body: JSON.stringify(newUser),
+        body: JSON.stringify(newUser), // Ensure password is included in the body
       });
-
+  
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(
           `HTTP error! Status: ${response.status} - ${errorText}`
         );
       }
-
+  
       const addedUser = await response.json();
       const updatedUsers = [...users, addedUser];
       setUsers(updatedUsers);
       setFilteredUsers(updatedUsers);
       setShowAddModal(false); // Close modal
-      setNewUser({ name: "", email: "", role: "", privilege: "" }); // Reset new user form
+      // Reset new user form, including password
+      setNewUser({ name: "", email: "", password: "", role: "", privilege: "" });
     } catch (error) {
       console.error("Error adding new user:", error);
     }
   };
+  
 
   return (
     <div className="w-full p-4 bg-gray-50 min-h-screen">
@@ -371,6 +378,15 @@ const Users = () => {
                 }
                 className="border border-gray-300 rounded-md py-2 px-4 w-full mb-4"
                 placeholder="Email"
+              />
+              <input
+                type="password"
+                value={newUser.password}
+                onChange={(e) =>
+                  setNewUser({ ...newUser, password: e.target.value })
+                }
+                className="border border-gray-300 rounded-md py-2 px-4 w-full mb-4"
+                placeholder="Password"
               />
               <select
                 value={newUser.role}
