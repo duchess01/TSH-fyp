@@ -184,12 +184,6 @@ const Users = () => {
             Manage Users
           </h2>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="bg-purple-500 text-white py-2 px-4 rounded-lg hover:bg-purple-600"
-        >
-          + Add User
-        </button>
       </div>
 
       {/* Filters */}
@@ -233,56 +227,56 @@ const Users = () => {
           >
             Reset Filters
           </button>
+          <button
+          onClick={() => setShowAddModal(true)}
+          className="bg-purple-500 text-white py-2 px-4 rounded-lg hover:bg-purple-600"
+        >
+          + Add New User
+        </button>
         </div>
       </div>
 
       {/* Users Table */}
-      <div className="overflow-x-auto mt-6 max-h-screen">
-        <table className="min-w-full bg-white rounded-lg shadow overflow-hidden">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-                Name
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-                Email
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-                Role
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-                Privilege
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-                Action
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredUsers.map((user, index) => (
-              <tr key={index} className="border-t hover:bg-gray-50">
-                <td className="px-6 py-4">{user.name}</td>
-                <td className="px-6 py-4">{user.email}</td>
-                <td className="px-6 py-4">{user.role}</td>
-                <td className="px-6 py-4">{user.privilege}</td>
-                <td className="px-6 py-4">
-                  <button
-                    onClick={() => handleEdit(user)}
-                    className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(user.id)}
-                    className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red -600 ml-2">
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <div className="overflow-x-auto mt-6">
+      <div className="h-[calc(100vh-250px)] overflow-y-auto">
+      <table className="min-w-full bg-white rounded-lg shadow">
+      <thead className="bg-gray-50">
+        <tr>
+          <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Name</th>
+          <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Email</th>
+          <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Role</th>
+          <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Privilege</th>
+          <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {filteredUsers.map((user, index) => (
+          <tr key={index} className="border-t hover:bg-gray-50">
+            <td className="px-6 py-4">{user.name}</td>
+            <td className="px-6 py-4">{user.email}</td>
+            <td className="px-6 py-4">{user.role}</td>
+            <td className="px-6 py-4">{user.privilege}</td>
+            <td className="px-6 py-4">
+              <button
+                onClick={() => handleEdit(user)}
+                className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => handleDelete(user.id)}
+                className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 ml-2"
+              >
+                Delete
+              </button>
+            </td>
+          </tr>
+        ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 
       {/* Edit User Modal */}
       {editUser && (
