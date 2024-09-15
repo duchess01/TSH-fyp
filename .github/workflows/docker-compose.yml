@@ -1,0 +1,62 @@
+name: Docker Compose CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      docker:
+        image: docker:20.10
+        options: --privileged
+        ports:
+          - 5435:5432
+        env:
+          DOCKER_BUILDKIT: 1
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Install Docker Compose
+        run: |
+          DOCKER_COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")')
+          sudo curl -L "https://github.com/docker/compose/releases/download/$DOCKER_COMPOSE_VERSION/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
+
+      - name: Create .local.env file
+        run: |
+          echo "DUCHESS_API_KEY=${{ secrets.DUCHESS_API_KEY }}" > backend/.local.env
+
+      - name: Run Docker Compose
+        working-directory: backend
+        run: docker-compose -f docker-compose.test.yml up --build -d
+
+      - name: Run tests
+        working-directory: backend
+        run: docker-compose -f docker-compose.test.yml run --rm ner-llm-test npm test
+
+      - name: Stop and remove containers
+        if: always()
+        working-directory: backend
+        run: docker-compose -f docker-compose.test.yml down
