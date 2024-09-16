@@ -1,0 +1,38 @@
+version: "3.8"
+services:
+  # testing
+  ner-llm-test:
+    build:
+      context: ./services/ner-llm
+      dockerfile: ./Dockerfile
+      target: testing
+    env_file:
+      - .local.env
+    environment:
+      - PG_HOST=db_ner_llm_test
+      - CORS_ORIGINS=http://localhost:3000
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db_ner_llm_test
+    volumes:
+      - ./services/ner-llm:/usr/src/app/ner-llm
+
+  db_ner_llm_test:
+    image: postgres:16
+
+    expose:
+      - "5432"
+    ports:
+      - "5435:5432"
+
+    environment:
+      POSTGRES_DB: langchain_test
+      POSTGRES_USER: langchain
+      POSTGRES_PASSWORD: langchain
+
+    volumes:
+      - db_ner_test:/var/lib/postgresql/data
+
+volumes:
+  db_ner_test:

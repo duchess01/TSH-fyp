@@ -12,11 +12,14 @@
     "prettier:fix": "prettier --w ."
   },
   "dependencies": {
+    "@heroicons/react": "^2.1.5",
     "@upstash/ratelimit": "^1.0.1",
     "@upstash/redis": "^1.28.3",
+    "axios": "^1.7.4",
     "chart.js": "^4.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.2",
+    "framer-motion": "^11.5.4",
     "nodemon": "^3.0.3",
     "prettier": "^3.2.5",
     "react": "^18.2.0",
@@ -24,6 +27,7 @@
     "react-dom": "^18.2.0",
     "react-icons": "^5.2.1",
     "react-router-dom": "^6.26.0",
+    "redux": "^5.0.1",
     "resend": "^3.2.0"
   },
   "devDependencies": {

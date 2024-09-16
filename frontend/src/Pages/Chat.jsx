@@ -7,75 +7,164 @@ import {
 } from "react";
 import { BiPlus, BiUser, BiSend, BiSolidUserCircle } from "react-icons/bi";
 import { MdOutlineArrowLeft, MdOutlineArrowRight } from "react-icons/md";
+import { changeRating, sendMessageAPI } from "../api/chat";
+import { getAllChatHistoryAPI } from "../api/chat";
+import { useNavigate } from "react-router-dom";
+import {
+  FaRegThumbsDown,
+  FaRegThumbsUp,
+  FaThumbsDown,
+  FaThumbsUp,
+} from "react-icons/fa";
+import ChatModal from "../components/chat/chatModal";
 
 function Chat() {
+  const navigate = useNavigate();
+
+  const [currentUser, setCurrentUser] = useState({});
   const [text, setText] = useState("");
   const [message, setMessage] = useState(null);
   const [previousChats, setPreviousChats] = useState([]);
-  const [localChats, setLocalChats] = useState([]);
+  const [previousTitles, setPreviousTitles] = useState([]);
+  const [currentChat, setCurrentChat] = useState([]);
   const [currentTitle, setCurrentTitle] = useState(null);
   const [isResponseLoading, setIsResponseLoading] = useState(false);
   const [errorText, setErrorText] = useState("");
   const [isShowSidebar, setIsShowSidebar] = useState(false);
   const scrollToLastItem = useRef(null);
+  const [chatSessionId, setChatSessionId] = useState(null);
+  const [machines, setMachines] = useState([
+    "machine x",
+    "machine y",
+    "machine z",
+  ]);
+  const [selectedMachine, setSelectedMachine] = useState(null);
+  const [thumbs, setThumbs] = useState([]);
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    const user = JSON.parse(sessionStorage.getItem("user")); // fetching user details from session storage
+    if (user === null) {
+      // user not logged in or session expired. Redirect to login page
+      navigate("/login");
+    }
+    // console.log("User details: ", user);
+
+    setCurrentUser(user);
+
+    // fetching previous chats
+    const fetchChats = async () => {
+      try {
+        const response = await getAllChatHistoryAPI(user.id);
+        if (response.status === 200) {
+          setPreviousChats(response.data);
+
+          let newId = newChatSessionId(response.data);
+          setChatSessionId(newId);
+
+          const uniqueTitles = getUniqueTitles(response.data);
+          setPreviousTitles(uniqueTitles);
+          console.log(response, "THIS IS ALL CHAT HISTORY");
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchChats();
+  }, []);
+
+  const newChatSessionId = (chats) => {
+    const currHighestChatSessionId = Math.max(
+      ...chats.map((chat) => chat.chat_session_id)
+    );
+    return currHighestChatSessionId + 1;
+  };
+
+  const getUniqueTitles = (chats) => {
+    const uniqueTitles = chats.reduce((acc, curr) => {
+      const exists = acc.find((item) => item.title === curr.title);
+      if (!exists) {
+        acc.push({
+          title: curr.title,
+          chat_session_id: curr.chat_session_id,
+        });
+      }
+      return acc;
+    }, []);
+    return uniqueTitles;
+  };
 
   const createNewChat = () => {
+    setSelectedMachine(null);
     setMessage(null);
     setText("");
     setCurrentTitle(null);
+    setCurrentChat([]);
+    console.log("this is new chat session id", newChatSessionId(previousChats));
+    setChatSessionId(newChatSessionId(previousChats));
   };
 
   const backToHistoryPrompt = (uniqueTitle) => {
+    const currChat = previousChats.filter((chat) => chat.title === uniqueTitle);
+    setCurrentChat(currChat);
+    setSelectedMachine(currChat[0].machine);
+    setChatSessionId(
+      previousChats.find((chat) => chat.title === uniqueTitle).chat_session_id
+    );
     setCurrentTitle(uniqueTitle);
     setMessage(null);
     setText("");
+    setTimeout(() => {
+      scrollToLastItem.current?.lastElementChild?.scrollIntoView({
+        behavior: "smooth",
+      });
+    }, 1);
   };
 
   const toggleSidebar = useCallback(() => {
     setIsShowSidebar((prev) => !prev);
   }, []);
 
+  const handleMachineSelect = (e) => {
+    setSelectedMachine(e.target.value);
+    setPreviousTitles(getUniqueTitles([...previousChats, ""]));
+    setCurrentTitle(e.target.value);
+  };
+
   const submitHandler = async (e) => {
     e.preventDefault();
-    return setErrorText("The TSH intelligent Chatbot is currently down, please try again later.");
     if (!text) return;
 
     setIsResponseLoading(true);
     setErrorText("");
 
-    const options = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: import.meta.env.VITE_AUTH_TOKEN,
-      },
-      body: JSON.stringify({
-        message: text,
-      }),
-    };
-
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/completions`,
-        options
+      // TODO: to pass in the correct chatSessionId and userId
+      const response = await sendMessageAPI(
+        chatSessionId,
+        currentUser.id,
+        text,
+        selectedMachine
       );
-
-      if (response.status === 429) {
-        return setErrorText("Too many requests, please try again later.");
-      }
-
-      const data = await response.json();
-
-      if (data.error) {
-        setErrorText(data.error.message);
+      if (response.status != 201) {
+        setErrorText(response.data.message);
         setText("");
+        // return setErrorText(
+        //   "The TSH intelligent Chatbot is currently down, please try again later."
+        // );
       } else {
-        setErrorText(false);
-      }
-
-      if (!data.error) {
         setErrorText("");
-        setMessage(data.choices[0].message);
+        const data = response.data;
+        setPreviousChats((prev) => [...prev, data]);
+        setCurrentChat((prev) => [
+          ...prev,
+          {
+            message: text,
+            response: data.response,
+          },
+        ]);
+        setPreviousTitles(getUniqueTitles([...previousChats, data]));
+        setCurrentTitle(data.title);
         setTimeout(() => {
           scrollToLastItem.current?.lastElementChild?.scrollIntoView({
             behavior: "smooth",
@@ -106,66 +195,52 @@ function Chat() {
     };
   }, []);
 
-  useEffect(() => {
-    const storedChats = localStorage.getItem("previousChats");
-
-    if (storedChats) {
-      setLocalChats(JSON.parse(storedChats));
+  const handleThumbsChange = (input, currentRating, msgId) => {
+    //allowed roles, to be confirmed
+    const allowedRoles = ["admin", "supervisor", "manager"];
+    const newRating = input === currentRating ? null : input;
+    const updatedChat = currentChat.map((chat) =>
+      chat.id === msgId ? { ...chat, rating: newRating } : chat
+    );
+    setCurrentChat(updatedChat);
+    changeRating(msgId, newRating);
+    if (
+      allowedRoles.includes(currentUser.role) &&
+      input === "down" &&
+      currentRating !== "down"
+    ) {
+      setIsOpen(true);
     }
-  }, []);
+  };
 
-  useEffect(() => {
-    if (!currentTitle && text && message) {
-      setCurrentTitle(text);
-    }
-
-    if (currentTitle && text && message) {
-      const newChat = {
-        title: currentTitle,
-        role: "user",
-        content: text,
-      };
-
-      const responseMessage = {
-        title: currentTitle,
-        role: message.role,
-        content: message.content,
-      };
-
-      setPreviousChats((prevChats) => [...prevChats, newChat, responseMessage]);
-      setLocalChats((prevChats) => [...prevChats, newChat, responseMessage]);
-
-      const updatedChats = [...localChats, newChat, responseMessage];
-      localStorage.setItem("previousChats", JSON.stringify(updatedChats));
-    }
-  }, [message, currentTitle]);
-
-  const currentChat = (localChats || previousChats).filter(
-    (prevChat) => prevChat.title === currentTitle
-  );
-
-  const uniqueTitles = Array.from(
-    new Set(previousChats.map((prevChat) => prevChat.title).reverse())
-  );
-
-  const localUniqueTitles = Array.from(
-    new Set(localChats.map((prevChat) => prevChat.title).reverse())
-  ).filter((title) => !uniqueTitles.includes(title));
+  const closeModal = () => {
+    setIsOpen(false);
+  };
 
   return (
     <>
-      <div className="container chat" style={{ color: "#ececf1" }}>
+      {isOpen === true ? <ChatModal closeModal={closeModal} /> : null}
+      <div
+        className="min-w-full chat h-screen"
+        style={{
+          color: "#ececf1",
+          display: "grid",
+          gridTemplateColumns: "0fr 1fr",
+          backgroundColor: "#343541",
+        }}
+      >
         <section className={`sidebar ${isShowSidebar ? "open" : ""}`}>
           <div className="sidebar-header" onClick={createNewChat} role="button">
             <BiPlus size={20} />
-            <button>New Question</button>
+            <button className="border-none bg-transparent cursor-pointer">
+              New Question
+            </button>
           </div>
           <div className="sidebar-history">
-            {uniqueTitles.length > 0 && previousChats.length !== 0 && (
+            {previousTitles.length !== 0 && (
               <>
-                <p>Ongoing</p>
                 <ul>
-                  {uniqueTitles?.map((uniqueTitle, idx) => {
+                  {previousTitles?.map((ele, idx) => {
                     const listItems = document.querySelectorAll("li");
 
                     listItems.forEach((item) => {
@@ -176,35 +251,11 @@ function Chat() {
 
                     return (
                       <li
+                        className={currentTitle === ele.title ? "active" : ""}
                         key={idx}
-                        onClick={() => backToHistoryPrompt(uniqueTitle)}
+                        onClick={() => backToHistoryPrompt(ele.title)}
                       >
-                        {uniqueTitle}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </>
-            )}
-            {localUniqueTitles.length > 0 && localChats.length !== 0 && (
-              <>
-                <p>Previous</p>
-                <ul>
-                  {localUniqueTitles?.map((uniqueTitle, idx) => {
-                    const listItems = document.querySelectorAll("li");
-
-                    listItems.forEach((item) => {
-                      if (item.scrollWidth > item.clientWidth) {
-                        item.classList.add("li-overflow-shadow");
-                      }
-                    });
-
-                    return (
-                      <li
-                        key={idx}
-                        onClick={() => backToHistoryPrompt(uniqueTitle)}
-                      >
-                        {uniqueTitle}
+                        {ele.title}
                       </li>
                     );
                   })}
@@ -234,7 +285,15 @@ function Chat() {
                 alt="ChatGPT"
               />
               <h1>TSH intelligent Chatbot</h1>
-              <h3>How can I help you today?</h3>
+              <h3>Choose a machine from the dropdown below to start</h3>
+              <select
+                className="p-1 rounded-lg text-black"
+                onChange={handleMachineSelect}
+              >
+                {machines.map((machine, idx) => {
+                  return <option key={idx}>{machine}</option>;
+                })}
+              </select>
             </div>
           )}
 
@@ -253,30 +312,80 @@ function Chat() {
           )}
           <div className="main-header">
             <ul>
-              {currentChat?.map((chatMsg, idx) => {
-                const isUser = chatMsg.role === "user";
-
-                return (
-                  <li key={idx} ref={scrollToLastItem}>
-                    {isUser ? (
-                      <div>
-                        <BiSolidUserCircle size={28.8} />
-                      </div>
-                    ) : (
+              {selectedMachine != null && (
+                <li>
+                  <div>
+                    <div className="flex mb-1">
                       <img src="images/tsh-logo.PNG" alt="ChatGPT" />
-                    )}
-                    {isUser ? (
-                      <div>
-                        <p className="role-title">You</p>
-                        <p>{chatMsg.content}</p>
+                      <span className="role-title pl-2">ChatGPT</span>
+                    </div>
+                    <p>
+                      Selected machine: {selectedMachine}. Please ask a
+                      question.
+                    </p>
+                  </div>
+                </li>
+              )}
+              {currentChat?.map((chatMsg, idx) => {
+                return (
+                  <div key={idx} ref={scrollToLastItem}>
+                    <li>
+                      {chatMsg.message != "" ? (
+                        <div>
+                          <div className="flex mb-1">
+                            <BiSolidUserCircle size={28.8} />
+                            <span className="role-title pl-2">You</span>
+                          </div>
+                          <p>{chatMsg.message}</p>
+                        </div>
+                      ) : null}
+                    </li>
+                    <li>
+                      <div className="w-full">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center">
+                            <img src="images/tsh-logo.PNG" alt="ChatGPT" />
+                            <span className="role-title pl-2">ChatGPT</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() =>
+                                handleThumbsChange(
+                                  "up",
+                                  chatMsg.rating,
+                                  chatMsg.id
+                                )
+                              }
+                              className="focus:outline-none"
+                            >
+                              {chatMsg.rating === "up" ? (
+                                <FaThumbsUp />
+                              ) : (
+                                <FaRegThumbsUp />
+                              )}
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleThumbsChange(
+                                  "down",
+                                  chatMsg.rating,
+                                  chatMsg.id
+                                )
+                              }
+                              className="focus:outline-none"
+                            >
+                              {chatMsg.rating === "down" ? (
+                                <FaThumbsDown />
+                              ) : (
+                                <FaRegThumbsDown />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                        <p>{chatMsg.response}</p>
                       </div>
-                    ) : (
-                      <div>
-                        <p className="role-title">ChatGPT</p>
-                        <p>{chatMsg.content}</p>
-                      </div>
-                    )}
-                  </li>
+                    </li>
+                  </div>
                 );
               })}
             </ul>
