@@ -10,6 +10,31 @@ router.get("/", async (req, res) => {
   res.status(200).json(rows);
 });
 
+//change rating
+router.post("/rating", async (req, res) => {
+  try {
+    const { id, rating } = req.body;
+
+    //Check if both id and rating is provided
+    if (typeof id === "undefined" || typeof rating === "undefined") {
+      return res.status(400).json({ message: "Id and rating are required" });
+    }
+
+    const updateQuery = "UPDATE chat SET rating = $1 WHERE id = $2 RETURNING *";
+    const updateValues = [rating, id];
+
+    const result = await db.query(updateQuery, updateValues);
+
+    //msg with id not found
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Chat not found" });
+    }
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
 // to update "topic" and "response" after getting output from LLM
 router.put("/:id", async (req, res) => {
   try {

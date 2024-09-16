@@ -12,6 +12,7 @@
     "prettier:fix": "prettier --w ."
   },
   "dependencies": {
+    "@heroicons/react": "^2.1.5",
     "@upstash/ratelimit": "^1.0.1",
     "@upstash/redis": "^1.28.3",
     "axios": "^1.7.4",
