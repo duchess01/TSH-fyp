@@ -1,13 +1,13 @@
 from pydantic import BaseModel
 from typing import Optional
 
-from backend.services.langchain.models.base import BaseResponseModel
+from models.base import BaseResponseModel
 
 
 class Query(BaseModel):
     query: str
     userId: Optional[str]
-    sessionId: str
+    chatSessionId: str
 
 
 class QueryResponseModel(BaseResponseModel):

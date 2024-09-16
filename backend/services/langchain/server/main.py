@@ -7,9 +7,9 @@ from dotenv import load_dotenv
 from os.path import join, dirname
 from starlette.middleware import Middleware
 
-from backend.services.langchain.models.base import BaseResponseModel
-from backend.services.langchain.queryAgent.router import query_router
-from backend.services.langchain.constants.constants import BASE_URL_PREFIX
+from models.base import BaseResponseModel
+from queryAgent.router import query_router
+from constants.constants import BASE_URL_PREFIX
 load_dotenv(join(dirname(__file__), '.env'))
 
 
@@ -35,5 +35,5 @@ def ready():
 
 if __name__ == "__main__":
 
-    uvicorn.run("backend.services.langchain.server.main:app",
+    uvicorn.run("server.main:app",
                 host="localhost", port=8001, reload=True)

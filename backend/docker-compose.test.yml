@@ -17,6 +17,8 @@ services:
       - db_ner_llm_test
     volumes:
       - ./services/ner-llm:/usr/src/app/ner-llm
+    networks:
+      - test-network
 
   db_ner_llm_test:
     image: postgres:16
@@ -33,6 +35,12 @@ services:
 
     volumes:
       - db_ner_test:/var/lib/postgresql/data
+    networks:
+      - test-network
 
 volumes:
   db_ner_test:
+
+networks:
+  test-network:
+    driver: bridge
