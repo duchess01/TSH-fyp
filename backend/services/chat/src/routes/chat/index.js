@@ -106,7 +106,8 @@ router.post("/", async (req, res) => {
     // const langchainResponse = await getLLMResponse(
     //   message,
     //   String(userId),
-    //   chatSessionId
+    //   chatSessionId,
+    //   machine
     // );
     const langchainResponse = {
       status_code: 201,

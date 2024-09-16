@@ -139,7 +139,6 @@ function Chat() {
     setErrorText("");
 
     try {
-      // TODO: to pass in the correct chatSessionId and userId
       const response = await sendMessageAPI(
         chatSessionId,
         currentUser.id,
