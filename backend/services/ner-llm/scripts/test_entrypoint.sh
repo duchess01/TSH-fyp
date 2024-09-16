@@ -31,9 +31,12 @@ set -euxo pipefail
 # print working dir
 echo "$(ls)" 
 
+
 # Run tests 
 
 cd ner-llm/tests 
+
+
 
 
 python -m pytest -v -rs
