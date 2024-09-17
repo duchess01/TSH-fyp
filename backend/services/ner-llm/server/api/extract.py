@@ -83,8 +83,7 @@ async def extractKeywords(
                 name = f"keyword_extractor_{request.keyword_count}",
                 description= "this generates keywords from text, specifically NOUNS", 
                 schema= KeywordExtractor.schema(),
-                # instruction= f"Extract keywords from the given text, focus on NOUNS and NOUN PHRASES, the result should limit the number of keywords extracted to {request.keyword_count} keywords. **DO NOT PROVIDE MORE THAN {request.keyword_count} KEYWORDS**. **DO NOT PROVIDE LESS THAN {request.keyword_count} KEYWORDS**. ONLY PROVIDE {request.keyword_count} KEYWORDS. choose keywords based on RELEVANCY with the text given. if there is not enough keywords, the extractor should fill up the remaining slots with 'NULL'"
-                instruction= f"Extract keywords from the given text, focus on NOUNS and NOUN PHRASES, choose keywords based on RELEVANCY with the text given."
+                instruction= f"Extract keywords from the given text, focus on NOUNS and NOUN PHRASES, the result should limit the number of keywords extracted to {request.keyword_count} keywords. **DO NOT PROVIDE MORE THAN {request.keyword_count} KEYWORDS**.  ONLY PROVIDE {request.keyword_count} KEYWORDS. choose keywords based on RELEVANCY with the text given."
             )
             
             
