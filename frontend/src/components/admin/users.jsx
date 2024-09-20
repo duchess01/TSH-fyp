@@ -236,7 +236,7 @@ const Users = () => {
       {/* Scrollable User List/Table */}
       <div
         className="mt-6 bg-white rounded-lg shadow-md overflow-y-auto"
-        style={{ maxHeight: "650px" }} // Adjust height as needed
+        style={{ maxHeight: "600px" }} // Adjust height as needed
       >
         {/* Responsive User List for Mobile */}
         <div className="lg:hidden">
