@@ -10,8 +10,8 @@ const Users = () => {
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
-    role: "",
-    privilege: "",
+    role: "Operator",
+    privilege: "Ask Questions",
     password: "",
   });
 
@@ -133,37 +133,41 @@ const Users = () => {
   const handleAddUser = async () => {
     const token = sessionStorage.getItem("token");
     try {
-      if (
-        !newUser.name ||
-        !newUser.email ||
-        !newUser.password ||
-        !newUser.role ||
-        !newUser.privilege
-      ) {
+      // Validate required fields
+      if (!newUser.name || !newUser.email || !newUser.password || !newUser.role || !newUser.privilege) {
         alert("All fields are required.");
         return;
       }
-
+  
+      // Set default values if role and privilege are not provided
+      const userToAdd = {
+        ...newUser,
+        role: newUser.role || "Operator", // Default role
+        privilege: newUser.privilege || "Ask Questions", // Default privilege
+      };
+  
+      // Send POST request to add new user
       const response = await fetch("http://localhost:3000/api/v1/users/add", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(newUser),
+        body: JSON.stringify(userToAdd),
       });
-
+  
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(
-          `HTTP error! Status: ${response.status} - ${errorText}`
-        );
+        throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
       }
-
+  
+      // Get added user and update state
       const addedUser = await response.json();
       const updatedUsers = [...users, addedUser];
       setUsers(updatedUsers);
       setFilteredUsers(updatedUsers);
+  
+      // Close modal and reset form
       setShowAddModal(false);
       setNewUser({
         name: "",
@@ -176,6 +180,7 @@ const Users = () => {
       console.error("Error adding new user:", error);
     }
   };
+  
 
   return (
     <div className="w-full p-4 bg-gray-50 min-h-screen">
