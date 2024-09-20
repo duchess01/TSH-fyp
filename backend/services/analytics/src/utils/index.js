@@ -10,8 +10,8 @@ function isDocker() {
 export default function getBaseURL() {
   try {
     let url = isDocker
-      ? CHAT_BASE_URL + `api/v1/chat/`
-      : DOCKER_CHAT_BASE_URL + `api/v1/chat/`;
+      ? DOCKER_CHAT_BASE_URL + `api/v1/chat/`
+      : CHAT_BASE_URL + `api/v1/chat/`;
     return url;
   } catch (error) {
     console.log("Error occured while getting chat base url");
