@@ -31,7 +31,7 @@ export async function getMachineDistribution() {
       },
     };
     const response = await axios.get(
-      ANALYTICS_BASE_URL + "/api/v1/dashboard/machine",
+      ANALYTICS_BASE_URL + "/api/v1/dashboard/machineDistribution",
       config
     );
     return response;

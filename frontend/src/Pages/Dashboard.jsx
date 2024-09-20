@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import SideNavBar from "../components/dashboard/SideNav";
 import FAQSection from "../components/dashboard/FAQSection";
-import CategoryBarChart from "../components/dashboard/CategoryBarGraph";
 import QuestionsReceivedLineGraph from "../components/dashboard/QuestionsReceivedLineGraph";
+import TopicBarChart from "../components/dashboard/CategoryBarGraph";
+import MachineBarChart from "../components/dashboard/MachineBarGraph";
 
 const DashboardPage = () => {
   const [faqs, setFaqs] = useState([
@@ -40,11 +41,9 @@ const DashboardPage = () => {
         <div className="bg-white w-full min-h-full rounded-lg p-5">
           <FAQSection faqs={faqs} />
           <div className="grid grid-cols-2 grid-rows-2 gap-4 mt-5">
-            <CategoryBarChart />
+            <TopicBarChart />
             <QuestionsReceivedLineGraph />
-            <div className="bg-gray-200 flex items-center justify-center">
-              3
-            </div>
+            <MachineBarChart />
             <div className="bg-gray-200 flex items-center justify-center">
               4
             </div>
