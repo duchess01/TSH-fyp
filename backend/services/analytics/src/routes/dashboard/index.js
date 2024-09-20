@@ -1,6 +1,7 @@
 import express from "express";
 import { Router } from "express";
 import axios, { HttpStatusCode } from "axios";
+import getBaseURL from "../../utils/index.js";
 
 const router = Router();
 
@@ -39,6 +40,48 @@ router.get("/topic", async (req, res) => {
   } catch (error) {
     console.error("Error fetching chat data:", error);
     res.send(HttpStatusCode.BadRequest, "Error fetching chat data");
+  }
+});
+
+// getting the distribution of the topics
+router.get("/topicDistribution", async (req, res) => {
+  try {
+    const CHAT_BASE_URL = getBaseURL();
+    const response = await axios.get(CHAT_BASE_URL);
+    const data = response.data;
+    let topicDistribution = {};
+    data.forEach((chat) => {
+      if (chat.topic in topicDistribution) {
+        topicDistribution[chat.topic] += 1;
+      } else {
+        topicDistribution[chat.topic] = 1;
+      }
+    });
+    res.status(HttpStatusCode.Ok).json(topicDistribution);
+  } catch (error) {
+    console.error("Error fetching topic distribution:", error);
+    res.status(HttpStatusCode.BadRequest).json({ message: error.message });
+  }
+});
+
+// getting the distribution of the machines
+router.get("/machineDistribution", async (req, res) => {
+  try {
+    const CHAT_BASE_URL = getBaseURL();
+    const response = await axios.get(CHAT_BASE_URL);
+    const data = response.data;
+    let machineDistribution = {};
+    data.forEach((chat) => {
+      if (chat.machine in machineDistribution) {
+        machineDistribution[chat.machine] += 1;
+      } else {
+        machineDistribution[chat.machine] = 1;
+      }
+    });
+    res.status(HttpStatusCode.Ok).json(machineDistribution);
+  } catch (error) {
+    console.error("Error fetching machine distribution:", error);
+    res.status(HttpStatusCode.BadRequest).json({ message: error.message });
   }
 });
 

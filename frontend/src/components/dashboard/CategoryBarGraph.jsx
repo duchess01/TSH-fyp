@@ -9,7 +9,7 @@ export default function CategoryBarChart({}) {
 
   useEffect(() => {
     const getData = async () => {
-      let response = await getDataAPI();
+      let response = await getTopicDistribution();
       if (response.status != 200) {
         console.log("error getting data", response.data);
         setErrorMessage(response.data);
@@ -20,7 +20,7 @@ export default function CategoryBarChart({}) {
         labels,
         datasets: [
           {
-            label: "Questions Category",
+            label: "Questions Topic Category",
             data: labels.map((label) => response.data[label] || 0),
             backgroundColor: "rgba(255, 99, 132, 0.5)",
           },
