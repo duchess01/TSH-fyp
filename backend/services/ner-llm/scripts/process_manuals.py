@@ -3,7 +3,7 @@ import os
 import sys
 
 import requests
-from .manual_content import manual_dictionary
+from manual_content import manual_dictionary
 
 BASE_URL = "http://localhost:8000"
 
@@ -11,8 +11,8 @@ def extract_keywords(content):
     url = f"{BASE_URL}/extractkeywords"
     payload = {
         "text": content,
-        "model_name": "gpt-3.5-turbo",
-        "chunking": True,
+        "model_name": "gpt-4o",
+        "chunking": False,
         "chunk_size": 300,
         "keyword_count": 30
     }
