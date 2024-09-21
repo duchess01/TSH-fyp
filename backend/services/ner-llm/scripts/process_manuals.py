@@ -3,7 +3,7 @@ import os
 import sys
 
 import requests
-from manual_content import manual_dictionary
+from .manual_content import manual_dictionary
 
 BASE_URL = "http://localhost:8000"
 
@@ -89,9 +89,9 @@ def save_output_to_file(output_dict, filename="chapter_keywords.json"):
 if __name__ == "__main__":
     processed_output = process_headings(manual_dictionary)
 
-    for heading, data in processed_output.items():
-        keywords = data["data"]["keywords"]
-        print(f"Heading: {heading}, Keyword Size: {len(keywords)}")
+    # for heading, data in processed_output.items():
+    #     keywords = data["data"]["keywords"]
+    #     print(f"Heading: {heading}, Keyword Size: {len(keywords)}")
 
     save_output_to_file(processed_output)
 
