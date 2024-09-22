@@ -104,7 +104,6 @@ function Chat() {
     setText("");
     setCurrentTitle(null);
     setCurrentChat([]);
-    console.log("this is new chat session id", newChatSessionId(previousChats));
     setChatSessionId(newChatSessionId(previousChats));
   };
 
@@ -293,6 +292,7 @@ function Chat() {
                 className="p-1 rounded-lg text-black"
                 onChange={handleMachineSelect}
               >
+                <option>Select a machine</option>
                 {machines.map((machine, idx) => {
                   return <option key={idx}>{machine}</option>;
                 })}
