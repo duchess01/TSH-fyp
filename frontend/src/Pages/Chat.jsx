@@ -74,10 +74,14 @@ function Chat() {
   }, []);
 
   const newChatSessionId = (chats) => {
-    const currHighestChatSessionId = Math.max(
-      ...chats.map((chat) => chat.chat_session_id)
-    );
-    return currHighestChatSessionId + 1;
+    let currHighestChatSessionId = 0;
+    chats.forEach((chat) => {
+      if (chat.chat_session_id > currHighestChatSessionId) {
+        currHighestChatSessionId = chat.chat_session_id;
+      }
+    });
+    const newChatId = currHighestChatSessionId + 1;
+    return newChatId;
   };
 
   const getUniqueTitles = (chats) => {
