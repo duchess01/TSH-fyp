@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import BarChart from "../common/BarChart";
 import { getMachineDistribution } from "../../api/dashboard";
+import { COLORS } from "../../constants/index.js";
 
 export default function MachineBarChart({}) {
   const [barChartData, setBarChartData] = useState(null);
@@ -22,7 +23,7 @@ export default function MachineBarChart({}) {
           {
             label: "Questions Machine Category",
             data: labels.map((label) => response.data[label] || 0),
-            backgroundColor: "rgba(99, 132, 132, 0.5)",
+            backgroundColor: COLORS[1],
           },
         ],
       };

@@ -73,12 +73,9 @@ const DashboardPage = () => {
             <div className="bg-white w-full min-h-full rounded-lg p-5">
               <FAQSection faqs={faqs} />
               <div className="grid grid-cols-2 grid-rows-2 gap-4 mt-5">
-                <CategoryBarChart />
-                <QuestionsReceivedLineGraph />
+                <TopicBarChart />
                 <MachineBarChart />
-                <div className="bg-gray-200 flex items-center justify-center">
-                  4
-                </div>
+                <QuestionsReceivedLineGraph />
               </div>
             </div>
           </div>

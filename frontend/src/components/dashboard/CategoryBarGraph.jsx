@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import BarChart from "../common/BarChart";
 import { getTopicDistribution } from "../../api/dashboard";
+import { COLORS } from "../../constants/index.js";
 
 export default function TopicBarChart({}) {
   const [barChartData, setBarChartData] = useState(null);
@@ -22,11 +23,10 @@ export default function TopicBarChart({}) {
           {
             label: "Questions Topic Category",
             data: labels.map((label) => response.data[label] || 0),
-            backgroundColor: "rgba(255, 99, 132, 0.5)",
+            backgroundColor: COLORS[0],
           },
         ],
       };
-      console.log("this is data,", data);
       let options = {
         responsive: true,
         plugins: {
