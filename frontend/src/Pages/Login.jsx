@@ -26,6 +26,7 @@ const Login = () => {
           email: response.data.email,
           name: response.data.name,
           role: response.data.role,
+          privilege: response.data.privilege,
         })
       );
       // const user = JSON.parse(sessionStorage.getItem("user"));

@@ -7,7 +7,7 @@ function isDocker() {
   return process.env.DOCKER_ENV === "true";
 }
 
-export async function getLLMResponse(query, userId, sessionId) {
+export async function getLLMResponse(query, userId, sessionId, machine) {
   try {
     let url = isDocker
       ? DOCKER_LANGCHAIN_BASE_URL + `api/v1/chat/`
@@ -22,6 +22,7 @@ export async function getLLMResponse(query, userId, sessionId) {
       query: query,
       userId: userId,
       sessionId: sessionId,
+      machine: machine,
     };
     const response = await axios.post(url, body, config);
     const data = response.data;

@@ -2,7 +2,7 @@ import axios from "axios";
 
 const ANALYTICS_BASE_URL = "http://localhost:3002";
 
-export async function getDataAPI() {
+export async function getTopicDistribution() {
   try {
     const config = {
       headers: {
@@ -10,12 +10,33 @@ export async function getDataAPI() {
       },
     };
     const response = await axios.get(
-      ANALYTICS_BASE_URL + "/api/v1/dashboard/topic",
+      ANALYTICS_BASE_URL + "/api/v1/dashboard/topicDistribution",
       config
     );
     return response;
   } catch (error) {
-    console.log("Error in get topic frequency API: ", error);
+    console.log("Error in get topic distribution API: ", error);
+    return {
+      status: error.response.status,
+      data: error.response.data.message,
+    };
+  }
+}
+
+export async function getMachineDistribution() {
+  try {
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
+    const response = await axios.get(
+      ANALYTICS_BASE_URL + "/api/v1/dashboard/machineDistribution",
+      config
+    );
+    return response;
+  } catch (error) {
+    console.log("Error in get machine distribution API: ", error);
     return {
       status: error.response.status,
       data: error.response.data.message,

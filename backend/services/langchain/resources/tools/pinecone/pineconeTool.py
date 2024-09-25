@@ -1,13 +1,12 @@
 import asyncio
 import os
 from dotenv import load_dotenv
-from langchain.agents import Tool, initialize_agent, AgentType
-from langchain_groq import ChatGroq
+from langchain.agents import Tool
 from langchain.chains import LLMChain
 
-from backend.services.langchain.resources.tools.pinecone.utils import initialize_pinecone_index, encode_string
-from backend.services.langchain.resources.tools.pinecone.prompt import RAG_PROMPT
-from backend.services.langchain.constants.constants import ALL_MODELS
+from resources.tools.pinecone.utils import initialize_pinecone_index, encode_string
+from resources.tools.pinecone.prompt import RAG_PROMPT
+from constants.constants import ALL_MODELS
 
 load_dotenv()
 pinecone_index_name = os.getenv("PINECONE_INDEX_NAME")

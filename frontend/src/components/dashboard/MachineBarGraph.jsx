@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from "react";
 import BarChart from "../common/BarChart";
-import { getTopicDistribution } from "../../api/dashboard";
+import { getMachineDistribution } from "../../api/dashboard";
 import { COLORS } from "../../constants/index.js";
 
-export default function TopicBarChart({}) {
+export default function MachineBarChart({}) {
   const [barChartData, setBarChartData] = useState(null);
   const [barChartOptions, setBarChartOptions] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
 
   useEffect(() => {
     const getData = async () => {
-      let response = await getTopicDistribution();
+      let response = await getMachineDistribution();
       if (response.status != 200) {
         console.log("error getting data", response.data);
         setErrorMessage(response.data);
@@ -21,9 +21,9 @@ export default function TopicBarChart({}) {
         labels,
         datasets: [
           {
-            label: "Questions Topic Category",
+            label: "Questions Machine Category",
             data: labels.map((label) => response.data[label] || 0),
-            backgroundColor: COLORS[0],
+            backgroundColor: COLORS[1],
           },
         ],
       };
@@ -35,7 +35,7 @@ export default function TopicBarChart({}) {
           },
           title: {
             display: true,
-            text: "Distribution of Questions by Topics",
+            text: "Distribution of Questions by Machine",
           },
         },
       };
