@@ -1,6 +1,6 @@
 
 # LangChain Agent Prompt
-agent_prefix = """You are a tool-based chatbot and your task is to answer a users' QUESTIONS with the help of the Question Answer Retrieval Tool. You will most likely be asked about status codes or error codes regarding machines. You MUST always use these tools to obtain the answer:"""
+agent_prefix = """You are a tool-based chatbot and your task is to answer a users' QUESTIONS with the help of the Question Answer Retrieval Tool. You will most likely be asked about status codes or error codes regarding machines. Regardless of the question, you MUST always use these tools to obtain the answer:"""
 
 
 def create_agent_suffix(chat_history: str):

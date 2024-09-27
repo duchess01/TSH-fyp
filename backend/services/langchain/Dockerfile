@@ -1,18 +1,31 @@
-# Use an official Python runtime as a base image
 FROM python:3.11-slim
 
-# Set the working directory inside the container to be at the project root
+# Install system dependencies and ca-certificates for SSL
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    build-essential \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set the working directory inside the container
 WORKDIR /usr/src/app
 
-# Copy the entire project into the container's working directory
-COPY . .
+# Copy only requirements.txt first to leverage Docker cache
+COPY requirements.txt .
 
-# Install any necessary dependencies
-# Assumes you have a requirements.txt file at the project root
-RUN pip install --no-cache-dir -r requirements.txt
+# Upgrade pip and install Python dependencies with trusted hosts
+RUN python -m pip install --upgrade pip setuptools && \
+    pip install --no-cache-dir -r requirements.txt \
+    --trusted-host pypi.org \
+    --trusted-host pypi.python.org \
+    --trusted-host files.pythonhosted.org
+
+# Now copy the rest of the code
+COPY . .
 
 # Expose the port your application runs on
 EXPOSE 8001
 
-# Command to run the application using the same command as localhost development
+# Command to run the application
 CMD ["python", "-m", "server.main"]

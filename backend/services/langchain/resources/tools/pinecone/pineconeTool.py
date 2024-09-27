@@ -1,12 +1,13 @@
-import asyncio
 import os
 from dotenv import load_dotenv
 from langchain.agents import Tool
 from langchain.chains import LLMChain
 
-from resources.tools.pinecone.utils import initialize_pinecone_index, encode_string
+from resources.tools.pinecone.utils import initialize_pinecone_index, get_embedding
 from resources.tools.pinecone.prompt import RAG_PROMPT
 from constants.constants import ALL_MODELS
+from services.ner_llm.ner_llm import NerLLMService
+from .utils import match_namespace
 
 load_dotenv()
 pinecone_index_name = os.getenv("PINECONE_INDEX_NAME")
@@ -22,24 +23,25 @@ class PineconeQueryTool:
         self.index = await initialize_pinecone_index(self.pinecone_index_name)
 
     async def run(self, query: str):
-        query_vector = encode_string(query)
+        query_vector = get_embedding(query)
+        keyword_map = NerLLMService().get_keyword_mapping()
+        namespace = match_namespace(keyword_map, query)
         response = self.index.query(
-            namespace='Interpolation Functions:Cutting Point Interpolation For Cylindrical Interpolation (G07.1)',
+            namespace=namespace,
             top_k=2,
             include_values=True,
             include_metadata=True,
             vector=query_vector
         )
         concatenated_text = " ".join(
-            res["metadata"]["text"] for res in response["matches"])
-        print("CONTEXT: ", concatenated_text)
+            res["metadata"]["data"][0] for res in response["matches"])
+
         rag_chain = LLMChain(llm=llm, prompt=RAG_PROMPT)
         rag_response = rag_chain.predict(
             question=query,
             context=concatenated_text
         )
-        print("RAG RESPONSE: ", rag_response)
-        return rag_response
+        return (rag_response, namespace)
 
 
 async def setup_pinecone_tool():

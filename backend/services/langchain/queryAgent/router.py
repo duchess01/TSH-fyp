@@ -31,13 +31,12 @@ async def get_response(query: Query):
         if inspect.isawaitable(agent_response):
             agent_response = await agent_response
 
-        print(agent_response)
-
+        agent_message, topic = agent_response
         response = QueryResponseModel(
             status_code=201,
-            topic="test",  # TODO get topic based off a match
+            topic=topic,
             user_query=user_query,
-            agent_response=agent_response,
+            agent_response=agent_message,
             message="success",
             data=None
         )
