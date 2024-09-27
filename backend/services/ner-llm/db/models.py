@@ -1,5 +1,5 @@
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy import Column, String, DateTime, Text, alias, ARRAY
+from sqlalchemy import Float, Column, String, DateTime, Text, alias, ARRAY
 from sqlalchemy.exc import SQLAlchemyError
 
 import datetime
@@ -56,3 +56,4 @@ class KeywordMapping(TimestampedModel) :
     keyword_id = Column(UUID(as_uuid=True), primary_key=True, default = lambda: uuid4(), comment = "UUID of the keyword map")
     namespace = Column(String(255), nullable=False, comment = "Namespace of the keyword")
     keywordArray = Column(ARRAY(String(255)), nullable=False, comment = "Array of keywords that belongs to the namespace")
+    keywordEmbeddings = Column(ARRAY(Float(precision=16)), nullable=True, comment = "Array of embeddings for the keywords")

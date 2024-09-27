@@ -112,7 +112,8 @@ class ExtractKeywordsEndpoint(BaseModel) :
     model_name : str = Field(default = DEFAULT_MODEL, description = "name of the model, possible values include :  gpt-3.5-turbo, gpt-4-0125-preview, fireworks, together-ai-mistral-8x7b-instruct-v0.1, claude-3-sonnet-20240229 , groq-llama3-8b-8192", example = "groq-llama3-8b-8192")
     chunk_size : int = Field(default = 400, description = "size of the chunk", example = 400)
     chunking : bool = Field(default = False, description = "whether to chunk the text or not", example = False)
-    
+    keyword_count : int = Field(default =30 , description = "number of keywords to be extracted", example = 30)
+
 class ExtractKeywordsReturn(BaseModel) :
     keywords : List[str] = Field(..., description = "keywords extracted from the text", example = ["information", "publication", "efforts", "accurate", "information", "contained", "purport", "cover", "details", "variations", "hardware", "software"])
 

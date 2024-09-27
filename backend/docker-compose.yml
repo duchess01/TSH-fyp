@@ -68,9 +68,12 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - db_ner_llm
+      db_ner_llm:
+        condition: service_healthy
     volumes:
       - ./services/ner-llm:/usr/src/app/ner-llm
+    networks:
+      - my-network
 
   #################################
   # Analytics microservice
@@ -126,6 +129,8 @@ services:
       - .local.env
     networks:
       - my-network
+    environment:
+      - ENVIRONMENT=docker
 
   #################################
   # PostgreSQL for User microservice
@@ -178,6 +183,13 @@ services:
       POSTGRES_PASSWORD: langchain
     volumes:
       - db_ner:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U langchain"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - my-network
 
 volumes:
   db_user_data:

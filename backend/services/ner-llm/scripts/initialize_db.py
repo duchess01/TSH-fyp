@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from db.models import Base, KeywordMapping
 from db.dbconfig import ENGINE
 
-JSON_FILE_PATH = os.path.join(os.path.dirname(__file__), '../db/chapter_keywords.json')
+JSON_FILE_PATH = os.path.join(os.path.dirname(__file__), '../db/keywords/chapter_keywords.json')
 
 Session = sessionmaker(bind=ENGINE)
 session = Session()
@@ -23,10 +23,14 @@ def insert_keywords_from_json():
     with open(JSON_FILE_PATH, 'r') as json_file:
         data = json.load(json_file)
 
-        for namespace, keyword_array in data.items():
+        for namespace, content in data.items():
+            keywords = content['data'].get('keywords', [])
+            embeddings = content['data'].get('embeddings', [])
+
             keyword_mapping = KeywordMapping(
                 namespace=namespace,
-                keywordArray=keyword_array
+                keywordArray=keywords,
+                keywordEmbeddings=embeddings
             )
             session.add(keyword_mapping)
         session.commit()

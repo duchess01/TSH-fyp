@@ -8,6 +8,7 @@ class Query(BaseModel):
     query: str
     userId: Optional[str]
     chatSessionId: str
+    machine: Optional[str]
 
 
 class QueryResponseModel(BaseResponseModel):

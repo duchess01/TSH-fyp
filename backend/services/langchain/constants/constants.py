@@ -29,6 +29,12 @@ def getModels():
                 temperature=0
             )
         }
+        models['gpt-4o'] = {
+            "chat_model": ChatOpenAI(
+                model_name="gpt-4o",
+                temperature=0
+            )
+        }
     if "GROQ_API_KEY" in os.environ:
         models["groq-llama3-8b-8192"] = {
             "chat_model": ChatGroq(
@@ -51,5 +57,5 @@ def getChatModel(modelName: Optional[str] = None) -> BaseChatModel:
 
 
 ALL_MODELS = getModels()
-DEFAULT_MODEL = "gpt-3.5-turbo"
+DEFAULT_MODEL = "gpt-4o-mini"
 AVAILABLE_MODELS = ALL_MODELS.keys()

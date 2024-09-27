@@ -74,22 +74,24 @@ async def extractKeywords(
     
     # check if keyword extractor exists
     try : 
-        extractor = session.query(Extractor).filter_by(name="keyword_extractor").scalar()
+        
+        name = f"keyword_extractor_{request.keyword_count}"
+        extractor = session.query(Extractor).filter_by(name=f"keyword_extractor_{request.keyword_count}").scalar()
         if extractor is None:
             # create extractor if it does not exist
             data = CreateExtractor(
-                name = "keyword_extractor",
+                name = f"keyword_extractor_{request.keyword_count}",
                 description= "this generates keywords from text, specifically NOUNS", 
                 schema= KeywordExtractor.schema(),
-                instruction= "Extract keywords from the given text, focus on NOUNS and NOUN PHRASES"
-                
+                instruction= f"Extract keywords from the given text, focus on NOUNS and NOUN PHRASES, the result should limit the number of keywords extracted to {request.keyword_count} keywords. **DO NOT PROVIDE MORE THAN {request.keyword_count} KEYWORDS**.  ONLY PROVIDE {request.keyword_count} KEYWORDS. choose keywords based on RELEVANCY with the text given."
             )
             
             
             res = createExtractor(data, session)
             
-            extractor = session.query(Extractor).filter_by(name="keyword_extractor").scalar()
+            print("EXTRACTOR CREATED: ", res)
             
+            extractor = session.query(Extractor).filter_by(name=f"keyword_extractor_{request.keyword_count}").scalar()
             
         
         keywordResponse = await extractUsingExtractor(text, extractor, model_name, chunk_size=request.chunk_size, chunking=request.chunking)
@@ -100,7 +102,8 @@ async def extractKeywords(
         for outer_list in keywordArrays:
             for inner_list in outer_list:
                 for item_dict in inner_list["data"]:
-                    if item_dict["keyword"].lower() not in keywords:
+                    print("keyword extracted: ", item_dict["keyword"])
+                    if item_dict["keyword"].lower() not in keywords or item_dict["keyword"].lower() == "null":
                         keywords.append(item_dict["keyword"].lower())
             
         

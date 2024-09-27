@@ -10,8 +10,9 @@ from starlette.middleware import Middleware
 from models.base import BaseResponseModel
 from queryAgent.router import query_router
 from constants.constants import BASE_URL_PREFIX
-load_dotenv(join(dirname(__file__), '.env'))
+from services.ner_llm.ner_llm import NerLLMService
 
+load_dotenv(join(dirname(__file__), '.env'))
 
 ROOT = Path(__file__).parent.parent.parent
 origins = ["*"]
@@ -36,4 +37,4 @@ def ready():
 if __name__ == "__main__":
 
     uvicorn.run("server.main:app",
-                host="localhost", port=8001, reload=True)
+                host="0.0.0.0", port=8001, reload=True)
