@@ -3,9 +3,7 @@ import axios, { HttpStatusCode } from "axios";
 const CHAT_BASE_URL = "http://localhost:3001/";
 const DOCKER_CHAT_BASE_URL = "http://chat:3001/";
 
-function isDocker() {
-  return process.env.DOCKER_ENV === "true";
-}
+const isDocker = process.env.DOCKER_ENV === "true";
 
 export default function getBaseURL() {
   try {
