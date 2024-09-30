@@ -17,6 +17,7 @@ import {
   FaThumbsUp,
 } from "react-icons/fa";
 import ChatModal from "../components/chat/chatModal";
+import { MACHIINES } from "../constants";
 
 function Chat() {
   const navigate = useNavigate();
@@ -33,11 +34,7 @@ function Chat() {
   const [isShowSidebar, setIsShowSidebar] = useState(false);
   const scrollToLastItem = useRef(null);
   const [chatSessionId, setChatSessionId] = useState(null);
-  const [machines, setMachines] = useState([
-    "machine x",
-    "machine y",
-    "machine z",
-  ]);
+  const [machines, setMachines] = useState(MACHIINES);
   const [selectedMachine, setSelectedMachine] = useState(null);
   const [thumbs, setThumbs] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -284,7 +281,7 @@ function Chat() {
                 src="images/tsh-logo.PNG"
                 width={45}
                 height={45}
-                alt="ChatGPT"
+                alt="TshGPT"
               />
               <h1>TSH intelligent Chatbot</h1>
               <h3>Choose a machine from the dropdown below to start</h3>
@@ -319,8 +316,8 @@ function Chat() {
                 <li>
                   <div>
                     <div className="flex mb-1">
-                      <img src="images/tsh-logo.PNG" alt="ChatGPT" />
-                      <span className="role-title pl-2">ChatGPT</span>
+                      <img src="images/tsh-logo.PNG" alt="TshGPT" />
+                      <span className="role-title pl-2">TSH GPT</span>
                     </div>
                     <p>
                       Selected machine: {selectedMachine}. Please ask a
@@ -347,8 +344,8 @@ function Chat() {
                       <div className="w-full">
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center">
-                            <img src="images/tsh-logo.PNG" alt="ChatGPT" />
-                            <span className="role-title pl-2">ChatGPT</span>
+                            <img src="images/tsh-logo.PNG" alt="TshGPT" />
+                            <span className="role-title pl-2">TSH GPT</span>
                           </div>
                           <div className="flex items-center space-x-2">
                             <button
