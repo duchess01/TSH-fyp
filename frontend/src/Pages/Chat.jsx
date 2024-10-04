@@ -16,7 +16,6 @@ import {
   FaThumbsDown,
   FaThumbsUp,
 } from "react-icons/fa";
-import ChatModal from "../components/chat/chatModal";
 
 function Chat() {
   const navigate = useNavigate();
@@ -221,7 +220,7 @@ function Chat() {
 
   return (
     <>
-      {isOpen === true ? <ChatModal closeModal={closeModal} /> : null}
+      {/* {isOpen === true ? <ChatModal closeModal={closeModal} /> : null} */}
       <div
         className="min-w-full chat h-screen"
         style={{
@@ -266,7 +265,12 @@ function Chat() {
             )}
           </div>
           <div className="sidebar-info">
-            <div className="sidebar-info-upgrade">
+            <div
+              className="sidebar-info-upgrade"
+              onClick={() => {
+                navigate("/FAQ");
+              }}
+            >
               <BiUser size={20} />
               <p>FAQs</p>
             </div>
