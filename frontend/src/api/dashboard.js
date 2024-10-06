@@ -55,7 +55,20 @@ export async function getLineGraphData() {
       ANALYTICS_BASE_URL + "/api/v1/dashboard/frequencyInAYear",
       config
     );
-    return response;
+    // sorting the response data by month
+    const data = response.data;
+    const sortedData = Object.keys(data)
+      .sort((a, b) => {
+        return new Date("2021-" + a) - new Date("2021-" + b);
+      })
+      .reduce((acc, key) => {
+        acc[key] = data[key];
+        return acc;
+      }, {});
+    return {
+      status: 200,
+      data: sortedData,
+    };
     // return {
     //   status: 200,
     //   data: {
