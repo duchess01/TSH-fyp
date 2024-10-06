@@ -23,7 +23,6 @@ async def get_response(query: Query):
         user_id = query.userId
         session_id = query.chatSessionId
         chat_history = ChatService().get_chat_history(user_id, session_id)
-
         agent_executor = await initialize_agent_executor(chat_history)
         agent_response = agent_executor.run(user_query)
 
@@ -31,7 +30,11 @@ async def get_response(query: Query):
         if inspect.isawaitable(agent_response):
             agent_response = await agent_response
 
-        agent_message, topic = agent_response
+        if (type(agent_response) == str):
+            agent_message = agent_response
+            topic = "follow up"  # TODO: change to previous question's topic
+        else:
+            agent_message, topic = agent_response
         response = QueryResponseModel(
             status_code=201,
             topic=topic,

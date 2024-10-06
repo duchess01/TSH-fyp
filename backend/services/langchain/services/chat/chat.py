@@ -19,7 +19,6 @@ class ChatService:
         try:
             response = requests.get(url, params=params)
             response.raise_for_status()  # Raise an error for bad status codes
-
             if response.text == '':
                 return ""
 
@@ -30,6 +29,7 @@ class ChatService:
             return None
 
     def _format_chat_history(self, chat_history):
+        chat_history = chat_history[::-1]
         formatted_history = ""
         for entry in chat_history:
             question = entry["message"]
