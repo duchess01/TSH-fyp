@@ -52,6 +52,12 @@ jobs:
         working-directory: backend
         run: docker-compose -f docker-compose.test.yml up --build -d
 
+      - name: Run User tests
+        run: |
+          cd services/user
+          npm install
+          npm run test
+
       - name: Run tests
         working-directory: backend
         run: docker-compose -f docker-compose.test.yml run --rm ner-llm-test npm test
