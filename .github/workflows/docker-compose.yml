@@ -54,7 +54,7 @@ jobs:
 
       - name: Run User tests
         run: |
-          cd services/user
+          cd backend/services/user
           npm install
           npm run test
 
