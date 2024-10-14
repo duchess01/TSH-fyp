@@ -5,7 +5,6 @@ import Chat from "./Pages/Chat";
 import LoginPage from "./Pages/Login";
 import DashboardPage from "./Pages/Dashboard";
 import LogoutPage from "./Pages/Logout";
-import AdduserPage from "./Pages/Adduser";
 import AdminPage from "./Pages/Admin";
 import UploadPage from "./Pages/manualupload";
 
@@ -20,7 +19,6 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/Logout" element={<LogoutPage />} />
-          <Route path="/Adduser" element={<AdduserPage />} />
           <Route path="/Admin" element={<AdminPage />} />
           <Route path="/Upload" element={<UploadPage />} />
           {/* <Route path="*" element={<NotFound />} /> */}

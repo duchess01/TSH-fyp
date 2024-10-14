@@ -5,8 +5,9 @@ import {
   useCallback,
   useLayoutEffect,
 } from "react";
-import { BiPlus, BiUser, BiSend, BiSolidUserCircle } from "react-icons/bi";
-import { MdOutlineArrowLeft, MdOutlineArrowRight } from "react-icons/md";
+import { BiPlus, BiUser, BiSend, BiSolidUserCircle, BiLogOut } from "react-icons/bi";
+import { MdOutlineArrowLeft, MdOutlineArrowRight, MdOutlineDashboard } from "react-icons/md";
+import { AiOutlineMessage } from "react-icons/ai"; // New icon for QnA
 import { changeRating, sendMessageAPI } from "../api/chat";
 import { getAllChatHistoryAPI } from "../api/chat";
 import { useNavigate } from "react-router-dom";
@@ -263,15 +264,49 @@ function Chat() {
             )}
           </div>
           <div className="sidebar-info">
-            <div className="sidebar-info-upgrade">
-              <BiUser size={20} />
-              <p>FAQs</p>
-            </div>
-            <div className="sidebar-info-user">
-              <BiSolidUserCircle size={20} />
-              <p>User</p>
-            </div>
-          </div>
+  <div className="sidebar-info-upgrade">
+    <button
+      className="flex items-center border-none bg-transparent cursor-pointer w-full p-2 hover:bg-gray-700"
+      onClick={() => navigate("/qna")}
+    >
+      <AiOutlineMessage size={20} />
+      <span className="pl-2">QnA</span>
+    </button>
+  </div>
+  <div className="sidebar-info-dashboard">
+    <button
+      className="flex items-center border-none bg-transparent cursor-pointer w-full p-2 hover:bg-gray-700"
+      onClick={() => navigate("/dashboard")}
+    >
+      <MdOutlineDashboard size={20} />
+      <span className="pl-2">Dashboard</span>
+    </button>
+  </div>
+  <div className="sidebar-info-user">
+    <button
+      className="flex items-center border-none bg-transparent cursor-pointer w-full p-2 hover:bg-gray-700"
+      onClick={() => navigate("/admin")}
+    >
+      <BiSolidUserCircle size={20} />
+      <span className="pl-2">Admin</span>
+    </button>
+  </div>
+  <div className="sidebar-info-logout">
+    <button
+      className="flex items-center border-none bg-transparent cursor-pointer w-full p-2 hover:bg-gray-700"
+      onClick={() => {
+        sessionStorage.clear();
+        navigate("/logout");
+      }}
+    >
+      <BiLogOut size={20} />
+      <span className="pl-2">Logout</span>
+    </button>
+  </div>
+</div>
+
+
+
         </section>
 
         <section className="main">
