@@ -250,6 +250,8 @@ def process_content(message_content, pdf_file):
         print(heading, start_page, end_page, "HEADING, START PAGE, END PAGE")
         extracted_content[heading] = extract_text_from_pages(reader, int(start_page), int(end_page))
 
+
+
     return extracted_content
 
 def embed_content(extracted_content, pdf_file):
@@ -261,28 +263,28 @@ def embed_content(extracted_content, pdf_file):
         
     print(output_dict, "OUTPUT DICT")
 
-    # insert into pinecone
-    # pc = Pinecone(api_key={PINECONE_API_KEY})
+    insert into pinecone
+    pc = Pinecone(api_key={PINECONE_API_KEY})
 
-    # index_name = pdf_file.split(".")[0]
+    index_name = pdf_file.split(".")[0]
 
-    # pc.create_index(
-    #     name=index_name,
-    #     dimension=1536 ,
-    #     metric="cosine",
-    #     spec=ServerlessSpec(
-    #         cloud="aws",
-    #         region="us-east-1"
-    #     ) 
-    # )
+    pc.create_index(
+        name=index_name,
+        dimension=1536 ,
+        metric="cosine",
+        spec=ServerlessSpec(
+            cloud="aws",
+            region="us-east-1"
+        ) 
+    )
 
-    # index = pc.Index(index_name) 
+    index = pc.Index(index_name) 
 
-    # # Upsert all embeddings into Pinecone
-    # try:
-    #     upsert_embeddings(output_dict, extracted_content, index)
-    # except Exception as e:
-    #     print(f"Error upserting embeddings: {e}")
+    # Upsert all embeddings into Pinecone
+    try:
+        upsert_embeddings(output_dict, extracted_content, index)
+    except Exception as e:
+        print(f"Error upserting embeddings: {e}")
 
 if __name__ == "__main__":
     pdf_file = "sample.pdf"

@@ -57,3 +57,14 @@ class KeywordMapping(TimestampedModel) :
     namespace = Column(String(255), nullable=False, comment = "Namespace of the keyword")
     keywordArray = Column(ARRAY(String(255)), nullable=False, comment = "Array of keywords that belongs to the namespace")
     keywordEmbeddings = Column(ARRAY(Float(precision=16)), nullable=True, comment = "Array of embeddings for the keywords")
+    
+    
+    
+class ManualMapping(TimestampedModel) :
+    __tablename__ = "manual_mapping"
+    manual_id = Column(UUID(as_uuid=True), primary_key=True, default = lambda: uuid4(), comment = "UUID of the manual map")
+    manual_name = Column(String(255), nullable=False, comment = "Name of the manual map")
+    #array of keywordMapping
+    manual_mapping = Column()
+    
+    
