@@ -10,19 +10,38 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 PINECONE_API_KEY = os.getenv('PINECONE_API_KEY')
 
-client = OpenAI(api_key={OPENAI_API_KEY})
+print(OPENAI_API_KEY, "OPENAI_API_KEY")
+
+
+if OPENAI_API_KEY :
+    client = OpenAI(api_key=OPENAI_API_KEY)
 
 ### helper functions ###
 def extract_text_from_page(pdf, page_number):
-    page = pdf.pages[page_number]
-    return page.extract_text()
+    
+    print(pdf, "PDF")
+    print(page_number, "PAGE NUMBER")
+    
+    try :
+        page = pdf.pages[page_number]
+        return page.extract_text()
+    except : 
+        print('PAGE NOT FOUND')
+        return ""
+        
+    
 
 def find_page_by_chapter_name(pdf, chapter_name, max_search_pages=100):
     pdf_page = []
-    for page_number in range(max_search_pages):
+    page_number = 0 
+    while page_number <= max_search_pages:
         text = extract_text_from_page(pdf, page_number)
+        
         if chapter_name.lower() in text.lower():
+            print(f"Found '{chapter_name}' on page {page_number + 1}")
             pdf_page.append(page_number + 1)
+        page_number += 1
+        
     return pdf_page
 
 def calculate_offsets(toc_dict, pdf_path):
@@ -30,6 +49,8 @@ def calculate_offsets(toc_dict, pdf_path):
     offsets = []
     for chapter_name, manual_page in toc_dict.items():
         chapter_name_split = chapter_name.split()[-1].strip()  # Use last part of heading
+        
+        print(chapter_name_split, "CHAPTER NAME SPLIT")
         pdf_page = find_page_by_chapter_name(pdf, chapter_name_split)
         if pdf_page:
             for page_num in pdf_page:
@@ -77,6 +98,8 @@ def extract_text_from_pages(reader, start_page, end_page):
         extracted_text = page.extract_text()
         cleaned_text = clean_text(extracted_text) if extracted_text else ""
         content.append(cleaned_text)
+        
+    print(content, "CONTENT")
     return content
 
 def get_embedding_for_page(page_content, model="text-embedding-ada-002"):
@@ -201,21 +224,30 @@ def read_pdf(pdf_file):
 
 def process_content(message_content, pdf_file):
     # Extract dictionary from message content
-    start = message_content.value.find("{")
-    end = message_content.value.rfind("}") + 1
-    dictionary_str = message_content.value[start:end]
+    print(message_content, "MESSAGE CONTENT")
+    print(type(message_content), "TYPE OF MESSAGE CONTENT")
+    start = message_content.find("{")
+    end = message_content.rfind("}") + 1
+    print('INDEX START END', start, end)
+    dictionary_str = message_content[start:end]
     toc_dict = ast.literal_eval(dictionary_str)
+    print(toc_dict, "TOC DICT")
 
     # Find page offset
     offsets = calculate_offsets(toc_dict, pdf_file)
+    
+    print(offsets, "OFFSETS")
     consistent_offset = most_frequent_offset(offsets)
     adjusted_toc = adjust_toc_with_offset(toc_dict, consistent_offset)
+    
+    print(adjusted_toc, "ADJUSTED TOC")
     store_dictionary = adjusted_toc
 
     # Extract content as {heading:[content]}
     reader = PdfReader(pdf_file)
     extracted_content = {}
     for heading, (start_page, end_page) in store_dictionary.items():
+        print(heading, start_page, end_page, "HEADING, START PAGE, END PAGE")
         extracted_content[heading] = extract_text_from_pages(reader, int(start_page), int(end_page))
 
     return extracted_content
@@ -225,29 +257,32 @@ def embed_content(extracted_content, pdf_file):
     for heading, pages in extracted_content.items():
         embeddings = [get_embedding_for_page(page) for page in pages] 
         output_dict[heading] = embeddings 
+        
+        
+    print(output_dict, "OUTPUT DICT")
 
     # insert into pinecone
-    pc = Pinecone(api_key={PINECONE_API_KEY})
+    # pc = Pinecone(api_key={PINECONE_API_KEY})
 
-    index_name = pdf_file.split(".")[0]
+    # index_name = pdf_file.split(".")[0]
 
-    pc.create_index(
-        name=index_name,
-        dimension=1536 ,
-        metric="cosine",
-        spec=ServerlessSpec(
-            cloud="aws",
-            region="us-east-1"
-        ) 
-    )
+    # pc.create_index(
+    #     name=index_name,
+    #     dimension=1536 ,
+    #     metric="cosine",
+    #     spec=ServerlessSpec(
+    #         cloud="aws",
+    #         region="us-east-1"
+    #     ) 
+    # )
 
-    index = pc.Index(index_name) 
+    # index = pc.Index(index_name) 
 
-    # Upsert all embeddings into Pinecone
-    try:
-        upsert_embeddings(output_dict, extracted_content, index)
-    except Exception as e:
-        print(f"Error upserting embeddings: {e}")
+    # # Upsert all embeddings into Pinecone
+    # try:
+    #     upsert_embeddings(output_dict, extracted_content, index)
+    # except Exception as e:
+    #     print(f"Error upserting embeddings: {e}")
 
 if __name__ == "__main__":
     pdf_file = "sample.pdf"
