@@ -45,12 +45,9 @@ def extract_text_from_page(pdf, page_number):
     print(pdf, "PDF")
     print(page_number, "PAGE NUMBER")
     
-    try :
-        page = pdf.pages[page_number]
-        return page.extract_text()
-    except : 
-        print('PAGE NOT FOUND')
-        return ""
+    page = pdf.pages[page_number]
+    return page.extract_text()
+    
         
     
 
