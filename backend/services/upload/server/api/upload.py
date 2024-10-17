@@ -1,7 +1,10 @@
 from fastapi import APIRouter,UploadFile, File
 from server.models.extractors_model import GenericResponse
 from PyPDF2 import PdfReader
-
+from utils.process_pdf import run_process
+import tempfile
+import os
+import shutil
 
 
 
@@ -25,11 +28,34 @@ async def uploadPdf(
     text = ""
     
     try : 
-        reader = PdfReader(file.file)
-        for page in reader.pages:
-            text += page.extract_text() + "\n"
-            print("TEXT EXTRACTED: ", text)
-        return GenericResponse(message = "File uploaded successfully", data = text)
+        # reader = PdfReader()
+        # for page in reader.pages:
+        #     text += page.extract_text() + "\n"
+        #     print("TEXT EXTRACTED: ", text)
+        
+        tmp_dir = tempfile.mkdtemp()
+        tmp_file_path = os.path.join(tmp_dir, file.filename)
+        
+        with open(tmp_file_path, 'wb') as f :
+            shutil.copyfileobj(file.file, f)
+            
+        relative_url = os.path.relpath(tmp_file_path)
+        
+        
+            
+        # process text
+        extracted_content, store_dictionary = run_process(relative_url)
+        
+        
+        # run NER to extract pages 
+            
+            
+            # convert 
+        return GenericResponse(message = "File uploaded successfully", data = {
+            'extracted_content' : extracted_content, 
+            
+            'store_dictionary' : store_dictionary
+        })
             
     except Exception as e:
         return GenericResponse(status_code = 500, message = "Internal server error", data = str(e))

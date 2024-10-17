@@ -15,6 +15,29 @@ print(OPENAI_API_KEY, "OPENAI_API_KEY")
 
 if OPENAI_API_KEY :
     client = OpenAI(api_key=OPENAI_API_KEY)
+    
+def run_process(pdf_file): 
+    
+    print(type(pdf_file), "type of pdf file")
+    
+    message_content = read_pdf(pdf_file)
+        
+        
+    extracted_content = process_content(message_content, pdf_file)
+    
+    # upserts to pinecone
+    upsert_content_pinecone(extracted_content, pdf_file)
+    
+    
+    # returns extracted_content
+    return extracted_content
+    
+
+    
+    
+    
+    
+    
 
 ### helper functions ###
 def extract_text_from_page(pdf, page_number):
@@ -99,7 +122,6 @@ def extract_text_from_pages(reader, start_page, end_page):
         cleaned_text = clean_text(extracted_text) if extracted_text else ""
         content.append(cleaned_text)
         
-    print(content, "CONTENT")
     return content
 
 def get_embedding_for_page(page_content, model="text-embedding-ada-002"):
@@ -136,6 +158,8 @@ def upsert_embeddings(output_dict, extracted_content, index):
 ### main functions ###
 def read_pdf(pdf_file):
     # upload File
+    
+    
     PDF_file = client.files.create(
         file=open(pdf_file, "rb"),
         purpose="assistants"
@@ -224,37 +248,30 @@ def read_pdf(pdf_file):
 
 def process_content(message_content, pdf_file):
     # Extract dictionary from message content
-    print(message_content, "MESSAGE CONTENT")
-    print(type(message_content), "TYPE OF MESSAGE CONTENT")
     start = message_content.find("{")
     end = message_content.rfind("}") + 1
-    print('INDEX START END', start, end)
     dictionary_str = message_content[start:end]
     toc_dict = ast.literal_eval(dictionary_str)
-    print(toc_dict, "TOC DICT")
 
     # Find page offset
     offsets = calculate_offsets(toc_dict, pdf_file)
     
-    print(offsets, "OFFSETS")
     consistent_offset = most_frequent_offset(offsets)
     adjusted_toc = adjust_toc_with_offset(toc_dict, consistent_offset)
     
-    print(adjusted_toc, "ADJUSTED TOC")
     store_dictionary = adjusted_toc
 
     # Extract content as {heading:[content]}
     reader = PdfReader(pdf_file)
     extracted_content = {}
     for heading, (start_page, end_page) in store_dictionary.items():
-        print(heading, start_page, end_page, "HEADING, START PAGE, END PAGE")
         extracted_content[heading] = extract_text_from_pages(reader, int(start_page), int(end_page))
 
 
 
-    return extracted_content
+    return extracted_content, store_dictionary
 
-def embed_content(extracted_content, pdf_file):
+def upsert_content_pinecone(extracted_content, pdf_file):
     output_dict = {}
     for heading, pages in extracted_content.items():
         embeddings = [get_embedding_for_page(page) for page in pages] 
@@ -263,7 +280,6 @@ def embed_content(extracted_content, pdf_file):
         
     print(output_dict, "OUTPUT DICT")
 
-    insert into pinecone
     pc = Pinecone(api_key={PINECONE_API_KEY})
 
     index_name = pdf_file.split(".")[0]
@@ -288,6 +304,5 @@ def embed_content(extracted_content, pdf_file):
 
 if __name__ == "__main__":
     pdf_file = "sample.pdf"
-    message_content = read_pdf(pdf_file)
-    extracted_content = process_content(message_content, pdf_file)
-    embed_content(extracted_content, pdf_file)
+    
+    run_process(pdf_file)
