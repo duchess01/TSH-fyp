@@ -52,6 +52,7 @@ def extract_text_from_page(pdf, page_number):
     
 
 def find_page_by_chapter_name(pdf, chapter_name, max_search_pages=100):
+    print(max_search_pages, 'MAX SEARCH PAGES')
     pdf_page = []
     page_number = 0 
     while page_number <= max_search_pages:
@@ -71,7 +72,7 @@ def calculate_offsets(toc_dict, pdf_path):
         chapter_name_split = chapter_name.split()[-1].strip()  # Use last part of heading
         
         print(chapter_name_split, "CHAPTER NAME SPLIT")
-        pdf_page = find_page_by_chapter_name(pdf, chapter_name_split)
+        pdf_page = find_page_by_chapter_name(pdf, chapter_name_split, len(PdfReader.pages))
         if pdf_page:
             for page_num in pdf_page:
                 offset = page_num - manual_page
