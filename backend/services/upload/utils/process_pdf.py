@@ -52,7 +52,7 @@ def extract_text_from_page(pdf, page_number):
     
 
 def find_page_by_chapter_name(pdf, chapter_name, max_search_pages=100):
-    print(max_search_pages, 'MAX SEARCH PAGES')
+    print(max_search_pages, )
     pdf_page = []
     page_number = 0 
     while page_number <= max_search_pages:

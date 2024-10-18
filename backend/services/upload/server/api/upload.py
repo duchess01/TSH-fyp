@@ -6,6 +6,7 @@ from utils.process_pdf import run_process
 import tempfile
 import os
 import shutil
+import traceback
 
 
 
@@ -60,12 +61,18 @@ async def uploadPdf(
             
     except Exception as e:
         
+        
+        stack_trace = traceback.format_exc()
         return JSONResponse(
             status_code = 500, 
             content = {
                 "status_code" :500,
                 "message" : "Internal Server Error",
-                "data" : str(e)
+                "error": {
+                "type": type(e).__name__,
+                "message": str(e),
+                "stack_trace": stack_trace
+            }
                 
             }
         )
