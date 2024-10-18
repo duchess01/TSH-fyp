@@ -72,12 +72,18 @@ router.get("/history", async (req, res) => {
       "SELECT * FROM chat WHERE chat_session_id = $1 AND user_id = $2 ORDER BY id DESC LIMIT 3",
       [chatSessionId, userId]
     );
+    rows.reverse();
     if (rows.length === 0) {
       res.status(200).send("");
     } else {
-      res
-        .status(200)
-        .json(rows.map(({ message, response }) => ({ message, response })));
+      res.status(200).json(
+        rows.map(({ message, response, topic, id }) => ({
+          message,
+          response,
+          topic,
+          id,
+        }))
+      );
     }
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -97,24 +103,23 @@ router.post("/", async (req, res) => {
     // Determine the title based on whether the chat session already exists
     const title = existingChats.length === 0 ? message : existingChats[0].title;
 
-    // TODO: uncomment the call to the Langchain microservice
     // Make a call to the Langchain microservice to get a response and topic
-    // const langchainResponse = await getLLMResponse(
-    //   message,
-    //   String(userId),
-    //   chatSessionId,
-    //   machine
-    // );
-    const langchainResponse = {
-      status_code: 201,
-      message: "success",
-      topic: "test",
-      user_query: "hello",
-      agent_response:
-        "Question: hello  \n" +
-        "Thought: The input does not contain a specific question regarding status codes or error codes. I need to wait for a valid question to proceed.  \n" +
-        "Action: None",
-    };
+    const langchainResponse = await getLLMResponse(
+      message,
+      String(userId),
+      chatSessionId,
+      machine
+    );
+    // const langchainResponse = {
+    //   status_code: 201,
+    //   message: "success",
+    //   topic: "test",
+    //   user_query: "hello",
+    //   agent_response:
+    //     "Question: hello  \n" +
+    //     "Thought: The input does not contain a specific question regarding status codes or error codes. I need to wait for a valid question to proceed.  \n" +
+    //     "Action: None",
+    // };
     if (langchainResponse.status_code !== 201) {
       res.status(langchainResponse.status).json(langchainResponse.data);
       return;

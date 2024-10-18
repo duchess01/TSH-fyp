@@ -11,7 +11,7 @@ from .utils import match_namespace
 
 load_dotenv()
 pinecone_index_name = os.getenv("PINECONE_INDEX_NAME")
-llm = ALL_MODELS["gpt-4o-mini"]["chat_model"]
+llm = ALL_MODELS["gpt-4o"]["chat_model"]
 
 
 class PineconeQueryTool:

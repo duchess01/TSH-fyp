@@ -2,6 +2,7 @@ import express from "express";
 import { Router } from "express";
 import axios, { HttpStatusCode } from "axios";
 import getBaseURL from "../../utils/index.js";
+import { MONTH_MAPPING } from "../../constants/index.js";
 
 const router = Router();
 
@@ -81,6 +82,33 @@ router.get("/machineDistribution", async (req, res) => {
     res.status(HttpStatusCode.Ok).json(machineDistribution);
   } catch (error) {
     console.error("Error fetching machine distribution:", error);
+    res.status(HttpStatusCode.BadRequest).json({ message: error.message });
+  }
+});
+
+// getting the frequency of the questions asked for the current year in months
+router.get("/frequencyInAYear", async (req, res) => {
+  try {
+    const CHAT_BASE_URL = getBaseURL();
+    const response = await axios.get(CHAT_BASE_URL);
+    const data = response.data;
+    let frequencyInAYear = {};
+    // getting the data in the current year
+    const currentDate = new Date().toISOString().split("-")[0];
+    const filteredData = data.filter((chat) => {
+      return chat.created_at.split("-")[0] === currentDate;
+    });
+    filteredData.forEach((chat) => {
+      const month = MONTH_MAPPING[parseInt(chat.created_at.split("-")[1])];
+      if (month in frequencyInAYear) {
+        frequencyInAYear[month] += 1;
+      } else {
+        frequencyInAYear[month] = 1;
+      }
+    });
+    res.status(HttpStatusCode.Ok).json(frequencyInAYear);
+  } catch (error) {
+    console.error("Error fetching frequency in a year:", error);
     res.status(HttpStatusCode.BadRequest).json({ message: error.message });
   }
 });

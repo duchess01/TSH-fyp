@@ -5,8 +5,20 @@ import {
   useCallback,
   useLayoutEffect,
 } from "react";
-import { BiPlus, BiUser, BiSend, BiSolidUserCircle } from "react-icons/bi";
-import { MdOutlineArrowLeft, MdOutlineArrowRight } from "react-icons/md";
+import {
+  BiPlus,
+  BiUser,
+  BiSend,
+  BiSolidUserCircle,
+  BiLogOut,
+} from "react-icons/bi";
+import {
+  MdOutlineArrowLeft,
+  MdOutlineArrowRight,
+  MdOutlineDashboard,
+} from "react-icons/md";
+import { AiOutlineMessage } from "react-icons/ai"; // New icon for QnA
+import { FaSpinner } from "react-icons/fa";
 import { changeRating, sendMessageAPI } from "../api/chat";
 import { getAllChatHistoryAPI } from "../api/chat";
 import { useNavigate } from "react-router-dom";
@@ -16,6 +28,8 @@ import {
   FaThumbsDown,
   FaThumbsUp,
 } from "react-icons/fa";
+import ChatModal from "../components/chat/chatModal";
+import { MACHIINES } from "../constants";
 
 function Chat() {
   const navigate = useNavigate();
@@ -32,11 +46,7 @@ function Chat() {
   const [isShowSidebar, setIsShowSidebar] = useState(false);
   const scrollToLastItem = useRef(null);
   const [chatSessionId, setChatSessionId] = useState(null);
-  const [machines, setMachines] = useState([
-    "machine x",
-    "machine y",
-    "machine z",
-  ]);
+  const [machines, setMachines] = useState(MACHIINES);
   const [selectedMachine, setSelectedMachine] = useState(null);
   const [thumbs, setThumbs] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -63,7 +73,6 @@ function Chat() {
 
           const uniqueTitles = getUniqueTitles(response.data);
           setPreviousTitles(uniqueTitles);
-          console.log(response, "THIS IS ALL CHAT HISTORY");
         }
       } catch (e) {
         console.error(e);
@@ -133,12 +142,27 @@ function Chat() {
     setCurrentTitle(e.target.value);
   };
 
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      scrollToLastItem.current?.scrollIntoView({
+        behavior: "smooth",
+      });
+    }, 1);
+  };
+
   const submitHandler = async (e) => {
     e.preventDefault();
     if (!text) return;
 
     setIsResponseLoading(true);
     setErrorText("");
+    setCurrentChat((prev) => [
+      ...prev,
+      {
+        message: text,
+      },
+    ]);
+    scrollToBottom();
 
     try {
       const response = await sendMessageAPI(
@@ -157,8 +181,9 @@ function Chat() {
         setErrorText("");
         const data = response.data;
         setPreviousChats((prev) => [...prev, data]);
+        // updating the lastest msg in prev to response from chatbot
         setCurrentChat((prev) => [
-          ...prev,
+          ...prev.slice(0, prev.length - 1),
           {
             message: text,
             response: data.response,
@@ -166,11 +191,7 @@ function Chat() {
         ]);
         setPreviousTitles(getUniqueTitles([...previousChats, data]));
         setCurrentTitle(data.title);
-        setTimeout(() => {
-          scrollToLastItem.current?.lastElementChild?.scrollIntoView({
-            behavior: "smooth",
-          });
-        }, 1);
+        scrollToBottom();
         setTimeout(() => {
           setText("");
         }, 2);
@@ -265,18 +286,44 @@ function Chat() {
             )}
           </div>
           <div className="sidebar-info">
-            <div
-              className="sidebar-info-upgrade"
-              onClick={() => {
-                navigate("/FAQ");
-              }}
-            >
-              <BiUser size={20} />
-              <p>FAQs</p>
+            <div className="sidebar-info-upgrade">
+              <button
+                className="flex items-center border-none bg-transparent cursor-pointer w-full p-2 hover:bg-gray-700"
+                onClick={() => navigate("/qna")}
+              >
+                <AiOutlineMessage size={20} />
+                <span className="pl-2">QnA</span>
+              </button>
+            </div>
+            <div className="sidebar-info-dashboard">
+              <button
+                className="flex items-center border-none bg-transparent cursor-pointer w-full p-2 hover:bg-gray-700"
+                onClick={() => navigate("/dashboard")}
+              >
+                <MdOutlineDashboard size={20} />
+                <span className="pl-2">Dashboard</span>
+              </button>
             </div>
             <div className="sidebar-info-user">
-              <BiSolidUserCircle size={20} />
-              <p>User</p>
+              <button
+                className="flex items-center border-none bg-transparent cursor-pointer w-full p-2 hover:bg-gray-700"
+                onClick={() => navigate("/admin")}
+              >
+                <BiSolidUserCircle size={20} />
+                <span className="pl-2">Admin</span>
+              </button>
+            </div>
+            <div className="sidebar-info-logout">
+              <button
+                className="flex items-center border-none bg-transparent cursor-pointer w-full p-2 hover:bg-gray-700"
+                onClick={() => {
+                  sessionStorage.clear();
+                  navigate("/logout");
+                }}
+              >
+                <BiLogOut size={20} />
+                <span className="pl-2">Logout</span>
+              </button>
             </div>
           </div>
         </section>
@@ -288,7 +335,7 @@ function Chat() {
                 src="images/tsh-logo.PNG"
                 width={45}
                 height={45}
-                alt="ChatGPT"
+                alt="TshGPT"
               />
               <h1>TSH intelligent Chatbot</h1>
               <h3>Choose a machine from the dropdown below to start</h3>
@@ -323,8 +370,8 @@ function Chat() {
                 <li>
                   <div>
                     <div className="flex mb-1">
-                      <img src="images/tsh-logo.PNG" alt="ChatGPT" />
-                      <span className="role-title pl-2">ChatGPT</span>
+                      <img src="images/tsh-logo.PNG" alt="TshGPT" />
+                      <span className="role-title pl-2">TSH GPT</span>
                     </div>
                     <p>
                       Selected machine: {selectedMachine}. Please ask a
@@ -334,8 +381,9 @@ function Chat() {
                 </li>
               )}
               {currentChat?.map((chatMsg, idx) => {
+                const isLastMessage = idx === currentChat.length - 1;
                 return (
-                  <div key={idx} ref={scrollToLastItem}>
+                  <div key={idx} ref={isLastMessage ? scrollToLastItem : null}>
                     <li>
                       {chatMsg.message != "" ? (
                         <div>
@@ -351,45 +399,53 @@ function Chat() {
                       <div className="w-full">
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center">
-                            <img src="images/tsh-logo.PNG" alt="ChatGPT" />
-                            <span className="role-title pl-2">ChatGPT</span>
+                            <img src="images/tsh-logo.PNG" alt="TshGPT" />
+                            <span className="role-title pl-2">TSH GPT</span>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <button
-                              onClick={() =>
-                                handleThumbsChange(
-                                  "up",
-                                  chatMsg.rating,
-                                  chatMsg.id
-                                )
-                              }
-                              className="focus:outline-none"
-                            >
-                              {chatMsg.rating === "up" ? (
-                                <FaThumbsUp />
-                              ) : (
-                                <FaRegThumbsUp />
-                              )}
-                            </button>
-                            <button
-                              onClick={() =>
-                                handleThumbsChange(
-                                  "down",
-                                  chatMsg.rating,
-                                  chatMsg.id
-                                )
-                              }
-                              className="focus:outline-none"
-                            >
-                              {chatMsg.rating === "down" ? (
-                                <FaThumbsDown />
-                              ) : (
-                                <FaRegThumbsDown />
-                              )}
-                            </button>
-                          </div>
+                          {!isResponseLoading && isLastMessage && (
+                            <div className="flex items-center space-x-2">
+                              <button
+                                onClick={() =>
+                                  handleThumbsChange(
+                                    "up",
+                                    chatMsg.rating,
+                                    chatMsg.id
+                                  )
+                                }
+                                className="focus:outline-none"
+                              >
+                                {chatMsg.rating === "up" ? (
+                                  <FaThumbsUp />
+                                ) : (
+                                  <FaRegThumbsUp />
+                                )}
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleThumbsChange(
+                                    "down",
+                                    chatMsg.rating,
+                                    chatMsg.id
+                                  )
+                                }
+                                className="focus:outline-none"
+                              >
+                                {chatMsg.rating === "down" ? (
+                                  <FaThumbsDown />
+                                ) : (
+                                  <FaRegThumbsDown />
+                                )}
+                              </button>
+                            </div>
+                          )}
                         </div>
-                        <p>{chatMsg.response}</p>
+                        {isResponseLoading && isLastMessage ? (
+                          <div className="flex items-center justify-center">
+                            <FaSpinner className="animate-spin" />
+                          </div>
+                        ) : (
+                          <p>{chatMsg.response}</p>
+                        )}
                       </div>
                     </li>
                   </div>

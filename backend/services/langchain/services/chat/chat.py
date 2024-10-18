@@ -19,20 +19,22 @@ class ChatService:
         try:
             response = requests.get(url, params=params)
             response.raise_for_status()  # Raise an error for bad status codes
-
             if response.text == '':
-                return ""
+                return "", None
 
             chat_history = response.json()
             return self._format_chat_history(chat_history)
         except requests.exceptions.RequestException as e:
             print(f'An error occurred calling Chat service: {e}')
-            return None
+            return "", "others"
 
     def _format_chat_history(self, chat_history):
         formatted_history = ""
+        latest_topic = "others"
         for entry in chat_history:
             question = entry["message"]
             answer = entry["response"]
+            topic = entry["topic"]
             formatted_history += f"question: '{question}'\nanswer: `{answer}`\n"
-        return formatted_history.strip()
+            latest_topic = topic
+        return formatted_history.strip(), latest_topic

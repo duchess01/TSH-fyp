@@ -11,3 +11,5 @@ export const COLORS = [
   "rgba(86, 225, 205, 0.4)",
   "rgba(120, 75, 192, 0.4)",
 ];
+
+export const MACHIINES = ["FANUC Series 30/300, 31/310, 32/320-MODEL A"];

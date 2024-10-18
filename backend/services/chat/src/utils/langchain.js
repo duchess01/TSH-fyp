@@ -1,18 +1,17 @@
 import axios, { HttpStatusCode } from "axios";
 
 const LANGCHAIN_MICROSERVICE_BASE_URL = "http://localhost:8001/";
-const DOCKER_LANGCHAIN_BASE_URL = "http://langchain:3002/";
+const DOCKER_LANGCHAIN_BASE_URL = "http://langchain:8001/";
 
-function isDocker() {
-  return process.env.DOCKER_ENV === "true";
-}
+const isDocker = process.env.DOCKER_ENV === "true";
 
 export async function getLLMResponse(query, userId, sessionId, machine) {
   try {
     let url = isDocker
-      ? DOCKER_LANGCHAIN_BASE_URL + `api/v1/chat/`
-      : LANGCHAIN_MICROSERVICE_BASE_URL + `api/v1/chat/`;
+      ? DOCKER_LANGCHAIN_BASE_URL + `langchain/queryAgent`
+      : LANGCHAIN_MICROSERVICE_BASE_URL + `langchain/queryAgent`;
 
+    console.log("this is langhcain url", url);
     const config = {
       headers: {
         "Content-Type": "application/json",
@@ -21,7 +20,7 @@ export async function getLLMResponse(query, userId, sessionId, machine) {
     const body = {
       query: query,
       userId: userId,
-      sessionId: sessionId,
+      chatSessionId: sessionId,
       machine: machine,
     };
     const response = await axios.post(url, body, config);
