@@ -51,11 +51,11 @@ def extract_text_from_page(pdf, page_number):
         
     
 
-def find_page_by_chapter_name(pdf, chapter_name, max_search_pages=100):
-    print(max_search_pages, )
+def find_page_by_chapter_name(pdf, chapter_name):
+    total_pages = len(pdf.pages)
     pdf_page = []
     page_number = 0 
-    while page_number <= max_search_pages:
+    while page_number <= total_pages - 1:
         text = extract_text_from_page(pdf, page_number)
         
         if chapter_name.lower() in text.lower():
@@ -164,7 +164,7 @@ def read_pdf(pdf_file):
     )
 
     pdf_file_id = next((file.id for file in client.files.list(purpose="assistants").data if file.filename == pdf_file), None)
-
+    print("PDF FILE ID", pdf_file_id)
     # # Create vector store
     # vector_store = client.beta.vector_stores.create(
     #     name="PDF Vector Store",
@@ -192,6 +192,8 @@ def read_pdf(pdf_file):
             assistant_exists = True
             assistant = cur
             break
+
+    print("ASSISTANT EXISTS", my_assistants.data)
 
     # Create assistant if it doesn't exist
     if(not assistant_exists):
@@ -238,7 +240,7 @@ def read_pdf(pdf_file):
     )
 
     messages = list(client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id))
-
+    print(messages, "MESSAGES")
     # Process the response content
     message_content = messages[0].content[0].text
 
@@ -278,6 +280,7 @@ def upsert_content_pinecone(extracted_content, pdf_file):
         
     print(output_dict, "OUTPUT DICT")
 
+    # insert into pinecone
     pc = Pinecone(api_key={PINECONE_API_KEY})
 
     index_name = pdf_file.split(".")[0]
@@ -304,3 +307,8 @@ if __name__ == "__main__":
     pdf_file = "sample.pdf"
     
     run_process(pdf_file)
+
+    # pdf_file = "sample.pdf"
+    message_content = read_pdf(pdf_file)
+    extracted_content = process_content(message_content, pdf_file)
+    embed_content(extracted_content, pdf_file)
