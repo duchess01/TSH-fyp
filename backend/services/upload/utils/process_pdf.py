@@ -23,14 +23,14 @@ def run_process(pdf_file):
     message_content = read_pdf(pdf_file)
         
         
-    extracted_content = process_content(message_content, pdf_file)
+    extracted_content, store_dictionary = process_content(message_content, pdf_file)
     
     # upserts to pinecone
     upsert_content_pinecone(extracted_content, pdf_file)
     
     
     # returns extracted_content
-    return extracted_content
+    return extracted_content, store_dictionary
     
 
     
@@ -68,15 +68,22 @@ def find_page_by_chapter_name(pdf, chapter_name):
 def calculate_offsets(toc_dict, pdf_path):
     pdf = PdfReader(pdf_path)
     offsets = []
+    
+    
     for chapter_name, manual_page in toc_dict.items():
         chapter_name_split = chapter_name.split()[-1].strip()  # Use last part of heading
         
         print(chapter_name_split, "CHAPTER NAME SPLIT")
-        pdf_page = find_page_by_chapter_name(pdf, chapter_name_split, len(PdfReader.pages))
+        
+        
+        pdf_page = find_page_by_chapter_name(pdf, chapter_name_split)
         if pdf_page:
             for page_num in pdf_page:
-                offset = page_num - manual_page
-                offsets.append(offset)
+                
+                if type(manual_page) == int :
+                
+                    offset = page_num - manual_page
+                    offsets.append(offset)
     return offsets
 
 def most_frequent_offset(offsets):
@@ -88,7 +95,9 @@ def adjust_toc_with_offset(toc_dict, consistent_offset):
 
     for i in range(len(toc_item_list)):
         chapter_name, manual_page = toc_item_list[i]
-        adjusted_page = manual_page + consistent_offset
+        
+        if (type(manual_page) == int):
+            adjusted_page = manual_page + consistent_offset
         
         # Determine the range for end page
         if i < len(toc_item_list) - 1:
@@ -256,6 +265,8 @@ def process_content(message_content, pdf_file):
     # Find page offset
     offsets = calculate_offsets(toc_dict, pdf_file)
     
+    print(offsets, 'OFFSETS')
+    
     consistent_offset = most_frequent_offset(offsets)
     adjusted_toc = adjust_toc_with_offset(toc_dict, consistent_offset)
     
@@ -273,18 +284,23 @@ def process_content(message_content, pdf_file):
 
 def upsert_content_pinecone(extracted_content, pdf_file):
     output_dict = {}
+    print(extracted_content, "EXTRACTED CONTENT")
     for heading, pages in extracted_content.items():
         embeddings = [get_embedding_for_page(page) for page in pages] 
         output_dict[heading] = embeddings 
         
         
-    print(output_dict, "OUTPUT DICT")
 
     # insert into pinecone
-    pc = Pinecone(api_key={PINECONE_API_KEY})
+    pc = Pinecone(api_key=PINECONE_API_KEY)
+    
+    print(type(pdf_file), 'type pdffile')
+    
+    print(pdf_file, 'pdfFILE')
 
-    index_name = pdf_file.split(".")[0]
+    index_name = pdf_file.split("\\")[-1].split(".")[0]
 
+    print("INDEX NAME", index_name)
     pc.create_index(
         name=index_name,
         dimension=1536 ,
@@ -310,5 +326,7 @@ if __name__ == "__main__":
 
     # pdf_file = "sample.pdf"
     message_content = read_pdf(pdf_file)
-    extracted_content = process_content(message_content, pdf_file)
+    extracted_content, store_dictionary = process_content(message_content, pdf_file)
+    
+    print(store_dictionary, 'store dictionary')
     embed_content(extracted_content, pdf_file)
