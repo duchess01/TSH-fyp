@@ -82,7 +82,7 @@ class CustomZeroShotAgent(ZeroShotAgent):
 
 
 async def initialize_agent_executor(chat_history):
-    llm = ALL_MODELS["gpt-4o"]["chat_model"]
+    llm = ALL_MODELS["gpt-4o-mini"]["chat_model"]
     pinecool_tool = await setup_pinecone_tool()
     tools = [pinecool_tool]
 
