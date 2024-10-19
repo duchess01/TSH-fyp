@@ -118,19 +118,19 @@ services:
   #################################
   # The Langchain microservice
   #################################
-  langchain:
-    build:
-      context: ./services/langchain
-      dockerfile: Dockerfile
-    ports:
-      - "8001:8001"
-    restart: always
-    env_file:
-      - .local.env
-    networks:
-      - my-network
-    environment:
-      - ENVIRONMENT=docker
+  # langchain:
+  #   build:
+  #     context: ./services/langchain
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8001:8001"
+  #   restart: always
+  #   env_file:
+  #     - .local.env
+  #   networks:
+  #     - my-network
+  #   environment:
+  #     - ENVIRONMENT=docker
 
   #################################
   # PostgreSQL for User microservice

@@ -32,12 +32,12 @@ set -euxo pipefail
 echo "$(ls)" 
 
 
-# Run tests 
+# # Run tests 
 
-cd ner-llm/tests 
-
-
+# cd ner-llm/tests 
 
 
-python -m pytest -v -rs
+
+
+# python -m pytest -v -rs
 

@@ -11,6 +11,7 @@ from server.api import extractors
 from server.api import extract
 from server.api import keywordMapping
 from server.api import embed
+from server.api import manual
 
 from utils.exception import UnicornException
 
@@ -56,6 +57,7 @@ app.include_router(extractors.router)
 app.include_router(extract.router)
 app.include_router(keywordMapping.router)
 app.include_router(embed.router)
+app.include_router(manual.router)
 
 
 # handle exceptions
