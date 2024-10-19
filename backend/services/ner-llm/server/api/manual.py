@@ -9,6 +9,7 @@ import json
 from server.models.keywords import ManualMappingRequest, ManualStatusRequest
 from db.models import ManualStatus, KeywordMapping, UploadStatus
 from typing import List
+import os
 
 
 
@@ -118,30 +119,47 @@ def createManualMapping(
             status_code=500, detail=f"Database error: {str(e)}"
         )
         
-@router.delete("/delete/{manual_name}", summary="Delete a manual", description="Delete a manual")
+@router.delete("/delete/{manual_name}", summary="Delete a manual", description="Delete a manual and its associated JSON file")
 async def deleteManual(manual_name: str, session: Session = Depends(get_session)) -> GenericResponse:
     try:
-        # Query for the ManualMapping
+        # Check database entries
         manual = session.query(ManualMapping).filter(ManualMapping.manual_name == manual_name).first()
+        manual_status = session.query(ManualStatus).filter(ManualStatus.manual_name == manual_name).first()
 
-        if manual is None:
+        # Check JSON file
+        json_file_path = os.path.join('db', 'keywords', f"{manual_name}.json")
+        file_exists = os.path.exists(json_file_path)
+
+        if manual is None and not file_exists:
             raise HTTPException(
-                status_code=404, detail=f"Manual '{manual_name}' not found"
+                status_code=404, detail=f"Manual '{manual_name}' not found in database or file system"
             )
 
-        # Delete associated ManualStatus if it exists
-        manual_status = session.query(ManualStatus).filter(ManualStatus.manual_name == manual_name).first()
-        if manual_status:
-            session.delete(manual_status)
+        # Proceed with deletion if either database entries or file exists
+        db_deleted = False
+        file_deleted = False
 
-        # Delete the ManualMapping (this will also delete associated KeywordMappings due to cascade)
-        session.delete(manual)
+        if manual:
+            # Delete associated ManualStatus if it exists
+            if manual_status:
+                session.delete(manual_status)
+            
+            # Delete the ManualMapping (this will also delete associated KeywordMappings due to cascade)
+            session.delete(manual)
+            session.commit()
+            db_deleted = True
 
-        session.commit()
+        if file_exists:
+            os.remove(json_file_path)
+            file_deleted = True
 
         return GenericResponse(
-            message=f"Manual '{manual_name}' and its associated data deleted successfully",
-            data={"deleted_manual": manual_name}
+            message=f"Manual '{manual_name}' deletion process completed",
+            data={
+                "manual_name": manual_name,
+                "database_entries_deleted": db_deleted,
+                "json_file_deleted": file_deleted
+            }
         )
 
     except SQLAlchemyError as e:
@@ -149,8 +167,11 @@ async def deleteManual(manual_name: str, session: Session = Depends(get_session)
         raise HTTPException(
             status_code=500, detail=f"Database error: {str(e)}"
         )
-
-
+    except OSError as e:
+        # If database deletion was successful but file deletion failed
+        raise HTTPException(
+            status_code=500, detail=f"Error during file system operation: {str(e)}"
+        )
 ################################# STASTUS #############################################################################################
 @router.post("/status", summary="Create a manual status", description="Create a manual status to track the progress of the manual upload")
 def createManualStatus(
