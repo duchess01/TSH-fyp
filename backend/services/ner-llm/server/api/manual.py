@@ -8,6 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError
 import json 
 from server.models.keywords import ManualMappingRequest, ManualStatusRequest
 from db.models import ManualStatus, KeywordMapping, UploadStatus
+from typing import List
 
 
 
@@ -16,7 +17,7 @@ router = APIRouter(
     tags = ["Manual operations [CRUD] to postgresDB"],
 )
 
-@router.get("/{manual_name}", summary="Get keyword mappings for a specific manual", description="Get all keyword mappings associated with a specific manual")
+@router.get("/get/{manual_name}", summary="Get keyword mappings for a specific manual", description="Get all keyword mappings associated with a specific manual")
 async def getManualKeywordMappings(manual_name: str, session: Session = Depends(get_session)) -> GenericResponse:
     try:
         # Query for the ManualMapping with the given name, including its related KeywordMappings
@@ -40,7 +41,7 @@ async def getManualKeywordMappings(manual_name: str, session: Session = Depends(
         )
 
 
-@router.get("", summary="Get all manuals", description="Get a list of all available manuals")
+@router.get("/", summary="Get all manuals", description="Get a list of all available manuals")
 async def getAllManuals(session: Session = Depends(get_session)) -> GenericResponse:
     try:
         stmt = select(ManualMapping)
@@ -57,7 +58,7 @@ async def getAllManuals(session: Session = Depends(get_session)) -> GenericRespo
             status_code=500, detail=f"Internal server error: {str(e)}"
         )
 
-@router.post("", summary="Create a manual mapping", description="Create a manual mapping and associate it with existing keyword mappings")
+@router.post("/create", summary="Create a manual mapping", description="Create a manual mapping and associate it with existing keyword mappings")
 def createManualMapping(
     manual_request: ManualMappingRequest,
     session: Session = Depends(get_session)
@@ -117,12 +118,15 @@ def createManualMapping(
             status_code=500, detail=f"Database error: {str(e)}"
         )
 
-
+################################# STASTUS #############################################################################################
 @router.post("/status", summary="Create a manual status", description="Create a manual status to track the progress of the manual upload")
 def createManualStatus(
     manual_status_request: ManualStatusRequest,
     session: Session = Depends(get_session)
 ) -> GenericResponse:
+    
+    
+    
     try:
         # Check if a status for this manual already exists
         existing_status = session.query(ManualStatus).filter(ManualStatus.manual_name == manual_status_request.manual_name).first()
@@ -150,3 +154,84 @@ def createManualStatus(
         raise HTTPException(
             status_code=500, detail=f"Database error: {str(e)}"
         )
+
+@router.put("/status", summary="Update the status of a manual", description="Update the status of a manual")
+def updateManualStatus(
+    manual_status_request: ManualStatusRequest,
+    session: Session = Depends(get_session)
+) -> GenericResponse:
+    try:
+        # Check if the manual status exists
+        manual_status = session.query(ManualStatus).filter(ManualStatus.manual_name == manual_status_request.manual_name).first()
+        if not manual_status:
+            raise HTTPException(
+                status_code=404, detail=f"Manual status for '{manual_status_request.manual_name}' not found"
+            )
+
+        # Update the status
+        manual_status.status = manual_status_request.status
+        session.commit()
+
+        return GenericResponse(
+            message=f"Manual status for '{manual_status_request.manual_name}' updated successfully",
+            data={"manual_name": manual_status.manual_name, "status": manual_status.status}
+        )
+
+    except SQLAlchemyError as e:
+        session.rollback()
+        raise HTTPException(
+            status_code=500, detail=f"Database error: {str(e)}"
+        )
+        
+@router.get("/allstatus", summary="Get all manual statuses", description="Get all manual statuses")
+def getAllManualStatuses(session: Session = Depends(get_session)) -> GenericResponse:
+    try:
+        # Query all manual statuses
+        manual_statuses = session.query(ManualStatus).all()
+        
+        # Convert the results to a list of dictionaries
+        status_list = [
+            {
+                "manual_name": status.manual_name,
+                "status": status.status,
+                "created_at": status.created_at,
+                "updated_at": status.updated_at
+            }
+            for status in manual_statuses
+        ]
+
+        return GenericResponse(
+            message="All manual statuses retrieved successfully",
+            data=status_list
+        )
+
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=500, detail=f"Database error: {str(e)}"
+        )
+
+@router.get("/status/{manual_name}", summary="Get the status of a manual", description="Get the status of a manual")
+def getManualStatus(
+    manual_name: str,
+    session: Session = Depends(get_session)
+) -> GenericResponse:
+    try:
+        # Query for the manual status
+        manual_status = session.query(ManualStatus).filter(ManualStatus.manual_name == manual_name).first()
+        
+        if not manual_status:
+            raise HTTPException(
+                status_code=404, detail=f"Manual status for '{manual_name}' not found"
+            )
+
+        return GenericResponse(
+            message=f"Manual status for '{manual_name}' retrieved successfully",
+            data={"manual_name": manual_status.manual_name, "status": manual_status.status}
+        )
+
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=500, detail=f"Database error: {str(e)}"
+        )
+
+
