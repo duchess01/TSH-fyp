@@ -64,7 +64,7 @@ class ManualMapping(TimestampedModel) :
     __tablename__ = "manual_mapping"
     manual_id = Column(UUID(as_uuid=True), primary_key=True, default = lambda: uuid4(), comment = "UUID of the manual map")
     manual_name = Column(String(255), nullable=False, comment = "Name of the manual map")
-    #array of keywordMapping
-    manual_mapping = Column()
+    #array of keywordMapping?
+ 
     
     

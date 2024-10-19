@@ -3,7 +3,7 @@ import os
 import sys
 
 import requests
-from .manual_content import manual_dictionary
+# from .manual_content import manual_dictionary
 
 BASE_URL = "http://localhost:8000"
 
@@ -77,8 +77,8 @@ def process_headings(headings_dict):
     return output
         
 
-def save_output_to_file(output_dict, filename="chapter_keywords.json"):
-    folder_path = os.path.join(os.path.dirname(__file__), '..', 'db/keywords')
+def save_output_to_file(output_dict, filename="output.json"):
+    folder_path = os.path.join(os.path.dirname(__file__), '..', '..', 'ner-llm', 'db', 'keywords')
     file_path = os.path.join(folder_path, filename)
 
     with open(file_path, 'w') as f:
@@ -87,7 +87,7 @@ def save_output_to_file(output_dict, filename="chapter_keywords.json"):
 
 
 if __name__ == "__main__":
-    processed_output = process_headings(manual_dictionary)
+    # processed_output = process_headings(manual_dictionary)
 
     # for heading, data in processed_output.items():
     #     keywords = data["data"]["keywords"]

@@ -30,7 +30,7 @@ def run_process(pdf_file):
     
     
     # returns extracted_content
-    return extracted_content, store_dictionary
+    return extracted_content
     
 
     

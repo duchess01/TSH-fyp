@@ -8,6 +8,8 @@ import os
 import shutil
 import traceback
 
+from utils.process_manuals import process_headings, save_output_to_file
+
 
 
 router = APIRouter(
@@ -46,17 +48,25 @@ async def uploadPdf(
         relative_url = os.path.relpath(tmp_file_path)
         
         # process text
-        extracted_content, store_dictionary = run_process(relative_url)
+        extracted_content = run_process(relative_url)
         
         
         # run NER to extract pages 
+        processed_output = process_headings(extracted_content)
+        
+        file_name = file.filename.split("\\")[-1].split(".")[0]
+        
+        file_name = f"{file_name}.json"
+        # Upsert to file 
+        save_output_to_file(processed_output, file_name)
+        
             
             
             # convert 
         return GenericResponse(message = "File uploaded successfully", data = {
             'extracted_content' : extracted_content, 
+            'processed_output' : processed_output
             
-            'store_dictionary' : store_dictionary
         })
             
     except Exception as e:
