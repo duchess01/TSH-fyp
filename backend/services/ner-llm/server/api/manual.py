@@ -10,6 +10,11 @@ from server.models.keywords import ManualMappingRequest, ManualStatusRequest
 from db.models import ManualStatus, KeywordMapping, UploadStatus
 from typing import List
 import os
+# pinecone
+from pinecone import Pinecone, PineconeException
+
+
+pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 
 
 
@@ -119,7 +124,7 @@ def createManualMapping(
             status_code=500, detail=f"Database error: {str(e)}"
         )
         
-@router.delete("/delete/{manual_name}", summary="Delete a manual", description="Delete a manual and its associated JSON file")
+@router.delete("/delete/{manual_name}", summary="Delete a manual", description="Delete a manual, its associated JSON file, and Pinecone vectors")
 async def deleteManual(manual_name: str, session: Session = Depends(get_session)) -> GenericResponse:
     try:
         # Check database entries
@@ -130,15 +135,38 @@ async def deleteManual(manual_name: str, session: Session = Depends(get_session)
         json_file_path = os.path.join('db', 'keywords', f"{manual_name}.json")
         file_exists = os.path.exists(json_file_path)
 
-        if manual is None and not file_exists:
+        # Check if Pinecone index exists
+        
+        print(pc.list_indexes().names(), "pc.list_indexes().names()")
+        pinecone_index_exists = manual_name in pc.list_indexes().names()
+        
+        print(pinecone_index_exists, "pinecone_index_exists")
+        
+        print(manual, "manual")
+        
+        print(file_exists, "file_exists")
+        
+        
+
+        if manual is None or not file_exists or not pinecone_index_exists:
             raise HTTPException(
-                status_code=404, detail=f"Manual '{manual_name}' not found in database or file system"
+                status_code=404, detail=f"Manual '{manual_name}' not found in database, file system, or Pinecone"
             )
 
-        # Proceed with deletion if either database entries or file exists
+        # Proceed with deletion if any of the entries exist
         db_deleted = False
         file_deleted = False
-
+        pinecone_deleted = False
+        
+        if pinecone_index_exists:
+            try:
+                pc.delete_index(manual_name)
+                pinecone_deleted = True
+            except Exception as e:
+                print(f"Error deleting vectors from Pinecone: {str(e)}")
+                raise HTTPException(
+                    status_code=500, detail=f"Error deleting vectors from Pinecone: {str(e)}"
+                )
         if manual:
             # Delete associated ManualStatus if it exists
             if manual_status:
@@ -153,12 +181,22 @@ async def deleteManual(manual_name: str, session: Session = Depends(get_session)
             os.remove(json_file_path)
             file_deleted = True
 
+
+
+
+
+        if not all([db_deleted, file_deleted, pinecone_deleted]):
+            raise HTTPException(
+                status_code=500, detail=f"Failed to delete all resources for manual '{manual_name}'"
+            )
+
         return GenericResponse(
             message=f"Manual '{manual_name}' deletion process completed",
             data={
                 "manual_name": manual_name,
                 "database_entries_deleted": db_deleted,
-                "json_file_deleted": file_deleted
+                "json_file_deleted": file_deleted,
+                "pinecone_vectors_deleted": pinecone_deleted
             }
         )
 
@@ -171,6 +209,12 @@ async def deleteManual(manual_name: str, session: Session = Depends(get_session)
         # If database deletion was successful but file deletion failed
         raise HTTPException(
             status_code=500, detail=f"Error during file system operation: {str(e)}"
+        )
+        
+    except PineconeException as pe:
+        # This will catch any Pinecone errors that weren't caught in the inner try-except block
+        raise HTTPException(
+            status_code=500, detail=f"Pinecone error: {str(pe)}"
         )
 ################################# STASTUS #############################################################################################
 @router.post("/status", summary="Create a manual status", description="Create a manual status to track the progress of the manual upload")
