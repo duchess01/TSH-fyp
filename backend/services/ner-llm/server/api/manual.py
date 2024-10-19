@@ -117,6 +117,39 @@ def createManualMapping(
         raise HTTPException(
             status_code=500, detail=f"Database error: {str(e)}"
         )
+        
+@router.delete("/delete/{manual_name}", summary="Delete a manual", description="Delete a manual")
+async def deleteManual(manual_name: str, session: Session = Depends(get_session)) -> GenericResponse:
+    try:
+        # Query for the ManualMapping
+        manual = session.query(ManualMapping).filter(ManualMapping.manual_name == manual_name).first()
+
+        if manual is None:
+            raise HTTPException(
+                status_code=404, detail=f"Manual '{manual_name}' not found"
+            )
+
+        # Delete associated ManualStatus if it exists
+        manual_status = session.query(ManualStatus).filter(ManualStatus.manual_name == manual_name).first()
+        if manual_status:
+            session.delete(manual_status)
+
+        # Delete the ManualMapping (this will also delete associated KeywordMappings due to cascade)
+        session.delete(manual)
+
+        session.commit()
+
+        return GenericResponse(
+            message=f"Manual '{manual_name}' and its associated data deleted successfully",
+            data={"deleted_manual": manual_name}
+        )
+
+    except SQLAlchemyError as e:
+        session.rollback()
+        raise HTTPException(
+            status_code=500, detail=f"Database error: {str(e)}"
+        )
+
 
 ################################# STASTUS #############################################################################################
 @router.post("/status", summary="Create a manual status", description="Create a manual status to track the progress of the manual upload")
@@ -233,5 +266,6 @@ def getManualStatus(
         raise HTTPException(
             status_code=500, detail=f"Database error: {str(e)}"
         )
+
 
 
