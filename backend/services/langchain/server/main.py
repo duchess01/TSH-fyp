@@ -6,6 +6,9 @@ from pathlib import Path
 from dotenv import load_dotenv
 from os.path import join, dirname
 from starlette.middleware import Middleware
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from models.base import BaseResponseModel
 from queryAgent.router import query_router

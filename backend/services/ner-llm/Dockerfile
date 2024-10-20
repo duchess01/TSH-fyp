@@ -53,8 +53,8 @@ ENTRYPOINT ["bash", "./ner-llm/scripts/entrypoint.sh"]
 
 # testing staging
 
-FROM base as testing
+# FROM base as testing
 
-RUN pip install --no-cache-dir pytest pytest-cov pytest-asyncio
+# RUN pip install --no-cache-dir pytest pytest-cov pytest-asyncio
 
-ENTRYPOINT ["bash", "./ner-llm/scripts/test_entrypoint.sh"]
+# ENTRYPOINT ["bash", "./ner-llm/scripts/test_entrypoint.sh"]
