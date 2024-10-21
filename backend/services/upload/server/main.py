@@ -83,4 +83,4 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 if __name__ == "__main__":
 
-    uvicorn.run("server.main:app", host="localhost", port=8001, reload=True)
+    uvicorn.run("server.main:app", host="localhost", port=8002, reload=True)

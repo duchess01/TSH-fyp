@@ -5,7 +5,7 @@ from constants.constants import ALL_MODELS
 import re
 import os
 from pydantic import Field
-from typing import Any, Union, Optional, Tuple
+from typing import Any, Union, Optional, Tuple, ClassVar
 from langchain.agents.mrkl.output_parser import MRKLOutputParser
 from langchain.agents import Tool
 from langchain.agents import AgentExecutor, ZeroShotAgent, AgentOutputParser
@@ -20,7 +20,7 @@ load_dotenv()
 
 class CustomAgentExecutor(AgentExecutor):
     final_tool_name: Optional[str] = None
-    max_iterations = 2
+    max_iterations: ClassVar[int] = 2
 
     def _get_tool_return(
         self, next_step_output: Tuple[AgentAction, str]
@@ -82,7 +82,7 @@ class CustomZeroShotAgent(ZeroShotAgent):
 
 
 async def initialize_agent_executor(chat_history):
-    llm = ALL_MODELS["gpt-4o"]["chat_model"]
+    llm = ALL_MODELS["gpt-4o-mini"]["chat_model"]
     pinecool_tool = await setup_pinecone_tool()
     tools = [pinecool_tool]
 

@@ -3,44 +3,54 @@ import json
 import os
 import click
 from sqlalchemy.orm import sessionmaker
-from db.models import Base, KeywordMapping
+from db.models import Base, ManualMapping, KeywordMapping
+
 from db.dbconfig import ENGINE
 
-JSON_FILE_PATH = os.path.join(os.path.dirname(__file__), '../db/keywords/chapter_keywords.json')
+KEYWORDS_DIR = os.path.join(os.path.dirname(__file__), '../db/keywords')
 
 Session = sessionmaker(bind=ENGINE)
 session = Session()
 
 def create_tables():
+    # drop tables if exists
+    Base.metadata.drop_all(ENGINE)
+    
+    
     """Create all tables."""
     Base.metadata.create_all(ENGINE)
     click.echo("All tables created successfully.")
-    
-    
 
-def insert_keywords_from_json():
-    """Insert keywords from JSON file into the database."""
-    with open(JSON_FILE_PATH, 'r') as json_file:
-        data = json.load(json_file)
+def insert_manuals_and_keywords():
+    """Insert manuals and keywords from JSON files into the database."""
+    for filename in os.listdir(KEYWORDS_DIR):
+        if filename.endswith('.json'):
+            file_path = os.path.join(KEYWORDS_DIR, filename)
+            manual_name = os.path.splitext(filename)[0]  # Remove the .json extension
 
-        for namespace, content in data.items():
-            keywords = content['data'].get('keywords', [])
-            embeddings = content['data'].get('embeddings', [])
+            with open(file_path, 'r') as json_file:
+                data = json.load(json_file)
 
-            keyword_mapping = KeywordMapping(
-                namespace=namespace,
-                keywordArray=keywords,
-                keywordEmbeddings=embeddings
-            )
-            session.add(keyword_mapping)
-        session.commit()
-        click.echo("Keywords inserted successfully.")
+                # Create a new ManualMapping
+                manual_mapping = ManualMapping(manual_name=manual_name)
 
-@click.command()
-def initialize_db():
-    """Initialize the database and insert keyword data."""
-    create_tables()
-    insert_keywords_from_json()
+                for namespace, content in data.items():
+                    keywords = content['data'].get('keywords', [])
+                    embeddings = content['data'].get('embeddings', [])
+
+                    keyword_mapping = KeywordMapping(
+                        namespace=namespace,
+                        keywordArray=keywords,
+                        keywordEmbeddings=embeddings,
+                        manual_mapping=manual_mapping
+                    )
+                    manual_mapping.keyword_mappings.append(keyword_mapping)
+
+                session.add(manual_mapping)
+
+            session.commit()
+            click.echo(f"Manual '{manual_name}' and its keywords inserted successfully.")
 
 if __name__ == "__main__":
-    initialize_db()
+    create_tables()
+    insert_manuals_and_keywords()

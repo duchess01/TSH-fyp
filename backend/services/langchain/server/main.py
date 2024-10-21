@@ -6,9 +6,13 @@ from pathlib import Path
 from dotenv import load_dotenv
 from os.path import join, dirname
 from starlette.middleware import Middleware
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from models.base import BaseResponseModel
 from queryAgent.router import query_router
+from qna.router import qna_router
 from constants.constants import BASE_URL_PREFIX
 from services.ner_llm.ner_llm import NerLLMService
 
@@ -26,6 +30,7 @@ middleware = [
 app = FastAPI(title="Langchain Microservice", middleware=middleware)
 
 app.include_router(query_router, prefix=BASE_URL_PREFIX)
+app.include_router(qna_router, prefix=BASE_URL_PREFIX)
 
 
 @app.get(f"{BASE_URL_PREFIX}/healthcheck", response_model=BaseResponseModel)

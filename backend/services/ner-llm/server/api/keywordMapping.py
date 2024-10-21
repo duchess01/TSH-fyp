@@ -1,11 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException
 from server.models.extractors_model import GenericResponse
-from server.models.keywords import KeywordMappingRequest
+from server.models.keywords import KeywordMappingRequest, ManualMappingRequest, ManualStatusRequest
 from db.dbconfig import get_session
-from db.models import KeywordMapping
-from sqlalchemy.orm import Session
+from db.models import KeywordMapping, ManualMapping, ManualStatus, UploadStatus
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import select, update
 from sqlalchemy.exc import SQLAlchemyError
+from pydantic import BaseModel, Field
+from typing import List
+import json
+
 
 
 router = APIRouter(
@@ -13,25 +17,9 @@ router = APIRouter(
     tags = ["Keyword Mapping Objects [CRUD] to postgres DB"],
 )
 
+# get mapping by manual name
 
 
-# get all route
-@router.get("", summary = "get all keyword mappings", description="get all keyword mappings")
-async def getAllMappings(session : Session = Depends(get_session)) -> GenericResponse:
-        
-        try:
-            stmt = select(KeywordMapping)
-            
-            result = session.execute(stmt)
-            
-            res = result.scalars().all()
-            
-            return GenericResponse(message = "GET all mappings success", data = res)
-        
-        except SQLAlchemyError as e :
-            raise HTTPException(
-                status_code = 500, detail = f"Internal server error : {str(e)}"
-            )
 
 
 
@@ -226,3 +214,11 @@ def deleteMappingByNamespace(
             status_code = 500, detail = f"Internal server error : {str(e)}"
         )
     
+
+
+
+    
+    
+
+
+
