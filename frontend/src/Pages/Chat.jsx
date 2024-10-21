@@ -28,7 +28,6 @@ import {
   FaThumbsDown,
   FaThumbsUp,
 } from "react-icons/fa";
-import ChatModal from "../components/chat/chatModal";
 import { MACHIINES } from "../constants";
 
 function Chat() {

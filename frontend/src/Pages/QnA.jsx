@@ -1,29 +1,33 @@
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
-import { useState, useRef, useMemo, useLayoutEffect, useCallback } from "react";
 import {
-  BiPlus,
-  BiUser,
-  BiSend,
-  BiSolidUserCircle,
-  BiChat,
-} from "react-icons/bi";
+  useState,
+  useRef,
+  useMemo,
+  useLayoutEffect,
+  useCallback,
+  useEffect,
+} from "react";
+import { BiSolidUserCircle, BiChat } from "react-icons/bi";
 import { MdOutlineArrowLeft, MdOutlineArrowRight } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import QNAModal from "../components/chat/QNAModal";
 import PostQuestionModal from "../components/chat/PostQuestionModal";
+import { unique } from "../api/qna";
 
-const FAQ = () => {
+const QnA = () => {
   const navigate = useNavigate();
 
   const [modelOpen, setModelOpen] = useState(false);
   const [postQuestionModalOpen, setPostQuestionModalOpen] = useState(false);
-
   const [isShowSidebar, setIsShowSidebar] = useState(false);
+  const [selectedRowData, setSelectedRowData] = useState(null); // State to hold the selected row data
+
   const toggleSidebar = useCallback(() => {
     setIsShowSidebar((prev) => !prev);
   }, []);
+
   useLayoutEffect(() => {
     const handleResize = () => {
       setIsShowSidebar(window.innerWidth <= 640);
@@ -31,102 +35,44 @@ const FAQ = () => {
     handleResize();
 
     window.addEventListener("resize", handleResize);
-
     return () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
 
   const gridRef = useRef();
-  const [rowData, setRowData] = useState([
-    {
-      Machine: "Machine X",
-      Question: "What to do error code 300?",
-      Solution: 64950,
-      Answers: 1,
-      Last_Updated: "24 / 11 / 2024",
-    },
-    {
-      Machine: "Machine Y",
-      Question: "What to do error code 500?",
-      Solution: 64950,
-      Answers: 2,
-      Last_Updated: "24 / 11 / 2024",
-    },
-    {
-      Machine: "Machine Z",
-      Question: "What to do error code 700?",
-      Solution: 64950,
-      Answers: 3,
-      Last_Updated: "24 / 11 / 2024",
-    },
-    {
-      Machine: "Machine A",
-      Question: "What to do error code 700?",
-      Solution: 64950,
-      Answers: 3,
-      Last_Updated: "24 / 11 / 2024",
-    },
-    {
-      Machine: "Machine B",
-      Question: "What to do error code 700?",
-      Solution: 64950,
-      Answers: 3,
-      Last_Updated: "24 / 11 / 2024",
-    },
-    {
-      Machine: "Machine C",
-      Question: "What to do error code 700?",
-      Solution: 64950,
-      Answers: 3,
-      Last_Updated: "24 / 11 / 2024",
-    },
-    {
-      Machine: "Machine D",
-      Question: "What to do error code 700?",
-      Solution: 64950,
-      Answers: 3,
-      Last_Updated: "24 / 11 / 2024",
-    },
-    {
-      Machine: "Machine E",
-      Question: "What to do error code 700?",
-      Solution: 64950,
-      Answers: 3,
-      Last_Updated: "24 / 11 / 2024",
-    },
-  ]);
+  const [rowData, setRowData] = useState([]);
 
-  const [colDefs, setColDefs] = useState([
-    {
-      field: "Machine",
-      filter: "agTextColumnFilter",
-      flex: 2,
-    },
-    {
-      field: "Question",
-      filter: "agTextColumnFilter",
-    },
-    // { field: "Solution" },
-    {
-      field: "Answers",
-      filter: "agNumberColumnFilter",
-      flex: 1,
-      // cellStyle: { "text-align": "center" },
-    },
-    {
-      headerName: "Last Updated",
-      valueGetter: (p) => p.data.Last_Updated,
-      filter: "agDateColumnFilter",
-      flex: 1,
-    },
-  ]);
+  const colDefs = useMemo(
+    () => [
+      {
+        field: "Machine",
+        filter: "agTextColumnFilter",
+        flex: 2,
+      },
+      {
+        field: "Question",
+        filter: "agTextColumnFilter",
+      },
+      {
+        field: "Answers",
+        filter: "agNumberColumnFilter",
+        flex: 1,
+      },
+      {
+        headerName: "Last Updated",
+        valueGetter: (p) => p.data.Last_Updated,
+        filter: "agDateColumnFilter",
+        flex: 1,
+      },
+    ],
+    []
+  );
 
   const defaultColDef = useMemo(
     () => ({
       filterParams: {
         debounceMs: 0,
-        // buttons: ["apply", "reset"],
       },
       floatingFilter: true,
       flex: 5,
@@ -142,12 +88,39 @@ const FAQ = () => {
     setPostQuestionModalOpen(false);
   };
 
+  useEffect(() => {
+    const fetchUniqueQnA = async () => {
+      const response = await unique();
+      if (response && response.data) {
+        const transformedData = response.data.map((item) => ({
+          Machine: item.machine,
+          Question: item.question,
+          Answers: parseInt(item.count),
+          Last_Updated: new Date(item.latest_date).toLocaleDateString("en-GB"),
+        }));
+        setRowData(transformedData);
+      }
+    };
+    fetchUniqueQnA();
+  }, []);
+
+  const handleRowClick = (row) => {
+    setSelectedRowData(row.data);
+    setModelOpen(true);
+  };
+
   return (
     <>
-      {modelOpen == true ? <QNAModal closeModal={closeModal} /> : null}
-      {postQuestionModalOpen == true ? (
+      {modelOpen && (
+        <QNAModal
+          closeModal={closeModal}
+          machine={selectedRowData?.Machine}
+          question={selectedRowData?.Question}
+        />
+      )}
+      {postQuestionModalOpen && (
         <PostQuestionModal closeModal={closePostQuestionModal} />
-      ) : null}
+      )}
       <div
         className="min-w-full chat h-screen"
         style={{
@@ -161,22 +134,14 @@ const FAQ = () => {
           <div
             className="sidebar-header"
             role="button"
-            onClick={() => {
-              setPostQuestionModalOpen(true);
-            }}
+            onClick={() => setPostQuestionModalOpen(true)}
           >
             <button className="border-none bg-transparent cursor-pointer">
               Post Question
             </button>
           </div>
-          <div className="sidebar-history"></div>
           <div className="sidebar-info">
-            <div
-              className="sidebar-info-upgrade"
-              onClick={() => {
-                navigate("/");
-              }}
-            >
+            <div className="sidebar-info-upgrade" onClick={() => navigate("/")}>
               <BiChat size={20} />
               <p>ChatBot</p>
             </div>
@@ -201,7 +166,7 @@ const FAQ = () => {
                 animateRows={true}
                 columnDefs={colDefs}
                 defaultColDef={defaultColDef}
-                onRowClicked={() => setModelOpen(true)}
+                onRowClicked={handleRowClick}
               />
             </div>
           </div>
@@ -218,10 +183,10 @@ const FAQ = () => {
               onClick={toggleSidebar}
             />
           )}
-          <div className="main-header"></div>
         </section>
       </div>
     </>
   );
 };
-export default FAQ;
+
+export default QnA;

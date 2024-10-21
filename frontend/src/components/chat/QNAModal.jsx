@@ -6,72 +6,43 @@ import {
   FaThumbsDown,
   FaThumbsUp,
 } from "react-icons/fa";
+import { useEffect, useState } from "react";
+import { machinequestion } from "../../api/qna";
 
-function QNAModal({ closeModal }) {
+function QNAModal({ closeModal, machine, question }) {
+  const [data, setData] = useState([]);
+
   const handleSubmit = () => {
     console.log("SEND TO BE");
   };
 
-  // Change data. Rating will become an array of user ids representing who pressed what.
-  const hardCodedData = [
-    {
-      question: "What to do when I encounter error code 500",
-      solution:
-        "You need to disconnect the machine and restart the whole system to fix the error.",
-      embedding: "Test",
-      rating: { likes: 5, dislikes: 1 },
-      attachment: null,
-    },
-    {
-      question: "What to do when I encounter error code 500",
-      solution: "I'm not sure but, I think you can just ignore the error.",
-      embedding: "Test",
-      rating: { likes: 0, dislikes: 10 },
-      attachment: null,
-    },
-    {
-      question: "What to do when I encounter error code 500",
-      solution: "The manual provided answer is incorrect.",
-      embedding: "Test",
-      rating: { likes: 1, dislikes: 8 },
-      attachment: null,
-    },
-    {
-      question: "What to do when I encounter error code 500",
-      solution:
-        "This is yet another answer that does not provide anything useful.",
-      embedding: "Test",
-      rating: { likes: 3, dislikes: 21 },
-      attachment: null,
-    },
-    {
-      question: "What to do when I encounter error code 500",
-      solution:
-        "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
-      embedding: "Test",
-      rating: { likes: 3, dislikes: 321 },
-      attachment: null,
-    },
-    {
-      question: "What to do when I encounter error code 500",
-      solution:
-        "Refer to attached image. It explains how to solve the error code.",
-      embedding: "Test",
-      rating: { likes: 10, dislikes: 1 },
-      attachment: "../../Assets/image.png",
-    },
-  ];
+  useEffect(() => {
+    const fetchMachineQuestion = async () => {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.error("No token found in sessionStorage");
+        return;
+      }
+      const response = await machinequestion(machine, question, token);
+      if (response && response.data) {
+        setData(response.data);
+        console.log(response.data);
+      }
+    };
 
-  // Sorting
-  const sortedData = hardCodedData.sort((a, b) => {
-    const overallRatingA = a.rating.likes - a.rating.dislikes;
-    const overallRatingB = b.rating.likes - b.rating.dislikes;
+    fetchMachineQuestion();
+  }, [machine, question]);
+
+  // Sorting based on likes and dislikes
+  const sortedData = [...data].sort((a, b) => {
+    const overallRatingA = a.likes - a.dislikes;
+    const overallRatingB = b.likes - b.dislikes;
     return overallRatingB - overallRatingA;
   });
 
   const handleRatingClick = (type, index) => {
     console.log(`${type} button clicked for item ${index}`);
-    // Add your logic for handling the rating here (e.g., updating state)
+    // Add your logic for handling the rating here
   };
 
   return (
@@ -90,25 +61,21 @@ function QNAModal({ closeModal }) {
         </button>
 
         {/* HEADER OF MODAL */}
-        <h1 className="text-xl underline">Machine X</h1>
-        <h1 className="text-2xl font-bold border-b pb-2">
-          What to do when I encounter error code 500
-        </h1>
+        <h1 className="text-xl underline">{machine}</h1>
+        <h1 className="text-2xl font-bold border-b pb-2">{question}</h1>
         {/* END OF HEADER */}
 
         {/* BODY OF MODAL */}
         <div className="mt-4 overflow-y-auto h-full">
           {sortedData.map((item, index) => (
-            <div key={index} className="mb-4 border-b pb-2">
+            <div key={item.id} className="mb-4 border-b pb-2">
               <p className="font-semibold">{item.solution}</p>
-              {item.attachment && (
-                <a
-                  href={item.attachment}
-                  download
-                  className="text-blue-500 underline"
-                >
-                  Download Attachment
-                </a>
+              {item.solution_image && (
+                <img
+                  src={item.solution_image}
+                  alt="Solution"
+                  className="mt-2"
+                />
               )}
               <div className="flex gap mt-2 items-center">
                 <button
@@ -118,7 +85,7 @@ function QNAModal({ closeModal }) {
                 >
                   <FaRegThumbsUp />
                 </button>
-                <span className="text-sm">{item.rating.likes}</span>
+                <span className="text-sm">{item.likes}</span>
                 <div className="mr-4"></div>
                 <button
                   onClick={() => handleRatingClick("Dislike", index)}
@@ -127,7 +94,7 @@ function QNAModal({ closeModal }) {
                 >
                   <FaRegThumbsDown />
                 </button>
-                <span className="text-sm">{item.rating.dislikes}</span>
+                <span className="text-sm">{item.dislikes}</span>
               </div>
             </div>
           ))}

@@ -2,13 +2,14 @@ import express from "express";
 import { Router } from "express";
 import db from "../../db/db.js";
 import multer from "multer";
+import axios from "axios";
 
 const router = Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 // Retrieve all users' solution
-router.get("/", async (req, res) => {
+router.get("/getall", async (req, res) => {
   try {
     const { rows } = await db.query("SELECT * FROM qna");
     res.status(200).json(rows);
@@ -19,7 +20,7 @@ router.get("/", async (req, res) => {
 });
 
 // Save the user's solution
-router.post("/", upload.single("image"), async (req, res) => {
+router.post("/addsolution", upload.single("image"), async (req, res) => {
   const { user_id, question, solution, query_ids } = req.body;
   const image = req.file ? req.file.buffer : null;
 
@@ -70,6 +71,128 @@ router.post("/", upload.single("image"), async (req, res) => {
   }
 });
 
+// Handle fetching unique questions and machines with counts and latest date
+router.get("/unique", async (req, res) => {
+  try {
+    const { rows } = await db.query(`
+      SELECT 
+        question, 
+        machine, 
+        COUNT(*) AS count, 
+        MAX(created_at) AS latest_date
+      FROM 
+        qna
+      GROUP BY 
+        question, machine
+      ORDER BY 
+        latest_date DESC
+    `);
+
+    // Check if any unique pairs exist
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "No unique questions found" });
+    }
+
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error("Error fetching unique questions:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Handle fetching Q&A data based on machine and question
+router.post("/machinequestion", async (req, res) => {
+  const { machine, question } = req.body;
+
+  // Validate input
+  if (!machine || !question) {
+    return res.status(400).json({ error: "Machine and question are required" });
+  }
+
+  // Extract the token from the Authorization header
+  const token = req.headers.authorization?.split(" ")[1]; // Get the token from the header
+  if (!token) {
+    return res.status(401).json({ error: "Authorization token is required" });
+  }
+
+  try {
+    // Fetch matching rows from the database, along with like and dislike counts
+    const { rows } = await db.query(
+      `
+      SELECT 
+        qna.*, 
+        COALESCE(SUM(CASE WHEN r.rating_value = TRUE THEN 1 ELSE 0 END), 0) AS likes,
+        COALESCE(SUM(CASE WHEN r.rating_value = FALSE THEN 1 ELSE 0 END), 0) AS dislikes,
+        ARRAY_AGG(CASE WHEN r.rating_value = TRUE THEN r.user_id END) AS liked_user_ids,
+        ARRAY_AGG(CASE WHEN r.rating_value = FALSE THEN r.user_id END) AS disliked_user_ids
+      FROM 
+        qna 
+      LEFT JOIN 
+        ratings r ON qna.id = r.qna_id
+      WHERE 
+        qna.machine = $1 AND qna.question = $2
+      GROUP BY 
+        qna.id
+    `,
+      [machine, question]
+    );
+
+    // Check if any rows exist
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "No matching Q&A found" });
+    }
+
+    // Function to fetch user details by ID
+    const fetchUserDetails = async (userId) => {
+      if (!userId) return null;
+      try {
+        const response = await axios.get(
+          `http://user:3000/api/v1/users/getUserDetails/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // Pass the token to the user API
+            },
+          }
+        );
+        return response.data;
+      } catch (error) {
+        console.error(`Error fetching user details for ID ${userId}:`, error);
+        return null;
+      }
+    };
+
+    // Fetch user details for liked and disliked user IDs
+    const result = await Promise.all(
+      rows.map(async (row) => {
+        const likedUsers = await Promise.all(
+          row.liked_user_ids.filter((id) => id !== null).map(fetchUserDetails)
+        );
+        const dislikedUsers = await Promise.all(
+          row.disliked_user_ids
+            .filter((id) => id !== null)
+            .map(fetchUserDetails)
+        );
+
+        // Remove liked_user_ids and disliked_user_ids from the response
+        const { liked_user_ids, disliked_user_ids, ...rest } = row;
+
+        return {
+          ...rest,
+          liked_by: likedUsers.filter((user) => user !== null),
+          disliked_by: dislikedUsers.filter((user) => user !== null),
+        };
+      })
+    );
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching Q&A data:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// RATINGS
+
 // Handle ratings
 router.post("/rate", async (req, res) => {
   const { qna_id, user_id, rating_value } = req.body;
@@ -111,6 +234,33 @@ router.post("/rate", async (req, res) => {
     res.status(200).json({ message: "Rating processed successfully" });
   } catch (error) {
     console.error("Error processing rating:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Ratings of qna_id
+router.get("/ratings/:id", async (req, res) => {
+  const qna_id = parseInt(req.params.id, 10);
+
+  // Validate input
+  if (isNaN(qna_id)) {
+    return res.status(400).json({ error: "Invalid qna_id" });
+  }
+
+  try {
+    // Fetch ratings from the database
+    const { rows } = await db.query("SELECT * FROM ratings WHERE qna_id = $1", [
+      qna_id,
+    ]);
+
+    // Check if any ratings exist
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "No ratings found for this Q&A" });
+    }
+
+    res.status(200).json(rows);
+  } catch (error) {
+    console.error("Error fetching ratings:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
