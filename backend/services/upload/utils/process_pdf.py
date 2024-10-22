@@ -6,6 +6,7 @@ import os
 import ast
 import re
 import requests
+from fastapi import HTTPException
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
@@ -24,6 +25,7 @@ def run_process(pdf_file):
     except Exception as e:
         print(f"Error during process: {e}")
         update_status_in_database(pdf_file, status="failed")
+        raise HTTPException(status_code=500, detail= f"Error during process: {e}")
 
 
 ### helper functions ###
@@ -153,21 +155,39 @@ def upsert_embeddings(output_dict, extracted_content, index):
 
 def update_status_in_database(pdf_file, status):
     try:
+        # Extract the file name without extension
         pdf_file = pdf_file.split("\\")[-1].split(".")[0]
-        url = "http://localhost:8000/manual/status" 
+        
+        url = "http://localhost:8000/manual/status"  # Consider making this URL configurable
         data = {
             "manual_name": pdf_file,
             "status": status
         }
         response = requests.put(url, json=data)
         
-        if response.status_code == 200:
-            print(f"Successfully updated status to {status} for file {pdf_file}")
-        else:
-            print(f"Failed to update status in the database. Status Code: {response.status_code}")
+        response.raise_for_status()  # This will raise an HTTPError for bad responses (4xx or 5xx)
+        
+        print(f"Successfully updated status to {status} for file {pdf_file}")
+        return True
+    
+    except requests.HTTPError as http_err:
+        error_message = f"HTTP error occurred while updating status: {http_err}"
+        print(error_message)
+        if response.text:
+            print(f"Response content: {response.text}")
+        raise HTTPException(status_code=response.status_code, detail=error_message)
+    
+    except requests.RequestException as req_err:
+        error_message = f"Request error occurred while updating status: {req_err}"
+        print(error_message)
+        raise HTTPException(status_code=500, detail=error_message)
     
     except Exception as e:
-        print(f"Error during status update: {e}")
+        error_message = f"Unexpected error during status update: {e}"
+        print(error_message)
+        raise HTTPException(status_code=500, detail=error_message)
+    
+
 
 ### end of helper functions ###
 
@@ -324,6 +344,7 @@ def upsert_content_pinecone(extracted_content, pdf_file):
     index_name = pdf_file.split("\\")[-1].split(".")[0].lower().replace("_", "-")
 
     print("INDEX NAME", index_name)
+    
     pc.create_index(
         name=index_name,
         dimension=1536 ,
@@ -341,7 +362,10 @@ def upsert_content_pinecone(extracted_content, pdf_file):
         upsert_embeddings(output_dict, extracted_content, index)
     except Exception as e:
         print(f"Error upserting embeddings: {e}")
+        
         update_status_in_database(pdf_file, status="failed")
+        raise HTTPException(status_code=500, detail= f"Error upserting embeddings: {e}")
+        
 
 if __name__ == "__main__":
     pdf_file = "sample.pdf"
