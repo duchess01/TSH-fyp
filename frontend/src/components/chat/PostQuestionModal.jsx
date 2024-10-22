@@ -9,7 +9,19 @@ function PostQuestionModal({ closeModal }) {
   const [question, setQuestion] = useState("");
   const [solution, setSolution] = useState("");
   const [imageFile, setImageFile] = useState(null);
+  const [imageFileName, setImageFileName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImageFileName(file.name);
+    } else {
+      setImageFile(null);
+      setImageFileName("");
+    }
+  };
 
   const handleSubmit = async () => {
     if (isLoading) return;
@@ -146,7 +158,7 @@ function PostQuestionModal({ closeModal }) {
                 aria-hidden="true"
                 className="mx-auto h-12 w-12 text-gray-300"
               />
-              <div className="mt-4 flex text-sm leading-6 text-gray-600">
+              <div className="mt-4 flex flex-col text-sm leading-6 text-gray-600">
                 <label
                   htmlFor="file-upload"
                   className="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
@@ -156,14 +168,20 @@ function PostQuestionModal({ closeModal }) {
                     id="file-upload"
                     name="file-upload"
                     type="file"
+                    accept="image/*,.pdf"
                     className="sr-only"
-                    onChange={(e) => setImageFile(e.target.files[0])}
+                    onChange={handleFileChange}
                   />
                 </label>
                 <p className="pl-1">or drag and drop</p>
+                {imageFileName && (
+                  <p className="mt-2 text-sm text-gray-600 truncate">
+                    {imageFileName}
+                  </p>
+                )}
               </div>
               <p className="text-xs leading-5 text-gray-600">
-                PNG, JPG, GIF up to 10MB
+                PNG, JPG, GIF, or PDF
               </p>
             </div>
           </div>

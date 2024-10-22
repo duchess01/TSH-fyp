@@ -16,6 +16,7 @@ function QNAModal({ closeModal, machine, question }) {
   const [data, setData] = useState([]);
   const [userSolution, setUserSolution] = useState("");
   const [imageFile, setImageFile] = useState(null);
+  const [imageFileName, setImageFileName] = useState("");
   const [loading, setLoading] = useState(false);
   const user = JSON.parse(sessionStorage.getItem("user"));
   const modalBodyRef = useRef(null);
@@ -52,7 +53,29 @@ function QNAModal({ closeModal, machine, question }) {
   };
 
   const handleFileChange = (event) => {
-    setImageFile(event.target.files[0]);
+    const file = event.target.files[0];
+    if (file) {
+      const fileType = file.type;
+      const validTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "application/pdf",
+      ];
+
+      if (validTypes.includes(fileType)) {
+        setImageFile(file);
+        setImageFileName(file.name);
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Invalid file type",
+          text: "Please upload an image (PNG, JPG, GIF) or a PDF file.",
+        });
+        setImageFile(null);
+        setImageFileName("");
+      }
+    }
   };
 
   const handleSubmit = async () => {
@@ -72,6 +95,7 @@ function QNAModal({ closeModal, machine, question }) {
       console.log("Solution added successfully:", response);
       setUserSolution("");
       setImageFile(null);
+      setImageFileName("");
       if (modalBodyRef.current) {
         modalBodyRef.current.scrollTop = 0;
       }
@@ -232,7 +256,7 @@ function QNAModal({ closeModal, machine, question }) {
               htmlFor="cover-photo"
               className="block text-lg font-medium leading-6 text-gray-900 mt-4"
             >
-              Solution Image
+              Solution Image (or PDF)
             </label>
             <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25">
               <div className="text-center">
@@ -240,7 +264,7 @@ function QNAModal({ closeModal, machine, question }) {
                   aria-hidden="true"
                   className="mx-auto h-12 w-12 text-gray-300"
                 />
-                <div className="mt-4 flex text-sm leading-6 text-gray-600">
+                <div className="mt-4 flex flex-col text-sm leading-6 text-gray-600">
                   <label
                     htmlFor="file-upload"
                     className="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
@@ -250,54 +274,31 @@ function QNAModal({ closeModal, machine, question }) {
                       id="file-upload"
                       name="file-upload"
                       type="file"
+                      accept="image/*,.pdf"
                       className="sr-only"
                       onChange={handleFileChange}
                     />
                   </label>
                   <p className="pl-1">or drag and drop</p>
+                  {imageFileName && (
+                    <p className="mt-2 text-sm text-gray-600 truncate">
+                      {imageFileName}
+                    </p>
+                  )}
                 </div>
                 <p className="text-xs leading-5 text-gray-600">
-                  PNG, JPG, GIF up to 10MB
+                  PNG, JPG, GIF, or PDF
                 </p>
               </div>
             </div>
-            <div className="flex gap-4 justify-end mt-4 mb-6">
-              <button
-                type="submit"
-                disabled={loading}
-                className={`bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 ${
-                  loading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-              >
-                {loading ? (
-                  <span className="flex items-center">
-                    <svg
-                      className="animate-spin h-5 w-5 mr-2"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 0114.45-4.95A8 8 0 106.59 20.95A8 8 0 014 12z"
-                      />
-                    </svg>
-                    Submitting...
-                  </span>
-                ) : (
-                  "Submit"
-                )}
-              </button>
-            </div>
+
+            <button
+              type="submit"
+              className="mt-4 inline-flex justify-center rounded-md border border-transparent bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              disabled={loading}
+            >
+              {loading ? "Submitting..." : "Submit Solution"}
+            </button>
           </form>
           {/* END OF USER ENTERED SOLUTION */}
         </div>
