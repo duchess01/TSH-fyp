@@ -7,9 +7,10 @@ import {
   FaThumbsUp,
 } from "react-icons/fa";
 import { useEffect, useState, useRef } from "react";
-import { machinequestion, addSolution } from "../../api/qna";
-import { rate } from "../../api/qna";
+import { machinequestion, addSolution, rate } from "../../api/qna";
 import Swal from "sweetalert2";
+import { Tooltip } from "@mui/material";
+import { format } from "date-fns";
 
 function QNAModal({ closeModal, machine, question }) {
   const [data, setData] = useState([]);
@@ -102,6 +103,11 @@ function QNAModal({ closeModal, machine, question }) {
     return overallRatingB - overallRatingA;
   });
 
+  // Function to format date
+  const formatDate = (dateString) => {
+    return format(new Date(dateString), "dd-MM-yyyy");
+  };
+
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
       <div
@@ -145,7 +151,25 @@ function QNAModal({ closeModal, machine, question }) {
                   >
                     {isLiked ? <FaThumbsUp /> : <FaRegThumbsUp />}
                   </button>
-                  <span className="text-sm">{item.likes}</span>
+                  <Tooltip
+                    title={
+                      item.liked_by.length > 0 ? (
+                        <div style={{ maxHeight: "200px", overflowY: "auto" }}>
+                          {item.liked_by.map((user) => (
+                            <div key={user.id}>
+                              {user.name} - {formatDate(user.created_at)}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        "There are no likes."
+                      )
+                    }
+                    arrow
+                    placement="top"
+                  >
+                    <span className="text-sm cursor-pointer">{item.likes}</span>
+                  </Tooltip>
                   <div className="mr-4"></div>
                   <button
                     onClick={() => handleRatingClick("Dislike", item)}
@@ -154,7 +178,27 @@ function QNAModal({ closeModal, machine, question }) {
                   >
                     {isDisliked ? <FaThumbsDown /> : <FaRegThumbsDown />}
                   </button>
-                  <span className="text-sm">{item.dislikes}</span>
+                  <Tooltip
+                    title={
+                      item.disliked_by.length > 0 ? (
+                        <div style={{ maxHeight: "200px", overflowY: "auto" }}>
+                          {item.disliked_by.map((user) => (
+                            <div key={user.id}>
+                              {user.name} - {formatDate(user.created_at)}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        "There are no dislikes."
+                      )
+                    }
+                    arrow
+                    placement="top"
+                  >
+                    <span className="text-sm cursor-pointer">
+                      {item.dislikes}
+                    </span>
+                  </Tooltip>
                 </div>
               </div>
             );
