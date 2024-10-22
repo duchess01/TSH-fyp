@@ -163,7 +163,7 @@ const QnA = () => {
             >
               <AgGridReact
                 pagination={true}
-                paginationPageSize={10}
+                paginationPageSize={20}
                 paginationPageSizeSelector={[10, 20, 50, 100]}
                 ref={gridRef}
                 rowData={rowData}
