@@ -21,11 +21,11 @@ router.get("/getall", async (req, res) => {
 
 // Save the user's solution
 router.post("/addsolution", upload.single("image"), async (req, res) => {
-  const { user_id, question, solution, query_ids } = req.body;
+  const { user_id, question, solution, query_ids, machine } = req.body;
   const image = req.file ? req.file.buffer : null;
 
   // Checks if any fields are missing
-  if (!user_id || !question || !query_ids) {
+  if (!user_id || !question || !query_ids || !machine) {
     return res.status(400).json({ error: "All fields are required" });
   }
   if (!solution && image == null) {
@@ -38,19 +38,19 @@ router.post("/addsolution", upload.single("image"), async (req, res) => {
   let newRow;
   try {
     const result = await db.query(
-      "INSERT INTO qna (user_id, topic, question, solution, solution_image) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-      [user_id, "topic", question, solution, image]
+      "INSERT INTO qna (user_id, topic, question, solution, solution_image, machine) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+      [user_id, "topic", question, solution, image, machine]
     );
 
-    //Retrieve new query id and append
+    // Retrieve new query id and append
     newRow = result.rows[0];
     const newQueryIds = [...query_ids, newRow.id];
 
     // Send the request to LangChain
     const lmmResponse = await axios.post(
-      "http://localhost:8001/langchain/qna/upsert",
+      "http://langchain:8001/langchain/qna/upsert",
       {
-        query: title,
+        query: question,
         ids: newQueryIds.map(String),
       }
     );
@@ -231,7 +231,14 @@ router.post("/rate", async (req, res) => {
       }
     }
 
-    res.status(200).json({ message: "Rating processed successfully" });
+    // Fetch updated rating data
+    const updatedRating = await db.query(
+      "SELECT * FROM ratings WHERE qna_id = $1 AND user_id = $2",
+      [qna_id, user_id]
+    );
+
+    // Return the updated rating data
+    res.status(200).json(updatedRating.rows[0]);
   } catch (error) {
     console.error("Error processing rating:", error);
     res.status(500).json({ error: "Internal server error" });
