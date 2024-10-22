@@ -22,7 +22,8 @@ const QnA = () => {
   const [modelOpen, setModelOpen] = useState(false);
   const [postQuestionModalOpen, setPostQuestionModalOpen] = useState(false);
   const [isShowSidebar, setIsShowSidebar] = useState(false);
-  const [selectedRowData, setSelectedRowData] = useState(null); // State to hold the selected row data
+  const [selectedRowData, setSelectedRowData] = useState(null);
+  const [rowData, setRowData] = useState([]);
 
   const toggleSidebar = useCallback(() => {
     setIsShowSidebar((prev) => !prev);
@@ -41,7 +42,6 @@ const QnA = () => {
   }, []);
 
   const gridRef = useRef();
-  const [rowData, setRowData] = useState([]);
 
   const colDefs = useMemo(
     () => [
@@ -80,27 +80,31 @@ const QnA = () => {
     []
   );
 
+  // Fetch unique QnA function
+  const fetchUniqueQnA = async () => {
+    const response = await unique();
+    if (response && response.data) {
+      const transformedData = response.data.map((item) => ({
+        Machine: item.machine,
+        Question: item.question,
+        Answers: parseInt(item.count),
+        Last_Updated: new Date(item.latest_date).toLocaleDateString("en-GB"),
+      }));
+      setRowData(transformedData);
+    }
+  };
+
   const closeModal = () => {
     setModelOpen(false);
+    fetchUniqueQnA();
   };
 
   const closePostQuestionModal = () => {
     setPostQuestionModalOpen(false);
+    fetchUniqueQnA();
   };
 
   useEffect(() => {
-    const fetchUniqueQnA = async () => {
-      const response = await unique();
-      if (response && response.data) {
-        const transformedData = response.data.map((item) => ({
-          Machine: item.machine,
-          Question: item.question,
-          Answers: parseInt(item.count),
-          Last_Updated: new Date(item.latest_date).toLocaleDateString("en-GB"),
-        }));
-        setRowData(transformedData);
-      }
-    };
     fetchUniqueQnA();
   }, []);
 

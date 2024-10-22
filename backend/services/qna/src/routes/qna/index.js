@@ -245,7 +245,6 @@ router.post("/rate", async (req, res) => {
   }
 });
 
-// Ratings of qna_id
 router.get("/ratings/:id", async (req, res) => {
   const qna_id = parseInt(req.params.id, 10);
 
@@ -254,18 +253,82 @@ router.get("/ratings/:id", async (req, res) => {
     return res.status(400).json({ error: "Invalid qna_id" });
   }
 
-  try {
-    // Fetch ratings from the database
-    const { rows } = await db.query("SELECT * FROM ratings WHERE qna_id = $1", [
-      qna_id,
-    ]);
+  // Extract the token from the Authorization header
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ error: "Authorization token is required" });
+  }
 
-    // Check if any ratings exist
+  try {
+    // Fetch the Q&A entry by qna_id along with likes and dislikes
+    const { rows } = await db.query(
+      `
+      SELECT 
+        qna.*, 
+        COALESCE(SUM(CASE WHEN r.rating_value = TRUE THEN 1 ELSE 0 END), 0) AS likes,
+        COALESCE(SUM(CASE WHEN r.rating_value = FALSE THEN 1 ELSE 0 END), 0) AS dislikes,
+        ARRAY_AGG(CASE WHEN r.rating_value = TRUE THEN r.user_id END) AS liked_user_ids,
+        ARRAY_AGG(CASE WHEN r.rating_value = FALSE THEN r.user_id END) AS disliked_user_ids
+      FROM 
+        qna 
+      LEFT JOIN 
+        ratings r ON qna.id = r.qna_id
+      WHERE 
+        qna.id = $1
+      GROUP BY 
+        qna.id
+    `,
+      [qna_id]
+    );
+
+    // Check if any rows exist
     if (rows.length === 0) {
-      return res.status(404).json({ message: "No ratings found for this Q&A" });
+      return res.status(404).json({ message: "No Q&A found for this ID" });
     }
 
-    res.status(200).json(rows);
+    // Function to fetch user details by ID
+    const fetchUserDetails = async (userId) => {
+      if (!userId) return null;
+      try {
+        const response = await axios.get(
+          `http://user:3000/api/v1/users/getUserDetails/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        return response.data;
+      } catch (error) {
+        console.error(`Error fetching user details for ID ${userId}:`, error);
+        return null;
+      }
+    };
+
+    // Fetch user details for liked and disliked user IDs
+    const result = await Promise.all(
+      rows.map(async (row) => {
+        const likedUsers = await Promise.all(
+          row.liked_user_ids.filter((id) => id !== null).map(fetchUserDetails)
+        );
+        const dislikedUsers = await Promise.all(
+          row.disliked_user_ids
+            .filter((id) => id !== null)
+            .map(fetchUserDetails)
+        );
+
+        // Remove liked_user_ids and disliked_user_ids from the response
+        const { liked_user_ids, disliked_user_ids, ...rest } = row;
+
+        return {
+          ...rest,
+          liked_by: likedUsers.filter((user) => user !== null),
+          disliked_by: dislikedUsers.filter((user) => user !== null),
+        };
+      })
+    );
+
+    res.status(200).json(result);
   } catch (error) {
     console.error("Error fetching ratings:", error);
     res.status(500).json({ error: "Internal server error" });

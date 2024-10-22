@@ -9,6 +9,7 @@ import {
 import { useEffect, useState, useRef } from "react";
 import { machinequestion, addSolution } from "../../api/qna";
 import { rate } from "../../api/qna";
+import Swal from "sweetalert2";
 
 function QNAModal({ closeModal, machine, question }) {
   const [data, setData] = useState([]);
@@ -74,8 +75,18 @@ function QNAModal({ closeModal, machine, question }) {
         modalBodyRef.current.scrollTop = 0;
       }
       fetchMachineQuestion();
+      Swal.fire({
+        icon: "success",
+        title: "Success!",
+        text: "Your solution has been submitted.",
+      });
     } else {
       console.error("Error adding solution:", response);
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Something went wrong. Please try again.",
+      });
     }
     setLoading(false);
   };

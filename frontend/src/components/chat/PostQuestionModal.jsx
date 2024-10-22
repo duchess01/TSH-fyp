@@ -1,23 +1,62 @@
 import { PhotoIcon } from "@heroicons/react/24/solid";
 import { RxCross2 } from "react-icons/rx";
 import { useState } from "react";
+import { addSolution } from "../../api/qna";
+import Swal from "sweetalert2";
 
 function PostQuestionModal({ closeModal }) {
   const [selectedMachine, setSelectedMachine] = useState("");
   const [question, setQuestion] = useState("");
+  const [solution, setSolution] = useState("");
+  const [imageFile, setImageFile] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = () => {
-    console.log("Machine:", selectedMachine);
-    console.log("Question:", question);
-    // Here you can add your logic to send the data
+  const handleSubmit = async () => {
+    if (isLoading) return;
+
+    setIsLoading(true);
+    const user_id = JSON.parse(sessionStorage.getItem("user")).id;
+    const query_ids = [];
+
+    try {
+      const response = await addSolution(
+        user_id,
+        question,
+        solution,
+        query_ids,
+        imageFile,
+        selectedMachine
+      );
+
+      if (response.status === 201) {
+        console.log("Solution added successfully:", response);
+        Swal.fire({
+          icon: "success",
+          title: "Success!",
+          text: "Your solution has been submitted.",
+        });
+        closeModal();
+      } else {
+        console.error("Error adding solution:", response);
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: "Something went wrong. Please try again.",
+        });
+      }
+    } catch (error) {
+      console.error("Error during submission:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Something went wrong. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const machines = [
-    "Machine X",
-    "Machine Y",
-    "Machine Z",
-    // Add more machines as needed
-  ];
+  const machines = ["Machine X", "Machine Y", "Machine Z"];
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
@@ -34,9 +73,8 @@ function PostQuestionModal({ closeModal }) {
           <RxCross2 className="h-6 w-6" />
         </button>
 
-        {/* MACHINE SELECTION AND QUESTION INPUT */}
         <h2 className="text-2xl font-bold mb-4 underline">Post a Question</h2>
-        <form>
+        <form onSubmit={(e) => e.preventDefault()}>
           <label
             htmlFor="machine"
             className="block text-lg font-medium leading-6 text-gray-900"
@@ -89,10 +127,13 @@ function PostQuestionModal({ closeModal }) {
               id="about"
               name="about"
               rows={3}
+              value={solution}
+              onChange={(e) => setSolution(e.target.value)}
               className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-              defaultValue={""}
+              placeholder="Type your solution here..."
             />
           </div>
+
           <label
             htmlFor="cover-photo"
             className="block text-lg font-medium leading-6 text-gray-900 mt-4"
@@ -116,6 +157,7 @@ function PostQuestionModal({ closeModal }) {
                     name="file-upload"
                     type="file"
                     className="sr-only"
+                    onChange={(e) => setImageFile(e.target.files[0])}
                   />
                 </label>
                 <p className="pl-1">or drag and drop</p>
@@ -128,17 +170,41 @@ function PostQuestionModal({ closeModal }) {
         </form>
         <div className="flex gap-4 justify-end mt-4 mb-6">
           <button
-            onClick={() => {
-              handleSubmit();
-              closeModal();
-            }}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            onClick={handleSubmit}
+            disabled={isLoading}
+            className={`bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 ${
+              isLoading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
           >
-            Submit
+            {isLoading ? (
+              <span className="flex items-center">
+                <svg
+                  className="animate-spin h-5 w-5 mr-2"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 0114.45-4.95A8 8 0 106.59 20.95A8 8 0 014 12z"
+                  />
+                </svg>
+                Submitting...
+              </span>
+            ) : (
+              "Submit"
+            )}
           </button>
         </div>
-
-        {/* END OF USER ENTERED SOLUTION */}
       </div>
     </div>
   );
