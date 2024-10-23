@@ -185,7 +185,7 @@ function QNAModal({ closeModal, machine, question }) {
                             "application/octet-stream",
                         })
                       )}
-                      download={`solution_image.${item.solution_image_type === "image/png" ? "png" : item.solution_image_type === "image/jpeg" ? "jpg" : item.solution_image_type === "application/pdf" ? "pdf" : "bin"}`}
+                      download={`Attachment.${item.solution_image_type === "image/png" ? "png" : item.solution_image_type === "image/jpeg" ? "jpg" : item.solution_image_type === "application/pdf" ? "pdf" : "bin"}`}
                       className="text-blue-500 underline"
                       aria-label="Download attachment"
                     >
