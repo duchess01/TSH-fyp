@@ -81,9 +81,9 @@ class CustomZeroShotAgent(ZeroShotAgent):
         return CustomMRKLOutputParser()
 
 
-async def initialize_agent_executor(chat_history):
+async def initialize_agent_executor(chat_history, machine):
     llm = ALL_MODELS["gpt-4o-mini"]["chat_model"]
-    pinecool_tool = await setup_pinecone_tool()
+    pinecool_tool = await setup_pinecone_tool(machine)
     tools = [pinecool_tool]
 
     agent_suffix = create_agent_suffix(chat_history)

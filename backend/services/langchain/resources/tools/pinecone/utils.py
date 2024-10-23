@@ -22,7 +22,7 @@ async def initialize_pinecone_index(pinecone_index_name):
             metric='euclidean',
             spec=ServerlessSpec(
                 cloud='aws',
-                region='us-west-2'
+                region='us-east-1'
             )
         )
     index = pc.Index(pinecone_index_name)
