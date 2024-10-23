@@ -3,7 +3,7 @@ import json
 import os
 import click
 from sqlalchemy.orm import sessionmaker
-from db.models import Base, ManualMapping, KeywordMapping
+from db.models import Base, ManualMapping, KeywordMapping, ManualStatus, UploadStatus
 
 from db.dbconfig import ENGINE
 
@@ -46,10 +46,21 @@ def insert_manuals_and_keywords():
                     )
                     manual_mapping.keyword_mappings.append(keyword_mapping)
 
+                # Create a new ManualStatus
+                manual_status = ManualStatus(
+                    manual_name=manual_name,
+                    status=UploadStatus.COMPLETED,
+                    manual_mapping=manual_mapping
+                )
+
+                # The relationship will automatically set manual_mapping.status
+                
+                # Add ManualMapping to the session (ManualStatus will be added automatically due to the relationship)
                 session.add(manual_mapping)
 
+            # Commit the transaction
             session.commit()
-            click.echo(f"Manual '{manual_name}' and its keywords inserted successfully.")
+            click.echo(f"Manual '{manual_name}' and its keywords inserted successfully. Status set to 'COMPLETED'.")
 
 if __name__ == "__main__":
     create_tables()
