@@ -3,6 +3,7 @@ import { RxCross2 } from "react-icons/rx";
 import { useState } from "react";
 import { addSolution } from "../../api/qna";
 import Swal from "sweetalert2";
+import { MACHIINES } from "../../constants";
 
 function PostQuestionModal({ closeModal }) {
   const [selectedMachine, setSelectedMachine] = useState("");
@@ -42,11 +43,13 @@ function PostQuestionModal({ closeModal }) {
       );
 
       if (response.status === 201) {
-        console.log("Solution added successfully:", response);
         Swal.fire({
           icon: "success",
           title: "Success!",
           text: "Your solution has been submitted.",
+          customClass: {
+            popup: "custom-swal",
+          },
         });
         closeModal();
       } else {
@@ -55,6 +58,9 @@ function PostQuestionModal({ closeModal }) {
           icon: "error",
           title: "Oops...",
           text: "Something went wrong. Please try again.",
+          customClass: {
+            popup: "custom-swal",
+          },
         });
       }
     } catch (error) {
@@ -63,13 +69,16 @@ function PostQuestionModal({ closeModal }) {
         icon: "error",
         title: "Oops...",
         text: "Something went wrong. Please try again.",
+        customClass: {
+          popup: "custom-swal",
+        },
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const machines = ["Machine X", "Machine Y", "Machine Z"];
+  const machines = MACHIINES;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
@@ -191,9 +200,7 @@ function PostQuestionModal({ closeModal }) {
           <button
             onClick={handleSubmit}
             disabled={isLoading}
-            className={`bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 ${
-              isLoading ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+            className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
           >
             {isLoading ? (
               <span className="flex items-center">

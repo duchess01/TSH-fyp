@@ -307,3 +307,18 @@ button {
   background-color: #343541;
   color: white;
 }
+
+.custom-swal {
+  background-color: #343541 !important;
+  color: white !important;
+}
+
+.custom-swal {
+  background-color: #343541 !important;
+  color: white !important;
+}
+
+.custom-swal .swal2-title,
+.custom-swal .swal2-html {
+  color: white !important; /* Ensures the text color is white */
+}

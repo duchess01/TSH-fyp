@@ -76,6 +76,9 @@ function QNAModal({ closeModal, machine, question }) {
           icon: "error",
           title: "Invalid file type",
           text: "Please upload an image (PNG, JPG, GIF) or a PDF file.",
+          customClass: {
+            popup: "custom-swal",
+          },
         });
         setImageFile(null);
         setImageFileName("");
@@ -98,7 +101,6 @@ function QNAModal({ closeModal, machine, question }) {
     );
 
     if (response.status === 201) {
-      console.log("Solution added successfully:", response);
       setUserSolution("");
       setImageFile(null);
       setImageFileName("");
@@ -110,6 +112,9 @@ function QNAModal({ closeModal, machine, question }) {
         icon: "success",
         title: "Success!",
         text: "Your solution has been submitted.",
+        customClass: {
+          popup: "custom-swal",
+        },
       });
     } else {
       console.error("Error adding solution:", response);
@@ -117,6 +122,9 @@ function QNAModal({ closeModal, machine, question }) {
         icon: "error",
         title: "Oops...",
         text: "Something went wrong. Please try again.",
+        customClass: {
+          popup: "custom-swal",
+        },
       });
     }
     setLoading(false);
@@ -144,7 +152,7 @@ function QNAModal({ closeModal, machine, question }) {
         className="fixed inset-0 bg-black opacity-50"
         onClick={() => closeModal()}
       ></div>
-      <div className="bg-white p-6 rounded-lg shadow-lg z-10 w-3/4 h-3/4 flex flex-col relative">
+      <div className="p-6 rounded-lg shadow-lg z-10 w-3/4 h-3/4 flex flex-col relative modalBGC">
         <button
           onClick={closeModal}
           className="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
@@ -159,7 +167,7 @@ function QNAModal({ closeModal, machine, question }) {
         {/* END OF HEADER */}
 
         {/* BODY OF MODAL */}
-        <div className="mt-4 overflow-y-auto h-full" ref={modalBodyRef}>
+        <div className="mt-4 overflow-y-auto h-full pr-4" ref={modalBodyRef}>
           {sortedData.map((item) => {
             const isLiked = item.liked_by.some((u) => u.id === user.id);
             const isDisliked = item.disliked_by.some((u) => u.id === user.id);
@@ -243,37 +251,38 @@ function QNAModal({ closeModal, machine, question }) {
             }}
           >
             <label
-              htmlFor="about"
-              className="block text-lg font-medium leading-6 text-gray-900"
+              htmlFor="solution"
+              className="block text-lg font-medium leading-6 text-white mt-4"
             >
               Solution
             </label>
             <div className="mt-2">
               <textarea
-                id="about"
-                name="about"
+                id="solution"
+                name="solution"
                 rows={3}
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                placeholder="Type your solution here..."
                 value={userSolution}
                 onChange={(e) => setUserSolution(e.target.value)}
               />
             </div>
             <label
               htmlFor="cover-photo"
-              className="block text-lg font-medium leading-6 text-gray-900 mt-4"
+              className="block text-lg font-medium leading-6 text-white mt-4"
             >
               Solution Image (or PDF)
             </label>
-            <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25">
+            <div className="mt-2 flex justify-center rounded-lg border border-dashed border-white-900/25">
               <div className="text-center">
                 <PhotoIcon
                   aria-hidden="true"
-                  className="mx-auto h-12 w-12 text-gray-300"
+                  className="mx-auto h-12 w-12 text-white"
                 />
-                <div className="mt-4 flex flex-col text-sm leading-6 text-gray-600">
+                <div className="mt-4 flex flex-col text-sm leading-6">
                   <label
                     htmlFor="file-upload"
-                    className="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                    className="relative cursor-pointer rounded-md font-bold text-blue-400 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-400"
                   >
                     <span>Upload a file</span>
                     <input
@@ -287,24 +296,52 @@ function QNAModal({ closeModal, machine, question }) {
                   </label>
                   <p className="pl-1">or drag and drop</p>
                   {imageFileName && (
-                    <p className="mt-2 text-sm text-gray-600 truncate">
+                    <p className="mt-2 text-sm text-white font-bold truncate">
                       {imageFileName}
                     </p>
                   )}
                 </div>
-                <p className="text-xs leading-5 text-gray-600">
+                <p className="text-xs leading-5 text-white">
                   PNG, JPG, GIF, or PDF
                 </p>
               </div>
             </div>
 
-            <button
-              type="submit"
-              className="mt-4 inline-flex justify-center rounded-md border border-transparent bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-              disabled={loading}
-            >
-              {loading ? "Submitting..." : "Submit Solution"}
-            </button>
+            <div className="mt-4 flex justify-end">
+              <button
+                type="submit"
+                className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                disabled={loading}
+              >
+                {loading ? (
+                  <span className="flex items-center">
+                    <svg
+                      className="animate-spin h-5 w-5 mr-2"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 0114.45-4.95A8 8 0 106.59 20.95A8 8 0 014 12z"
+                      />
+                    </svg>
+                    Submitting...
+                  </span>
+                ) : (
+                  "Submit"
+                )}
+              </button>
+            </div>
           </form>
           {/* END OF USER ENTERED SOLUTION */}
         </div>
