@@ -1,18 +1,18 @@
-import { UserIcon } from "@heroicons/react/24/solid";
 import axios from "axios";
 
 const USER_BASE_URL = "http://localhost:3003/api/v1";
 
-export async function unique() {
+export async function unique(token) {
   try {
     const config = {
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
     };
     const body = {};
     let url = USER_BASE_URL + "/qna/unique";
-    const response = await axios.get(url, body, config);
+    const response = await axios.get(url, config);
     return response;
   } catch (error) {
     console.log("Error in getting unique qna solutions: ", error);
@@ -49,12 +49,12 @@ export async function machinequestion(machine, question, token) {
   }
 }
 
-export async function rate(qna_id, user_id, rating_value) {
+export async function rate(qna_id, user_id, rating_value, token) {
   try {
     const config = {
       headers: {
         "Content-Type": "application/json",
-        // Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
     };
 
@@ -82,7 +82,8 @@ export async function addSolution(
   solution,
   query_ids,
   imageFile,
-  machine
+  machine,
+  token
 ) {
   try {
     const formData = new FormData();
@@ -99,7 +100,7 @@ export async function addSolution(
     const config = {
       headers: {
         "Content-Type": "multipart/form-data",
-        // Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
     };
 

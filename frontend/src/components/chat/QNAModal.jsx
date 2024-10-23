@@ -45,7 +45,12 @@ function QNAModal({ closeModal, machine, question }) {
       rating = isDisliked ? null : false; // Toggle dislike
     }
 
-    const response = await rate(item.id, user.id, rating);
+    const response = await rate(
+      item.id,
+      user.id,
+      rating,
+      sessionStorage.getItem("token")
+    );
     if (response.status !== 200) {
       console.log("Error when rating.");
     }
@@ -88,7 +93,8 @@ function QNAModal({ closeModal, machine, question }) {
       userSolution,
       query_ids,
       imageFile,
-      machine
+      machine,
+      sessionStorage.getItem("token")
     );
 
     if (response.status === 201) {

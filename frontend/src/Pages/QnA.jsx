@@ -22,7 +22,6 @@ import { unique } from "../api/qna";
 
 const QnA = () => {
   const navigate = useNavigate();
-
   const [modelOpen, setModelOpen] = useState(false);
   const [postQuestionModalOpen, setPostQuestionModalOpen] = useState(false);
   const [isShowSidebar, setIsShowSidebar] = useState(false);
@@ -86,7 +85,12 @@ const QnA = () => {
 
   // Fetch unique QnA function
   const fetchUniqueQnA = async () => {
-    const response = await unique();
+    const token = sessionStorage.getItem("token");
+    if (!token) {
+      console.error("No token found in sessionStorage");
+      return;
+    }
+    const response = await unique(token);
     if (response && response.data) {
       const transformedData = response.data.map((item) => ({
         Machine: item.machine,
@@ -109,6 +113,11 @@ const QnA = () => {
   };
 
   useEffect(() => {
+    const user = JSON.parse(sessionStorage.getItem("user")); // fetching user details from session storage
+    if (user === null) {
+      // user not logged in or session expired. Redirect to login page
+      navigate("/login");
+    }
     fetchUniqueQnA();
   }, []);
 

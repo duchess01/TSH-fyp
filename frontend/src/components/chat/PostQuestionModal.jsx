@@ -37,7 +37,8 @@ function PostQuestionModal({ closeModal }) {
         solution,
         query_ids,
         imageFile,
-        selectedMachine
+        selectedMachine,
+        sessionStorage.getItem("token")
       );
 
       if (response.status === 201) {
@@ -76,10 +77,10 @@ function PostQuestionModal({ closeModal }) {
         className="fixed inset-0 bg-black opacity-50"
         onClick={() => closeModal()}
       ></div>
-      <div className="bg-white p-6 rounded-lg shadow-lg z-10 w-3/4 h-3/4 flex flex-col relative overflow-hidden">
+      <div className="p-6 rounded-lg shadow-lg z-10 w-3/4 h-3/4 flex flex-col relative overflow-hidden modalBGC">
         <button
           onClick={closeModal}
-          className="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
+          className="absolute top-4 right-4 text-white hover:text-gray-400"
           aria-label="Close"
         >
           <RxCross2 className="h-6 w-6" />
@@ -89,7 +90,7 @@ function PostQuestionModal({ closeModal }) {
         <form onSubmit={(e) => e.preventDefault()}>
           <label
             htmlFor="machine"
-            className="block text-lg font-medium leading-6 text-gray-900"
+            className="block text-lg font-medium leading-6 text-white"
           >
             Select Machine
           </label>
@@ -98,7 +99,7 @@ function PostQuestionModal({ closeModal }) {
             name="machine"
             value={selectedMachine}
             onChange={(e) => setSelectedMachine(e.target.value)}
-            className="block w-full mt-2 mb-4 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+            className="block w-full mt-2 mb-4 rounded-md border-0 py-1.5 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
           >
             <option value="" disabled>
               Select a machine
@@ -112,7 +113,7 @@ function PostQuestionModal({ closeModal }) {
 
           <label
             htmlFor="question"
-            className="block text-lg font-medium leading-6 text-gray-900"
+            className="block text-lg font-medium leading-6 text-white"
           >
             Your Question
           </label>
@@ -123,45 +124,45 @@ function PostQuestionModal({ closeModal }) {
               type="text"
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+              className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
               placeholder="Type your question here..."
             />
           </div>
 
           <label
-            htmlFor="about"
-            className="block text-lg font-medium leading-6 text-gray-900 mt-4"
+            htmlFor="solution"
+            className="block text-lg font-medium leading-6 text-white mt-4"
           >
             Solution
           </label>
           <div className="mt-2">
             <textarea
-              id="about"
-              name="about"
+              id="solution"
+              name="solution"
               rows={3}
               value={solution}
               onChange={(e) => setSolution(e.target.value)}
-              className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+              className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
               placeholder="Type your solution here..."
             />
           </div>
 
           <label
             htmlFor="cover-photo"
-            className="block text-lg font-medium leading-6 text-gray-900 mt-4"
+            className="block text-lg font-medium leading-6 text-white mt-4"
           >
             Solution Image
           </label>
-          <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25">
+          <div className="mt-2 flex justify-center rounded-lg border border-dashed border-white-900/25">
             <div className="text-center">
               <PhotoIcon
                 aria-hidden="true"
-                className="mx-auto h-12 w-12 text-gray-300"
+                className="mx-auto h-12 w-12 text-white"
               />
-              <div className="mt-4 flex flex-col text-sm leading-6 text-gray-600">
+              <div className="mt-4 flex flex-col text-sm leading-6">
                 <label
                   htmlFor="file-upload"
-                  className="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                  className="relative cursor-pointer rounded-md font-bold text-blue-400 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-400"
                 >
                   <span>Upload a file</span>
                   <input
@@ -175,12 +176,12 @@ function PostQuestionModal({ closeModal }) {
                 </label>
                 <p className="pl-1">or drag and drop</p>
                 {imageFileName && (
-                  <p className="mt-2 text-sm text-gray-600 truncate">
+                  <p className="mt-2 text-sm text-white font-bold truncate">
                     {imageFileName}
                   </p>
                 )}
               </div>
-              <p className="text-xs leading-5 text-gray-600">
+              <p className="text-xs leading-5 text-white">
                 PNG, JPG, GIF, or PDF
               </p>
             </div>
