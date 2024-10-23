@@ -149,6 +149,7 @@ async def deleteManual(manual_name: str, session: Session = Depends(get_session)
         
 
         if manual is None or not file_exists or not pinecone_index_exists:
+            print(manual, file_exists, pinecone_index_exists )
             raise HTTPException(
                 status_code=404, detail=f"Manual '{manual_name}' not found in database, file system, or Pinecone"
             )
