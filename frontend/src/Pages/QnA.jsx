@@ -9,8 +9,12 @@ import {
   useCallback,
   useEffect,
 } from "react";
-import { BiSolidUserCircle, BiChat } from "react-icons/bi";
-import { MdOutlineArrowLeft, MdOutlineArrowRight } from "react-icons/md";
+import { BiSolidUserCircle, BiLogOut, BiChat } from "react-icons/bi";
+import {
+  MdOutlineArrowLeft,
+  MdOutlineArrowRight,
+  MdOutlineDashboard,
+} from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import QNAModal from "../components/chat/QNAModal";
 import PostQuestionModal from "../components/chat/PostQuestionModal";
@@ -145,13 +149,44 @@ const QnA = () => {
             </button>
           </div>
           <div className="sidebar-info">
-            <div className="sidebar-info-upgrade" onClick={() => navigate("/")}>
-              <BiChat size={20} />
-              <p>ChatBot</p>
+            <div className="sidebar-info-upgrade">
+              <button
+                className="flex items-center border-none bg-transparent cursor-pointer w-full p-2 hover:bg-gray-700"
+                onClick={() => navigate("/")}
+              >
+                <BiChat size={20} />
+                <span className="pl-2">Chatbot</span>
+              </button>
             </div>
-            <div className="sidebar-info-user">
-              <BiSolidUserCircle size={20} />
-              <p>User</p>
+            <div className="sidebar-info-upgrade">
+              <button
+                className="flex items-center border-none bg-transparent cursor-pointer w-full p-2 hover:bg-gray-700"
+                onClick={() => navigate("/dashboard")}
+              >
+                <MdOutlineDashboard size={20} />
+                <span className="pl-2">Dashboard</span>
+              </button>
+            </div>
+            <div className="sidebar-info-upgrade">
+              <button
+                className="flex items-center border-none bg-transparent cursor-pointer w-full p-2 hover:bg-gray-700"
+                onClick={() => navigate("/admin")}
+              >
+                <BiSolidUserCircle size={20} />
+                <span className="pl-2">Admin</span>
+              </button>
+            </div>
+            <div className="sidebar-info-upgrade">
+              <button
+                className="flex items-center border-none bg-transparent cursor-pointer w-full p-2 hover:bg-gray-700"
+                onClick={() => {
+                  sessionStorage.clear();
+                  navigate("/logout");
+                }}
+              >
+                <BiLogOut size={20} />
+                <span className="pl-2">Logout</span>
+              </button>
             </div>
           </div>
         </section>

@@ -294,7 +294,7 @@ function Chat() {
                 <span className="pl-2">QnA</span>
               </button>
             </div>
-            <div className="sidebar-info-dashboard">
+            <div className="sidebar-info-upgrade">
               <button
                 className="flex items-center border-none bg-transparent cursor-pointer w-full p-2 hover:bg-gray-700"
                 onClick={() => navigate("/dashboard")}
@@ -303,7 +303,7 @@ function Chat() {
                 <span className="pl-2">Dashboard</span>
               </button>
             </div>
-            <div className="sidebar-info-user">
+            <div className="sidebar-info-upgrade">
               <button
                 className="flex items-center border-none bg-transparent cursor-pointer w-full p-2 hover:bg-gray-700"
                 onClick={() => navigate("/admin")}
@@ -312,7 +312,7 @@ function Chat() {
                 <span className="pl-2">Admin</span>
               </button>
             </div>
-            <div className="sidebar-info-logout">
+            <div className="sidebar-info-upgrade">
               <button
                 className="flex items-center border-none bg-transparent cursor-pointer w-full p-2 hover:bg-gray-700"
                 onClick={() => {
