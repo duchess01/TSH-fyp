@@ -229,6 +229,7 @@ def createManualStatus(
         # Check if a status for this manual already exists
         existing_status = session.query(ManualStatus).filter(ManualStatus.manual_name == manual_status_request.manual_name).first()
         if existing_status:
+            print("Status for manual already exists")
             raise HTTPException(
                 status_code=400, detail=f"Status for manual '{manual_status_request.manual_name}' already exists"
             )

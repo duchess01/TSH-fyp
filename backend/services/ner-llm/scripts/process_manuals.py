@@ -62,6 +62,11 @@ def process_headings(headings_dict):
         content = " ".join(content_list) + heading
 
         keywords = extract_keywords(json.dumps(content))
+        
+        if keywords is None : 
+            print(f"No keywords found for heading: {heading}")
+            continue 
+        
         keywords.append(heading)
         keywords_content = " ".join(keywords)
         embeddings = embed_keywords(json.dumps(keywords_content))

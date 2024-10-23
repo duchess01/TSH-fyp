@@ -2,6 +2,7 @@
 from jsonschema.validators import Draft202012Validator
 from jsonschema import ValidationError
 from typing import Any, Dict
+from fastapi import HTTPException
 
 def validate_json_schema(schema : Dict[str, Any]) -> None:
     

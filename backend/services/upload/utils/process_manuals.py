@@ -25,6 +25,7 @@ def extract_keywords(content):
             return keywords
         else:
             print(f"Error: {response_data.get('message')}")
+            
             return None
     else:
         print(f"Request failed with status code {response.status_code}")

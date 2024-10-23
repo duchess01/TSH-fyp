@@ -8,6 +8,7 @@ import os
 import shutil
 import traceback
 import requests
+from fastapi import HTTPException
 
 from utils.process_manuals import process_headings, save_output_to_file
 
@@ -24,14 +25,13 @@ async def uploadPdf(
     if not file.filename.endswith(".pdf"):
        return GenericResponse(status_code = 400, message = "Bad Request", data = "File must be a pdf file")
    
-    text = ""
-    
-    try : 
+    tmp_dir = None
+    try:
         # PROCESS UPLOADED FILE AS A TMP FILE
         tmp_dir = tempfile.mkdtemp()
         tmp_file_path = os.path.join(tmp_dir, file.filename)
         
-        with open(tmp_file_path, 'wb') as f :
+        with open(tmp_file_path, 'wb') as f:
             shutil.copyfileobj(file.file, f)
             
         relative_url = os.path.relpath(tmp_file_path)
@@ -46,10 +46,9 @@ async def uploadPdf(
         }
         response = requests.post(url, json=data)
         
-        if response.status_code == 200:
-            print(f"Successfully updated status to in progress for file {pdf_file}")
-        else:
-            print(f"Failed to update status in the database. Status Code: {response.status_code}")
+        if response.status_code != 200:
+            raise HTTPException(status_code=response.status_code, 
+                detail=f"Failed to update status in the database. Status Code: {response.status_code}")
         
         
         
@@ -72,36 +71,37 @@ async def uploadPdf(
             "manual_name": pdf_file,
             "manual_mappings": processed_output
         }
-        response = requests.post(url, json=data)
         
-        if response.status_code == 200:
-            print(f"Successfully created file {pdf_file} in database ")
-        else:
-            print(f"Failed to update status in the database. Status Code: {response.status_code}")
+        headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
+        response = requests.post(url, json=data, headers=headers)
         
-            
-            
-            # convert 
-        return GenericResponse(message = "File uploaded successfully", data = {
-            'extracted_content' : extracted_content, 
-            'processed_output' : processed_output
-            
+        if response.status_code != 200:
+            raise HTTPException(status_code=response.status_code, 
+                detail=f"Failed to update status in the database. Status Code: {response.status_code}")
+        
+        return GenericResponse(message="File uploaded successfully", data={
+            'extracted_content': extracted_content, 
+            'processed_output': processed_output
         })
             
+    except HTTPException as he:
+        # Re-raise HTTP exceptions
+        raise he
     except Exception as e:
-        
-        
         stack_trace = traceback.format_exc()
         return JSONResponse(
-            status_code = 500, 
-            content = {
-                "status_code" :500,
-                "message" : "Internal Server Error",
+            status_code=500, 
+            content={
+                "status_code": 500,
+                "message": "Internal Server Error",
                 "error": {
-                "type": type(e).__name__,
-                "message": str(e),
-                "stack_trace": stack_trace
-            }
-                
+                    "type": type(e).__name__,
+                    "message": str(e),
+                    "stack_trace": stack_trace
+                }
             }
         )
+    finally:
+        # Clean up temporary directory
+        if tmp_dir and os.path.exists(tmp_dir):
+            shutil.rmtree(tmp_dir)
