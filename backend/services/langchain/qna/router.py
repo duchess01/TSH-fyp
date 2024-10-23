@@ -1,7 +1,8 @@
 import inspect
 from fastapi import APIRouter
 import os
-from resources.tools.pinecone.utils import get_embedding, initialize_pinecone_index
+from resources.tools.pinecone.utils import get_embedding, initialize_pinecone_index, getTopicFromQuery
+
 
 from dotenv import load_dotenv
 
@@ -24,7 +25,7 @@ async def upsert_qna(query: Upsert):
     try:
         index = await initialize_pinecone_index(os.getenv("PINECONE_QNA_INDEX_NAME"))
         query_embedding = get_embedding(query.query)
-        upsert_data = [
+        upsert_data = [ 
             {
                 "id": query.ids[0],
                 "values": query_embedding,
@@ -33,9 +34,11 @@ async def upsert_qna(query: Upsert):
                 }
             }
         ]
-        upsert_response = index.upsert(vectors=upsert_data)
+        
+        topic = getTopicFromQuery(query.query)
+        upsert_response = index.upsert(vectors=upsert_data, namespace=topic)
 
-        return {"status": "success", "upserted_count": upsert_response.upserted_count}
+        return {"status": "success", "upserted_count": upsert_response.upserted_count, "topic": topic}
 
     except Exception as error:
         raise Exception(
