@@ -22,8 +22,9 @@ async def get_response(query: Query):
         user_query = query.query
         user_id = query.userId
         session_id = query.chatSessionId
+        machine = query.machine
         chat_history, latest_topic = ChatService().get_chat_history(user_id, session_id)
-        agent_executor = await initialize_agent_executor(chat_history)
+        agent_executor = await initialize_agent_executor(chat_history, machine)
         agent_response = agent_executor.run(user_query)
 
         # Check if the result is awaitable

@@ -6,9 +6,9 @@ from models.base import BaseResponseModel
 
 class Query(BaseModel):
     query: str
-    userId: Optional[str]
+    userId: str
     chatSessionId: str
-    machine: Optional[str]
+    machine: str
 
 
 class QueryResponseModel(BaseResponseModel):
