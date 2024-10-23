@@ -41,16 +41,16 @@ function PostQuestionModal({ closeModal }) {
         selectedMachine,
         sessionStorage.getItem("token")
       );
-
       if (response.status === 201) {
         Swal.fire({
           icon: "success",
           title: "Success!",
-          text: "Your solution has been submitted.",
+          text: response.data.message,
           customClass: {
             popup: "custom-swal",
           },
         });
+
         closeModal();
       } else {
         console.error("Error adding solution:", response);

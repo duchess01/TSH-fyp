@@ -87,14 +87,16 @@ export async function addSolution(
 ) {
   try {
     const formData = new FormData();
+
     formData.append("user_id", user_id);
-    formData.append("question", question);
-    formData.append("solution", solution);
+    formData.append("question", question.trim());
+    formData.append("solution", solution.trim());
     formData.append("query_ids", JSON.stringify(query_ids));
     formData.append("machine", machine);
 
     if (imageFile) {
       formData.append("image", imageFile);
+      formData.append("image_type", imageFile.type);
     }
 
     const config = {

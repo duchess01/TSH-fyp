@@ -28,8 +28,13 @@ router.post(
   async (req, res) => {
     const { user_id, question, solution, query_ids, machine } = req.body;
     const image = req.file ? req.file.buffer : null;
+    const imageType = req.file ? req.file.mimetype : null;
 
-    if (!user_id || !question || !query_ids || !machine) {
+    let idsToUse = Array.isArray(query_ids)
+      ? query_ids
+      : JSON.parse(query_ids || "[]");
+
+    if (!user_id || !question || !machine) {
       return res.status(400).json({ error: "All fields are required" });
     }
     if (!solution && image == null) {
@@ -39,21 +44,33 @@ router.post(
     }
 
     let newRow;
+    let newThread = true;
     try {
+      if (idsToUse.length === 0) {
+        const existingQueryResult = await db.query(
+          "SELECT id FROM qna WHERE question = $1",
+          [question]
+        );
+        if (existingQueryResult.rows.length !== 0) {
+          newThread = false;
+        }
+        idsToUse = existingQueryResult.rows.map((row) => row.id);
+      }
+
       const result = await db.query(
-        "INSERT INTO qna (user_id, topic, question, solution, solution_image, machine) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
-        [user_id, "topic", question, solution, image, machine]
+        "INSERT INTO qna (user_id, topic, question, solution, solution_image, solution_image_type, machine) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
+        [user_id, "topic", question, solution, image, imageType, machine]
       );
 
       newRow = result.rows[0];
-      const newQueryIds = [...query_ids, newRow.id];
+      idsToUse.push(newRow.id);
 
       // Send the request to LangChain
       const lmmResponse = await axios.post(
         "http://langchain:8001/langchain/qna/upsert",
         {
           query: question,
-          ids: newQueryIds.map(String),
+          ids: idsToUse.map(String),
         }
       );
 
@@ -64,7 +81,14 @@ router.post(
           .json({ error: "Upsert failed, created data has been deleted." });
       }
 
-      res.status(201).json(result.rows[0]);
+      const message = newThread
+        ? "Successfully created a new thread."
+        : "Successfully added to existing thread.";
+
+      res.status(201).json({
+        message,
+        data: result.rows[0],
+      });
     } catch (error) {
       console.error("Error inserting data:", error);
       res.status(500).json({ error: "Internal server error" });

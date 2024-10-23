@@ -171,15 +171,27 @@ function QNAModal({ closeModal, machine, question }) {
           {sortedData.map((item) => {
             const isLiked = item.liked_by.some((u) => u.id === user.id);
             const isDisliked = item.disliked_by.some((u) => u.id === user.id);
+
             return (
               <div key={item.id} className="mb-4 border-b pb-2">
                 <p className="font-semibold">{item.solution}</p>
                 {item.solution_image && (
-                  <img
-                    src={item.solution_image}
-                    alt="Solution"
-                    className="mt-2"
-                  />
+                  <div className="mt-2">
+                    <a
+                      href={URL.createObjectURL(
+                        new Blob([new Uint8Array(item.solution_image.data)], {
+                          type:
+                            item.solution_image_type ||
+                            "application/octet-stream",
+                        })
+                      )}
+                      download={`solution_image.${item.solution_image_type === "image/png" ? "png" : item.solution_image_type === "image/jpeg" ? "jpg" : item.solution_image_type === "application/pdf" ? "pdf" : "bin"}`}
+                      className="text-blue-500 underline"
+                      aria-label="Download attachment"
+                    >
+                      Attachment
+                    </a>
+                  </div>
                 )}
                 <div className="flex gap mt-2 items-center">
                   <button
@@ -265,8 +277,10 @@ function QNAModal({ closeModal, machine, question }) {
                 placeholder="Type your solution here..."
                 value={userSolution}
                 onChange={(e) => setUserSolution(e.target.value)}
+                required
               />
             </div>
+
             <label
               htmlFor="cover-photo"
               className="block text-lg font-medium leading-6 text-white mt-4"
