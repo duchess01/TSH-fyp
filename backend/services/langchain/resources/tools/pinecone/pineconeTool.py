@@ -9,8 +9,6 @@ from constants.constants import ALL_MODELS
 from services.ner_llm.ner_llm import NerLLMService
 from .utils import match_namespace
 
-load_dotenv()
-pinecone_index_name = os.getenv("PINECONE_INDEX_NAME")
 llm = ALL_MODELS["gpt-4o-mini"]["chat_model"]
 
 
@@ -24,7 +22,7 @@ class PineconeQueryTool:
 
     async def run(self, query: str):
         query_vector = get_embedding(query)
-        keyword_map = NerLLMService().get_keyword_mapping()
+        keyword_map = NerLLMService().get_keyword_mapping(self.pinecone_index_name)
         namespace = match_namespace(keyword_map, query)
         response = self.index.query(
             namespace=namespace,
@@ -44,7 +42,7 @@ class PineconeQueryTool:
         return (rag_response, namespace)
 
 
-async def setup_pinecone_tool():
+async def setup_pinecone_tool(pinecone_index_name):
     tool = PineconeQueryTool(pinecone_index_name)
     await tool.initialize()
     pinecone_tool = Tool(

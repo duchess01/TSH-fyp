@@ -3,7 +3,7 @@ import os
 import sys
 
 import requests
-from .manual_content import manual_dictionary
+# from .manual_content import manual_dictionary
 
 BASE_URL = "http://localhost:8000"
 
@@ -25,6 +25,7 @@ def extract_keywords(content):
             return keywords
         else:
             print(f"Error: {response_data.get('message')}")
+            
             return None
     else:
         print(f"Request failed with status code {response.status_code}")
@@ -62,11 +63,6 @@ def process_headings(headings_dict):
         content = " ".join(content_list) + heading
 
         keywords = extract_keywords(json.dumps(content))
-        
-        if keywords is None : 
-            print(f"No keywords found for heading: {heading}")
-            continue 
-        
         keywords.append(heading)
         keywords_content = " ".join(keywords)
         embeddings = embed_keywords(json.dumps(keywords_content))
@@ -82,8 +78,8 @@ def process_headings(headings_dict):
     return output
         
 
-def save_output_to_file(output_dict, filename="chapter_keywords.json"):
-    folder_path = os.path.join(os.path.dirname(__file__), '..', 'db/keywords')
+def save_output_to_file(output_dict, filename="output.json"):
+    folder_path = os.path.join(os.path.dirname(__file__), '..', '..', 'ner-llm', 'db', 'keywords')
     file_path = os.path.join(folder_path, filename)
 
     with open(file_path, 'w') as f:
@@ -92,7 +88,7 @@ def save_output_to_file(output_dict, filename="chapter_keywords.json"):
 
 
 if __name__ == "__main__":
-    processed_output = process_headings(manual_dictionary)
+    # processed_output = process_headings(manual_dictionary)
 
     # for heading, data in processed_output.items():
     #     keywords = data["data"]["keywords"]

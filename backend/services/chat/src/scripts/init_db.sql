@@ -5,7 +5,7 @@
 -- Create the chat table
 CREATE TABLE chat (
     id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL,
+    user_id VARCHAR(255) NOT NULL,
     title VARCHAR(255),
     chat_session_id VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE qna (
     topic VARCHAR(255),
     title VARCHAR(255),
     solution TEXT,
-    solution_image BYTEA,
+    solution_image BYTEA, 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

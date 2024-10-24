@@ -10,5 +10,7 @@ class GenericResponse(BaseModel):
     status_code : int = Field(default = 200, description = "HTTP status code")
     message : str = Field(..., description = "Message")
     data : Any = Field(..., description = "Data fields")
+    
+    
 
 

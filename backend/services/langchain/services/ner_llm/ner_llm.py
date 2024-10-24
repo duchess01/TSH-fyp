@@ -9,8 +9,8 @@ class NerLLMService:
         else:
             self.base_url = 'http://localhost:8000'
 
-    def get_keyword_mapping(self):
-        url = f'{self.base_url}/keywords'
+    def get_keyword_mapping(self, machine:str):
+        url = f'{self.base_url}/manual/get/{machine}'
         try:
             response = requests.get(url)
             response.raise_for_status()  # Raise an error for bad status codes
