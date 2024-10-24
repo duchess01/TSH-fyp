@@ -6,7 +6,7 @@ from models.base import BaseResponseModel
 
 class Query(BaseModel):
     query: str
-    userId: str
+    userId: int
     chatSessionId: str
     machine: str
 
