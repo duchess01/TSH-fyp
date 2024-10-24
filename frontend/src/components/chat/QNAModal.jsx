@@ -196,7 +196,7 @@ function QNAModal({ closeModal, machine, question }) {
                 <div className="flex gap mt-2 items-center">
                   <button
                     onClick={() => handleRatingClick("Like", item)}
-                    className="bg-transparent hover:bg-green-100 p-1 rounded-full"
+                    className="bg-transparent hover:bg-green-900 p-1 rounded-full"
                     aria-label="Like"
                   >
                     {isLiked ? <FaThumbsUp /> : <FaRegThumbsUp />}
@@ -223,7 +223,7 @@ function QNAModal({ closeModal, machine, question }) {
                   <div className="mr-4"></div>
                   <button
                     onClick={() => handleRatingClick("Dislike", item)}
-                    className="bg-transparent hover:bg-red-100 p-1 rounded-full"
+                    className="bg-transparent hover:bg-red-900 p-1 rounded-full"
                     aria-label="Dislike"
                   >
                     {isDisliked ? <FaThumbsDown /> : <FaRegThumbsDown />}
