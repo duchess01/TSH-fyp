@@ -136,7 +136,7 @@ function Chat() {
   }, []);
 
   const handleMachineSelect = (e) => {
-    setSelectedMachine(e.target.value);
+    setSelectedMachine("64164en-pdf");
     setPreviousTitles(getUniqueTitles([...previousChats, ""]));
     setCurrentTitle(e.target.value);
   };
