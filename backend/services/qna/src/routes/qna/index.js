@@ -4,6 +4,7 @@ import db from "../../db/db.js";
 import multer from "multer";
 import axios from "axios";
 import { verifyToken } from "../../middleware/authMiddleware.js";
+import { verify } from "jsonwebtoken";
 
 const router = Router();
 const storage = multer.memoryStorage();
@@ -335,7 +336,7 @@ router.get("/ratings/:id", verifyToken, async (req, res) => {
 });
 
 // Integration with Chatbot + retrieveQna
-router.post("/chatbot", async (req, res) => {
+router.post("/chatbot", verifyToken, async (req, res) => {
   const { query } = req.body;
 
   try {
