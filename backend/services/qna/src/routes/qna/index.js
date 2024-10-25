@@ -334,7 +334,7 @@ router.get("/ratings/:id", verifyToken, async (req, res) => {
   }
 });
 
-// Integration with Chabot + retrieveQna
+// Integration with Chatbot + retrieveQna
 router.post("/chatbot", async (req, res) => {
   const { query } = req.body;
 
@@ -351,13 +351,25 @@ router.post("/chatbot", async (req, res) => {
       for (const ids of idsArray) {
         if (ids.length > 0) {
           const data = await fetchQnaDataByIds(ids);
+          // Store data as an array in results
           results.push(data);
         } else {
-          results.push([]);
+          results.push([]); // Retain empty array for empty IDs
         }
       }
 
-      res.status(200).json({ status: "success", data: results });
+      // Fetch likes and dislikes for each Q&A item in the results
+      const enrichedResults = await Promise.all(
+        results.map(async (dataArray) => {
+          return await Promise.all(
+            dataArray.map(async (item) => {
+              return await fetchQnaLikesDislikes(req, item.id);
+            })
+          );
+        })
+      );
+
+      res.status(200).json({ status: "success", data: enrichedResults });
     } else {
       res.status(404).json({ error: "No IDs found" });
     }
@@ -367,6 +379,7 @@ router.post("/chatbot", async (req, res) => {
   }
 });
 
+// Function to fetch QnA data by IDs
 async function fetchQnaDataByIds(ids) {
   const idList = ids.map((id) => parseInt(id, 10));
 
@@ -375,10 +388,86 @@ async function fetchQnaDataByIds(ids) {
 
   try {
     const { rows } = await db.query(query, idList);
-    return rows;
+    return rows; // Return the rows as is
   } catch (error) {
     console.error("Error fetching QnA data:", error);
     throw new Error("Database query failed");
+  }
+}
+
+// Function to fetch likes and dislikes for a given Q&A ID
+async function fetchQnaLikesDislikes(req, qnaId) {
+  const authHeader = req.header("Authorization");
+  const token = authHeader && authHeader.split(" ")[1];
+
+  try {
+    const { rows } = await db.query(
+      `
+      SELECT 
+        qna.*, 
+        COALESCE(SUM(CASE WHEN r.rating_value = TRUE THEN 1 ELSE 0 END), 0) AS likes,
+        COALESCE(SUM(CASE WHEN r.rating_value = FALSE THEN 1 ELSE 0 END), 0) AS dislikes,
+        ARRAY_AGG(CASE WHEN r.rating_value = TRUE THEN r.user_id END) AS liked_user_ids,
+        ARRAY_AGG(CASE WHEN r.rating_value = FALSE THEN r.user_id END) AS disliked_user_ids
+      FROM 
+        qna 
+      LEFT JOIN 
+        ratings r ON qna.id = r.qna_id
+      WHERE 
+        qna.id = $1
+      GROUP BY 
+        qna.id
+    `,
+      [qnaId]
+    );
+
+    if (rows.length === 0) {
+      return null; // Or handle the case where no Q&A found
+    }
+
+    const row = rows[0];
+
+    // Fetch user details for liked and disliked users
+    const likedUsers = await Promise.all(
+      row.liked_user_ids
+        .filter((id) => id !== null)
+        .map((id) => fetchUserDetails(token, id))
+    );
+    const dislikedUsers = await Promise.all(
+      row.disliked_user_ids
+        .filter((id) => id !== null)
+        .map((id) => fetchUserDetails(token, id))
+    );
+
+    const { liked_user_ids, disliked_user_ids, ...rest } = row;
+
+    return {
+      ...rest,
+      liked_by: likedUsers.filter((user) => user !== null),
+      disliked_by: dislikedUsers.filter((user) => user !== null),
+    };
+  } catch (error) {
+    console.error("Error fetching likes and dislikes:", error);
+    throw new Error("Database query failed");
+  }
+}
+
+// Function to fetch user details
+async function fetchUserDetails(token, userId) {
+  if (!userId) return null;
+  try {
+    const response = await axios.get(
+      `http://user:3000/api/v1/users/getUserDetails/${userId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching user details for ID ${userId}:`, error);
+    return null;
   }
 }
 
