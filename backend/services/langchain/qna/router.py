@@ -42,7 +42,7 @@ async def upsert_qna(query: Upsert):
             500, "Pinecone QnA upsert failed", str(error))
 
 
-@qna_router.get(
+@qna_router.post(
     "/retrieveQna",
     description="query qna data from pinecone"
 )

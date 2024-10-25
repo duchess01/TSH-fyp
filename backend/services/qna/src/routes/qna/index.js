@@ -334,4 +334,52 @@ router.get("/ratings/:id", verifyToken, async (req, res) => {
   }
 });
 
+// Integration with Chabot + retrieveQna
+router.post("/chatbot", async (req, res) => {
+  const { query } = req.body;
+
+  try {
+    const retrieveQna = await axios.post(
+      "http://langchain:8001/langchain/qna/retrieveQna",
+      { query: query }
+    );
+
+    if (retrieveQna && retrieveQna.data && retrieveQna.data.ids) {
+      const idsArray = retrieveQna.data.ids;
+      const results = [];
+
+      for (const ids of idsArray) {
+        if (ids.length > 0) {
+          const data = await fetchQnaDataByIds(ids);
+          results.push(data);
+        } else {
+          results.push([]);
+        }
+      }
+
+      res.status(200).json({ status: "success", data: results });
+    } else {
+      res.status(404).json({ error: "No IDs found" });
+    }
+  } catch (error) {
+    console.error("Error retrieving data for chatbot:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+async function fetchQnaDataByIds(ids) {
+  const idList = ids.map((id) => parseInt(id, 10));
+
+  const placeholders = idList.map((_, index) => `$${index + 1}`).join(",");
+  const query = `SELECT * FROM qna WHERE id IN (${placeholders})`;
+
+  try {
+    const { rows } = await db.query(query, idList);
+    return rows;
+  } catch (error) {
+    console.error("Error fetching QnA data:", error);
+    throw new Error("Database query failed");
+  }
+}
+
 export default router;
