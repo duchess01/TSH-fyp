@@ -1,4 +1,5 @@
 # Assuming you're using SentenceTransformers
+from typing import List
 from sentence_transformers import util
 import os
 import numpy as np
@@ -8,7 +9,7 @@ from dotenv import load_dotenv
 from pinecone import Pinecone, ServerlessSpec
 
 load_dotenv()
-client = OpenAI()
+client = OpenAI(api_key = os.getenv("OPENAI_API_KEY"))
 
 pinecone_api_key = os.getenv("PINECONE_API_KEY")
 
@@ -54,3 +55,51 @@ def match_namespace(keyword_array, query):  # [(embedding, namespace), ...]
             highest_score = score
             best_match = namespace
     return best_match
+
+class TopicExtractor:
+    def __init__(self):
+        self.assistant = self._get_or_create_assistant()
+
+    def _get_or_create_assistant(self):
+        assistants = client.beta.assistants.list(order="desc", limit=20)
+        for assistant in assistants.data:
+            if assistant.name == "Topic Extractor Assistant":
+                return assistant
+        
+        # Create assistant if it doesn't exist
+        return client.beta.assistants.create(
+            name="Topic Extractor Assistant",
+            instructions="You are a highly specialized assistant that helps extract concise topics (1-3 words) from given queries or text.",
+            model="gpt-3.5-turbo", 
+        )
+
+    def extract_topic(self, query: str, topics : List[str]) -> str:
+        max_attempts = 3
+        for attempt in range(max_attempts):
+            try:
+                thread = client.beta.threads.create(
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": f"You will be provided with a list of topics and a query, check if this query can match with any ONE topic in the list of topics provided, if not generate ONE new topic. \n\nQuery: {query} \n\nTopics: {topics}. Your response will always be a single word or phrase.",
+                        }
+                    ]
+                )
+
+                run = client.beta.threads.runs.create_and_poll(
+                    thread_id=thread.id,
+                    assistant_id=self.assistant.id
+                )
+
+                messages = list(client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id))
+
+                if messages:
+                    topic = messages[0].content[0].text.value
+                    return topic
+ 
+            except Exception as e:
+                print(f"Attempt {attempt + 1} failed: {str(e)}")
+                if attempt == max_attempts - 1:
+                    raise Exception("Failed to extract topic after multiple attempts")
+
+        raise Exception("No topic extracted")
