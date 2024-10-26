@@ -58,6 +58,58 @@ router.get("/allHistory", async (req, res) => {
     const { rows } = await db.query("SELECT * FROM chat WHERE user_id = $1", [
       userId,
     ]);
+
+    // getting the list of unqiue ids from qna db
+    let ids = new Set();
+    let human_response = {};
+    if (rows) {
+      for (let i = 0; i < rows.length; i++) {
+        let temp = rows[i].human_response;
+        if (temp != null) {
+          temp = temp.split(",");
+          for (let j = 0; j < temp.length; j++) {
+            ids.add(temp[j]);
+          }
+        }
+      }
+      ids = Array.from(ids);
+    }
+
+    if (ids.length != 0) {
+      ids = Array.from(ids);
+      if (ids.length != 0) {
+        human_response = await axios.post(
+          // "http://localhost:3003/api/v1/qna/getByIds",
+          "http://qna:3003/api/v1/qna/getByIds",
+          {
+            ids: ids,
+          }
+        );
+        console.log("this is human response", human_response.data);
+      }
+    }
+
+    // for looping human responses and extracting the id and response in a hashmap
+    let human_response_map = {};
+    if (human_response.data) {
+      for (let i = 0; i < human_response.data.length; i++) {
+        human_response_map[human_response.data[i].id] = human_response.data[i];
+      }
+    }
+
+    // from the list of human responses, append the solution to the chat history
+    for (let i = 0; i < rows.length; i++) {
+      let temp = rows[i].human_response;
+      if (temp != null) {
+        temp = temp.split(",");
+        let temp_response = [];
+        for (let j = 0; j < temp.length; j++) {
+          temp_response.push(human_response_map[temp[j]]);
+        }
+        rows[i].human_response = temp_response;
+      }
+    }
+
     res.status(200).json(rows);
   } catch (error) {
     console.log("this iss error", error);

@@ -380,6 +380,7 @@ router.post("/chatbot", async (req, res) => {
   }
 });
 
+// API to return the data by ids
 // Function to fetch QnA data by IDs
 async function fetchQnaDataByIds(ids) {
   const idList = ids.map((id) => parseInt(id, 10));

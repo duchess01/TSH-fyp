@@ -401,7 +401,7 @@ function Chat() {
                     <li>
                       <div className="w-full">
                         <div className="flex items-center justify-between mb-1">
-                          <div className="pt-2">
+                          <div className="pt-2 w-full">
                             <p>
                               <span className="font-bold">
                                 {isLastMessage && isResponseLoading
@@ -444,7 +444,7 @@ function Chat() {
                                 })}
                             </p>
                           </div>
-                          {!isResponseLoading && isLastMessage && (
+                          {!isResponseLoading && (
                             <div className="flex item-start space-x-2 pl-2">
                               <button
                                 onClick={() =>
