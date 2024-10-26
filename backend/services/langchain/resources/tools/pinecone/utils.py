@@ -56,9 +56,6 @@ def match_namespace(keyword_array, query):  # [(embedding, namespace), ...]
             best_match = namespace
     return best_match
 
-# def getTopicFromQuery(query) :
-    
-    
 class TopicExtractor:
     def __init__(self):
         self.assistant = self._get_or_create_assistant()
@@ -73,10 +70,10 @@ class TopicExtractor:
         return client.beta.assistants.create(
             name="Topic Extractor Assistant",
             instructions="You are a highly specialized assistant that helps extract concise topics (1-3 words) from given queries or text.",
-            model="gpt-3.5-turbo",  # You can use "gpt-4" if you have access
+            model="gpt-3.5-turbo", 
         )
 
-    async def extract_topic(self, query: str, Topics : List[str]) -> str:
+    def extract_topic(self, query: str, topics : List[str]) -> str:
         max_attempts = 3
         for attempt in range(max_attempts):
             try:
@@ -84,7 +81,7 @@ class TopicExtractor:
                     messages=[
                         {
                             "role": "user",
-                            "content": f"You will be provided with a list of topics and a query, check if this query can match with any ONE topic in the list of topics, if not generate a new topic. \n\nQuery: {query} \n\nTopics: {Topics}"
+                            "content": f"You will be provided with a list of topics and a query, check if this query can match with any ONE topic in the list of topics provided, if not generate ONE new topic. \n\nQuery: {query} \n\nTopics: {topics}. Your response will always be a single word or phrase.",
                         }
                     ]
                 )
@@ -98,8 +95,6 @@ class TopicExtractor:
 
                 if messages:
                     topic = messages[0].content[0].text.value
-                    print(topic, 'TOPIC')
-                    
                     return topic
  
             except Exception as e:
@@ -108,73 +103,3 @@ class TopicExtractor:
                     raise Exception("Failed to extract topic after multiple attempts")
 
         raise Exception("No topic extracted")
-
-    # topic_extractor = TopicExtractor()
-    #     my_assistants = client.beta.assistants.list(
-    #         order="desc",
-    #         limit="20",
-    #     )
-
-    # assistant_exists = False
-    # for cur in my_assistants.data:
-    #     if cur.name == "TOC Extractor Assistant":
-    #         assistant_exists = True
-    #         assistant = cur
-    #         break
-
-    # # Create assistant if it doesn't exist
-    # if(not assistant_exists):
-    #     assistant = client.beta.assistants.create(
-    #         name="TOC Extractor Assistant",
-    #         instructions="You are a highly specialized assistant that helps extract Table of Contents from uploaded PDF files and formats them as a dictionary of headings and page numbers.",
-    #         model="gpt-4o-mini",
-    #         tools=[{"type": "file_search"}],
-    #     )
-
-    # ## Retry Mechanism ## 
-    # attempt = 0 
-    # max_attempts = 3
-    # messages = []
-
-    # while attempt < max_attempts:
-    #     print(f"Attempt {attempt + 1} of {max_attempts} for run process") 
-    #     # Create a thread:
-    #     message_file = client.files.create(
-    #         file=open(pdf_file, "rb"), purpose="assistants"
-    #     )
-
-    #     file_id = pdf_file_id
-    #     query = """
-    #         From the file {file_id}, extract the Table of Contents, which contains headings and their corresponding page numbers. 
-    #         I would like you to format this information as a dictionary where each key is a combination of 'heading number + heading name', 
-    #         and each value is the corresponding page number. If the headings have a hierarchical structure (e.g., Section 1, 1.1, 1.1.1), preserve that in the key. 
-    #         For example: {'1 Introduction': 1, '1.1 Overview': 3, '2 Methodology': 10}.
-    #     """
-    #     thread = client.beta.threads.create(
-    #     messages=[
-    #         {
-    #         "role": "user",
-    #         "content": query,
-    #         "attachments": [
-    #             { "file_id": message_file.id, "tools": [{"type": "file_search"}] }
-    #         ],
-    #     }
-    #     ]
-    #     )
-
-    #     run = client.beta.threads.runs.create_and_poll(
-    #         thread_id=thread.id, assistant_id=assistant.id
-    #     )
-
-    #     messages = list(client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id))
-
-    #     if messages and "{" in messages[0].content[0].text.value:
-    #         if messages[0].content[0].text.value.count("{") == 1:
-    #             break
-    #     attempt += 1
-    
-    # if not messages:
-    #     update_status_in_database(pdf_file, status="failed")
-    #     raise Exception("No messages found")
-    # # Process the response content
-    # message_content = messages[0].content[0].text

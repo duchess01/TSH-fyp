@@ -6,7 +6,6 @@ from models.base import BaseResponseModel
 class Upsert(BaseModel):
     query: str
     ids: List[str]
-    machine: str
 
 
 class QueryQnA(BaseModel):
@@ -15,3 +14,4 @@ class QueryQnA(BaseModel):
 
 class QueryQnAResponse(BaseResponseModel):
     ids: List[str]
+    

@@ -1,7 +1,8 @@
 import inspect
-from fastapi import APIRouter
+from fastapi import APIRouter, Query, HTTPException
+from typing import List
 import os
-from resources.tools.pinecone.utils import get_embedding, initialize_pinecone_index, getTopicFromQuery
+from resources.tools.pinecone.utils import get_embedding, initialize_pinecone_index, TopicExtractor
 
 
 from dotenv import load_dotenv
@@ -35,10 +36,9 @@ async def upsert_qna(query: Upsert):
             }
         ]
         
-        topic = getTopicFromQuery(query.query)
-        upsert_response = index.upsert(vectors=upsert_data, namespace=topic)
+        upsert_response = index.upsert(vectors=upsert_data)
 
-        return {"status": "success", "upserted_count": upsert_response.upserted_count, "topic": topic}
+        return {"status": "success", "upserted_count": upsert_response.upserted_count}
 
     except Exception as error:
         raise Exception(
@@ -67,3 +67,16 @@ async def query_qna(query: QueryQnA):
     except Exception as error:
         raise Exception(
             500, "Pinecone QnA query failed", str(error))
+
+@qna_router.get(
+    "/getTopic",
+    description="get topic of query"
+)
+def get_topic(query: str = Query(...), topics: List[str] = Query(...)):
+    try:
+        topic_extractor = TopicExtractor()
+        topic = topic_extractor.extract_topic(query,topics)
+        return {"status": "success", "topic": topic}
+    except Exception as error:
+        raise HTTPException(
+            500, "Pinecone QnA get topic failed", str(error))
