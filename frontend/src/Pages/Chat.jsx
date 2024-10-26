@@ -170,6 +170,9 @@ function Chat() {
         text,
         selectedMachine
       );
+      // changing from a list of list in human_response to a list
+      console.log("Response from chatbot: ", response);
+      response.data.human_response = response.data.human_response.flat();
       if (response.status != 201) {
         setErrorText(response.data.message);
         setText("");
@@ -186,6 +189,7 @@ function Chat() {
           {
             message: text,
             response: data.response,
+            human_response: data.human_response,
           },
         ]);
         setPreviousTitles(getUniqueTitles([...previousChats, data]));
@@ -397,12 +401,51 @@ function Chat() {
                     <li>
                       <div className="w-full">
                         <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center">
-                            <img src="images/tsh-logo.PNG" alt="TshGPT" />
-                            <span className="role-title pl-2">TSH GPT</span>
+                          <div className="pt-2">
+                            <p>
+                              <span className="font-bold">
+                                {isLastMessage && isResponseLoading
+                                  ? ""
+                                  : "LLM response:"}
+                              </span>{" "}
+                              <br /> {chatMsg.response}
+                            </p>
+                            <br />
+                            <p>
+                              <span className="font-bold">
+                                {isLastMessage && isResponseLoading
+                                  ? ""
+                                  : "Human response:"}
+                              </span>{" "}
+                              <br />{" "}
+                              {chatMsg.human_response &&
+                                chatMsg.human_response.map((response, idx) => {
+                                  return (
+                                    <div
+                                      key={idx}
+                                      className="bg-slate-500 rounded mb-4 p-2"
+                                    >
+                                      <span className="font-bold">
+                                        Solution {idx + 1}:
+                                      </span>{" "}
+                                      <br /> {response.solution}
+                                      <p className="flex justify-end">
+                                        <span className="font-bold">
+                                          Likes:
+                                        </span>{" "}
+                                        {response.likes}{" "}
+                                        <span className="ml-4 font-bold">
+                                          Dislikes:
+                                        </span>{" "}
+                                        {response.dislikes}
+                                      </p>
+                                    </div>
+                                  );
+                                })}
+                            </p>
                           </div>
                           {!isResponseLoading && isLastMessage && (
-                            <div className="flex items-center space-x-2">
+                            <div className="flex item-start space-x-2 pl-2">
                               <button
                                 onClick={() =>
                                   handleThumbsChange(
@@ -440,10 +483,13 @@ function Chat() {
                         </div>
                         {isResponseLoading && isLastMessage ? (
                           <div className="flex items-center justify-center">
-                            <FaSpinner className="animate-spin" />
+                            <FaSpinner
+                              className="animate-spin"
+                              style={{ position: "relative", top: "-30px" }}
+                            />
                           </div>
                         ) : (
-                          <p>{chatMsg.response}</p>
+                          <></>
                         )}
                       </div>
                     </li>

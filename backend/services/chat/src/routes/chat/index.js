@@ -2,6 +2,7 @@ import express from "express";
 import { Router } from "express";
 import db from "../../db/db.js";
 import { getLLMResponse } from "../../utils/langchain.js";
+import axios from "axios";
 
 const router = Router();
 
@@ -128,10 +129,28 @@ router.post("/", async (req, res) => {
     // Destructure the response and topic from the Langchain service
     const { agent_response, topic } = langchainResponse;
 
+    // query qna db to get the relevant human responses for the given query
+    const { data } = await axios.post(
+      // "http://localhost:3003/api/v1/qna/chatbot",
+      "http://qna:3003/api/v1/qna/chatbot",
+      {
+        query: message,
+      }
+    );
+
+    // getting the list of ids
+    let ids = [];
+    for (let i = 0; i < data["data"].length; i++) {
+      for (let j = 0; j < data["data"][i].length; j++) {
+        ids.push(data["data"][i][j].id);
+      }
+    }
+    ids = ids.join(",");
+
     // Insert the fully populated record into the database
     const insertQuery = `
-      INSERT INTO chat (chat_session_id, user_id, title, message, response, topic, machine)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      INSERT INTO chat (chat_session_id, user_id, title, message, response, topic, machine, human_response)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *;
     `;
     const insertValues = [
@@ -142,10 +161,12 @@ router.post("/", async (req, res) => {
       agent_response,
       topic,
       machine,
+      ids,
     ];
     const { rows } = await db.query(insertQuery, insertValues);
 
     // Return the inserted record as the response
+    rows[0].human_response = data["data"];
     return res.status(201).json(rows[0]);
   } catch (error) {
     res.status(400).json({ message: error.message });
