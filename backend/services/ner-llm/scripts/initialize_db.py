@@ -32,7 +32,7 @@ def insert_manuals_and_keywords():
                 data = json.load(json_file)
 
                 # Create a new ManualMapping
-                manual_mapping = ManualMapping(manual_name=manual_name)
+                manual_mapping = ManualMapping(manual_name=manual_name, machine_name='FANUC Series 30i/300')
 
                 for namespace, content in data.items():
                     keywords = content['data'].get('keywords', [])
@@ -43,12 +43,14 @@ def insert_manuals_and_keywords():
                         keywordArray=keywords,
                         keywordEmbeddings=embeddings,
                         manual_mapping=manual_mapping
+                        
                     )
                     manual_mapping.keyword_mappings.append(keyword_mapping)
 
                 # Create a new ManualStatus
                 manual_status = ManualStatus(
-                    manual_name=manual_name,
+                    manual_name = "FANUC Series 30i/300",
+                
                     status=UploadStatus.COMPLETED,
                     manual_mapping=manual_mapping
                 )

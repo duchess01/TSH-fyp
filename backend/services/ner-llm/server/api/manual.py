@@ -55,7 +55,7 @@ async def getAllManuals(session: Session = Depends(get_session)) -> GenericRespo
         manuals = result.scalars().all()
 
         # Convert manuals to a list of dictionaries for easier serialization
-        manual_list = [{"manual_id": manual.uuid, "manual_name": manual.manual_name, "keyword_mappings": [{"keyword_id": keyword.uuid, "keyword_namespace": keyword.namespace, "keyword_array": keyword.keywordArray} for keyword in manual.keyword_mappings]} for manual in manuals]
+        manual_list = [{"manual_id": manual.uuid, "manual_name": manual.manual_name, "machine_name": manual.machine_name, "keyword_mappings": [{"keyword_id": keyword.uuid, "keyword_namespace": keyword.namespace, "keyword_array": keyword.keywordArray} for keyword in manual.keyword_mappings]} for manual in manuals]
 
         return GenericResponse(message="GET all manuals success", data=manual_list)
 
@@ -109,6 +109,7 @@ def createManualMapping(
         
         response = {
             "manual_name": new_manual.manual_name,
+            "machine_name": new_manual.machine_name,
             "status": manual_status.status,
             "keyword_mappings": [{"keyword_id": keyword.uuid, "keyword_namespace": keyword.namespace, "keyword_array": keyword.keywordArray} for keyword in new_manual.keyword_mappings]
             
@@ -141,68 +142,62 @@ async def deleteManual(manual_name: str, session: Session = Depends(get_session)
         pinecone_index_exists = manual_name in pc.list_indexes().names()
         
         print(pinecone_index_exists, "pinecone_index_exists")
-        
         print(manual, "manual")
-        
         print(file_exists, "file_exists")
         
-        if manual_status is None :
+        if manual_status:
+            print(manual_status.status, "manual_status.status")
+        
+        # If manual status is FAILED, we should proceed with deletion of whatever resources exist
+        if manual_status and manual_status.status == UploadStatus.FAILED:
+            # No need to check for existence of all resources
+            pass
+        # If manual status is COMPLETED, check for consistency
+        elif manual_status and manual_status.status == UploadStatus.COMPLETED:
+            if manual is None or not file_exists or not pinecone_index_exists:
+                raise HTTPException(
+                    status_code=404, detail=f"Manual '{manual_name}' not found in database, file system, or Pinecone"
+                )
+        # If no manual status or it's in any other state, only raise 404 if nothing exists
+        elif not manual and not file_exists and not pinecone_index_exists and not manual_status:
             raise HTTPException(
-                status_code=404, detail=f"Manual '{manual_name}' not found in database"
-            )
-        
-        
-
-        if manual is None or not file_exists or not pinecone_index_exists and manual_status.status == UploadStatus.COMPLETED:
-            raise HTTPException(
-                status_code=404, detail=f"Manual '{manual_name}' not found in database, file system, or Pinecone"
+                status_code=404, detail=f"No resources found for manual '{manual_name}'"
             )
 
-        # Proceed with deletion if any of the entries exist
-        db_deleted = False
-        file_deleted = False
-        pinecone_deleted = False
-        
+        # Proceed with deletion of whatever resources exist
+        response_data = {
+            "manual_name": manual_name,
+            "resources": {
+                "database": {"exists": bool(manual), "deleted": False},
+                "json_file": {"exists": file_exists, "deleted": False},
+                "pinecone": {"exists": pinecone_index_exists, "deleted": False}
+            }
+        }
+
         if pinecone_index_exists:
             try:
                 pc.delete_index(manual_name)
-                pinecone_deleted = True
+                response_data["resources"]["pinecone"]["deleted"] = True
             except Exception as e:
                 print(f"Error deleting vectors from Pinecone: {str(e)}")
-                raise HTTPException(
-                    status_code=500, detail=f"Error deleting vectors from Pinecone: {str(e)}"
-                )
+
         if manual:
             # Delete associated ManualStatus if it exists
             if manual_status:
                 session.delete(manual_status)
-            
+
             # Delete the ManualMapping (this will also delete associated KeywordMappings due to cascade)
             session.delete(manual)
             session.commit()
-            db_deleted = True
+            response_data["resources"]["database"]["deleted"] = True
 
         if file_exists:
             os.remove(json_file_path)
-            file_deleted = True
-
-
-
-
-
-        if not all([db_deleted, file_deleted, pinecone_deleted]):
-            raise HTTPException(
-                status_code=500, detail=f"Failed to delete all resources for manual '{manual_name}'"
-            )
+            response_data["resources"]["json_file"]["deleted"] = True
 
         return GenericResponse(
             message=f"Manual '{manual_name}' deletion process completed",
-            data={
-                "manual_name": manual_name,
-                "database_entries_deleted": db_deleted,
-                "json_file_deleted": file_deleted,
-                "pinecone_vectors_deleted": pinecone_deleted
-            }
+            data=response_data
         )
 
     except SQLAlchemyError as e:
@@ -259,7 +254,7 @@ def createManualStatus(
             status_code=500, detail=f"Database error: {str(e)}"
         )
 
-@router.put("/status", summary="Update the status of a manual", description="Update the status of a manual")
+@router.put("/status", summary="Update or create the status of a manual", description="Update the status of a manual or create a new status if it doesn't exist")
 def updateManualStatus(
     manual_status_request: ManualStatusRequest,
     session: Session = Depends(get_session)
@@ -267,17 +262,24 @@ def updateManualStatus(
     try:
         # Check if the manual status exists
         manual_status = session.query(ManualStatus).filter(ManualStatus.manual_name == manual_status_request.manual_name).first()
+        
         if not manual_status:
-            raise HTTPException(
-                status_code=404, detail=f"Manual status for '{manual_status_request.manual_name}' not found"
+            # Create a new ManualStatus if it doesn't exist
+            manual_status = ManualStatus(
+                manual_name=manual_status_request.manual_name,
+                status=manual_status_request.status
             )
+            session.add(manual_status)
+            message = f"Manual status for '{manual_status_request.manual_name}' created successfully"
+        else:
+            # Update the existing status
+            manual_status.status = manual_status_request.status
+            message = f"Manual status for '{manual_status_request.manual_name}' updated successfully"
 
-        # Update the status
-        manual_status.status = manual_status_request.status
         session.commit()
 
         return GenericResponse(
-            message=f"Manual status for '{manual_status_request.manual_name}' updated successfully",
+            message=message,
             data={"manual_name": manual_status.manual_name, "status": manual_status.status}
         )
 
@@ -334,6 +336,35 @@ def getManualStatus(
         )
 
     except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=500, detail=f"Database error: {str(e)}"
+        )
+
+@router.delete("/status/{manual_name}", summary="Delete a manual status", description="Delete the status of a manual")
+def deleteManualStatus(
+    manual_name: str,
+    session: Session = Depends(get_session)
+) -> GenericResponse:
+    try:
+        # Query for the manual status
+        manual_status = session.query(ManualStatus).filter(ManualStatus.manual_name == manual_name).first()
+        
+        if not manual_status:
+            raise HTTPException(
+                status_code=404, detail=f"Manual status for '{manual_name}' not found"
+            )
+
+        # Delete the manual status
+        session.delete(manual_status)
+        session.commit()
+
+        return GenericResponse(
+            message=f"Manual status for '{manual_name}' deleted successfully",
+            data={"manual_name": manual_name}
+        )
+
+    except SQLAlchemyError as e:
+        session.rollback()
         raise HTTPException(
             status_code=500, detail=f"Database error: {str(e)}"
         )

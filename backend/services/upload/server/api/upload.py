@@ -10,6 +10,8 @@ import traceback
 import requests
 from fastapi import HTTPException
 
+from utils.rollback import rollback_all
+
 from utils.process_manuals import process_headings, save_output_to_file
 
 router = APIRouter(
@@ -44,16 +46,18 @@ async def uploadPdf(
             "manual_name": pdf_file,
             "status": "in_progress"
         }
-        response = requests.post(url, json=data)
+        response = requests.put(url, json=data)
         
         if response.status_code != 200:
             raise HTTPException(status_code=response.status_code, 
-                detail=f"Failed to update status in the database. Status Code: {response.status_code}")
+                detail=f"Failed to update status in the database. Status Code: {response.status_code}, Response: {response.json()}")
         
         
         
         # process text
-        extracted_content = run_process(relative_url)
+        extracted_content = await run_process(relative_url)
+
+        print(extracted_content, "extracted_content")
         
         # run NER to extract keywords + embed keywords
         processed_output = process_headings(extracted_content)
@@ -76,6 +80,8 @@ async def uploadPdf(
         response = requests.post(url, json=data, headers=headers)
         
         if response.status_code != 200:
+            # roll back db
+            rollback_all(pdf_file)
             raise HTTPException(status_code=response.status_code, 
                 detail=f"Failed to update status in the database. Status Code: {response.status_code}")
         

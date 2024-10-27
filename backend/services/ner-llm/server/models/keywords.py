@@ -51,7 +51,7 @@ class ManualMappingRequest(BaseModel):
             # ... other sections ...
         }
     )
-
+    machine_name : str = Field(..., description="The name of the machine the manual is for", examples=["machine1", "machine2"])
 
 
 class ManualStatusRequest(BaseModel):
