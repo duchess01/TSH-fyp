@@ -117,3 +117,26 @@ export async function addSolution(
     };
   }
 }
+
+export async function deleteQnA(qna_id, token) {
+  try {
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    const url = `${USER_BASE_URL}/qna/delete/${qna_id}`;
+
+    const response = await axios.delete(url, config);
+
+    return response;
+  } catch (error) {
+    console.log("Error in deleting Q&A: ", error);
+    return {
+      status: error.response?.status || 500,
+      data: error.response?.data?.message || "An error occurred",
+    };
+  }
+}

@@ -4,7 +4,6 @@ import db from "../../db/db.js";
 import multer from "multer";
 import axios from "axios";
 import { verifyToken } from "../../middleware/authMiddleware.js";
-// import { verify } from "jsonwebtoken";
 
 const router = Router();
 const storage = multer.memoryStorage();
@@ -181,6 +180,9 @@ router.post("/machinequestion", verifyToken, async (req, res) => {
 
     const result = await Promise.all(
       rows.map(async (row) => {
+        // Fetch user details for the creator of the Q&A
+        const creatorDetails = await fetchUserDetails(row.user_id);
+
         const likedUsers = await Promise.all(
           row.liked_user_ids.filter((id) => id !== null).map(fetchUserDetails)
         );
@@ -196,6 +198,7 @@ router.post("/machinequestion", verifyToken, async (req, res) => {
           ...rest,
           liked_by: likedUsers.filter((user) => user !== null),
           disliked_by: dislikedUsers.filter((user) => user !== null),
+          user: creatorDetails, // Include user details in the response
         };
       })
     );
@@ -472,5 +475,42 @@ async function fetchUserDetails(token, userId) {
     return null;
   }
 }
+
+// Handle deleting a Q&A and its associated ratings
+router.delete("/delete/:id", verifyToken, async (req, res) => {
+  const qnaId = parseInt(req.params.id, 10);
+
+  if (isNaN(qnaId)) {
+    return res.status(400).json({ error: "Invalid Q&A ID" });
+  }
+
+  try {
+    // Start a transaction
+    await db.query("BEGIN");
+
+    // Delete from ratings table first
+    await db.query("DELETE FROM ratings WHERE qna_id = $1", [qnaId]);
+
+    // Delete from qna table
+    const result = await db.query("DELETE FROM qna WHERE id = $1 RETURNING *", [
+      qnaId,
+    ]);
+
+    if (result.rowCount === 0) {
+      await db.query("ROLLBACK");
+      return res.status(404).json({ message: "Q&A not found" });
+    }
+
+    await db.query("COMMIT");
+
+    res
+      .status(200)
+      .json({ message: "Q&A and related ratings deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting Q&A:", error);
+    await db.query("ROLLBACK");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 export default router;

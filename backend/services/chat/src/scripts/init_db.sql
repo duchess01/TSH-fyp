@@ -17,16 +17,6 @@ CREATE TABLE chat (
     human_response VARCHAR(255)
 );
 
-CREATE TABLE qna (
-    id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL,
-    topic VARCHAR(255),
-    title VARCHAR(255),
-    solution TEXT,
-    solution_image BYTEA, 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
 -- Insert sample chat messages
 INSERT INTO chat (user_id, chat_session_id, title, message, response, topic, machine, created_at, human_response)
 VALUES 

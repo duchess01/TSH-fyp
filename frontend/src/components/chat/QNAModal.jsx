@@ -1,4 +1,5 @@
 import { PhotoIcon } from "@heroicons/react/24/solid";
+import { IoTrashOutline } from "react-icons/io5";
 import { RxCross2 } from "react-icons/rx";
 import {
   FaRegThumbsDown,
@@ -11,6 +12,7 @@ import { machinequestion, addSolution, rate } from "../../api/qna";
 import Swal from "sweetalert2";
 import { Tooltip } from "@mui/material";
 import { format } from "date-fns";
+import { deleteQnA } from "../../api/qna";
 
 function QNAModal({ closeModal, machine, question }) {
   const [data, setData] = useState([]);
@@ -20,7 +22,6 @@ function QNAModal({ closeModal, machine, question }) {
   const [loading, setLoading] = useState(false);
   const user = JSON.parse(sessionStorage.getItem("user"));
   const modalBodyRef = useRef(null);
-  console.log(sessionStorage.getItem("token"));
 
   const fetchMachineQuestion = async () => {
     const token = sessionStorage.getItem("token");
@@ -147,6 +148,46 @@ function QNAModal({ closeModal, machine, question }) {
     return format(new Date(dateString), "dd-MM-yyyy");
   };
 
+  const handleDelete = async (id) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "rgb(79, 70, 229)",
+      confirmButtonText: "Yes, delete it!",
+      customClass: {
+        popup: "custom-swal",
+      },
+    });
+
+    if (result.isConfirmed) {
+      const token = sessionStorage.getItem("token");
+      const response = await deleteQnA(id, token);
+      if (response.status === 200) {
+        Swal.fire({
+          icon: "success",
+          title: "Deleted!",
+          text: "Your solution has been deleted.",
+          customClass: {
+            popup: "custom-swal",
+          },
+        });
+        fetchMachineQuestion();
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error!",
+          text: "There was a problem deleting the solution. Please try again.",
+          customClass: {
+            popup: "custom-swal",
+          },
+        });
+      }
+    }
+  };
+
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
       <div
@@ -175,7 +216,15 @@ function QNAModal({ closeModal, machine, question }) {
 
             return (
               <div key={item.id} className="mb-4 border-b pb-2">
-                <p className="font-semibold">{item.solution}</p>
+                <div className="flex justify-between items-center">
+                  <p className="font-bold underline">
+                    {item.user ? item.user.name : "Deleted User"}
+                  </p>
+                  <span className="text-gray-400 font-normal">
+                    {formatDate(item.created_at)}
+                  </span>
+                </div>
+                <p className="font">{item.solution}</p>
                 {item.solution_image && (
                   <div className="mt-2">
                     <a
@@ -204,13 +253,22 @@ function QNAModal({ closeModal, machine, question }) {
                   </button>
                   <Tooltip
                     title={
-                      item.liked_by.length > 0 ? (
+                      item.likes > 0 ? (
                         <div style={{ maxHeight: "200px", overflowY: "auto" }}>
                           {item.liked_by.map((user) => (
                             <div key={user.id}>
                               {user.name} - {formatDate(user.created_at)}
                             </div>
                           ))}
+                          {item.likes > item.liked_by.length &&
+                            Array.from(
+                              { length: item.likes - item.liked_by.length },
+                              (_, index) => (
+                                <div key={`deleted-like-${index}`}>
+                                  Deleted User
+                                </div>
+                              )
+                            )}
                         </div>
                       ) : (
                         "There are no likes."
@@ -231,13 +289,24 @@ function QNAModal({ closeModal, machine, question }) {
                   </button>
                   <Tooltip
                     title={
-                      item.disliked_by.length > 0 ? (
+                      item.dislikes > 0 ? (
                         <div style={{ maxHeight: "200px", overflowY: "auto" }}>
                           {item.disliked_by.map((user) => (
                             <div key={user.id}>
                               {user.name} - {formatDate(user.created_at)}
                             </div>
                           ))}
+                          {item.dislikes > item.disliked_by.length &&
+                            Array.from(
+                              {
+                                length: item.dislikes - item.disliked_by.length,
+                              },
+                              (_, index) => (
+                                <div key={`deleted-dislike-${index}`}>
+                                  Deleted User
+                                </div>
+                              )
+                            )}
                         </div>
                       ) : (
                         "There are no dislikes."
@@ -250,6 +319,14 @@ function QNAModal({ closeModal, machine, question }) {
                       {item.dislikes}
                     </span>
                   </Tooltip>
+
+                  <button
+                    onClick={() => handleDelete(item.id)}
+                    className="bg-transparent hover:bg-gray-600 p-1 rounded-full ml-auto"
+                    aria-label="Delete"
+                  >
+                    <IoTrashOutline className="h-5 w-5 text-red-500" />
+                  </button>
                 </div>
               </div>
             );

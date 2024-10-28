@@ -45,7 +45,7 @@ VALUES
     -- Example entries with image types
     (11, 'Installation', 'Machine A', 'How to install Machine A with images?', 'Refer to the images provided.', NULL, 'image/png'),
     (12, 'Troubleshooting', 'Machine A', 'Why is Machine A not starting? See the image.', 'Check the image for troubleshooting steps.', NULL, 'image/jpeg'),
-    (13, 'Maintenance', 'Machine B', 'Maintenance guide with PDF.', 'See attached PDF for maintenance details.', NULL, 'application/pdf');
+    (13, 'Maintenance', 'Machine B', 'Maintenance guide with PDF.', 'See attached PDF for maintenance details. LOREM LOREM LOREM LOREM IPASDAIO MDI MCOANDA NMSKDMADM A KLOREM LOREM LOREM LOREM OKERMIAMDSMAK LOREM', NULL, 'application/pdf');
 
 -- Insert sample ratings ensuring each Q&A has different total counts for likes and dislikes
 INSERT INTO ratings (qna_id, user_id, rating_value)
@@ -87,4 +87,4 @@ VALUES
 
     (10, 1, TRUE),  -- Like for Q&A id 10 by User 1 (John Doe)
     (10, 2, TRUE),  -- Like for Q&A id 10 by User 2 (Alice Johnson)
-    (10, 3, FALSE); -- Dislike for Q&A id 10 by User 3 (Michael Scott)
+    (10, 7, FALSE); -- Dislike for Q&A id 10 by User 3 (Michael Scott)
