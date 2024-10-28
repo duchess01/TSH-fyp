@@ -58,6 +58,7 @@ def store_keywords(heading, keywords):
     return response.status_code
 
 def process_headings(headings_dict):
+    print(headings_dict, "headings_dict")
     output = {}
     for heading, content_list in headings_dict.items():
         content = " ".join(content_list) + heading

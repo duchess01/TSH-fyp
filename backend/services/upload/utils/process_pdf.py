@@ -8,6 +8,8 @@ import re
 import requests
 from fastapi import HTTPException
 
+from utils.rollback import rollback_all
+
 load_dotenv()
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 PINECONE_API_KEY = os.getenv('PINECONE_API_KEY')
@@ -15,17 +17,17 @@ PINECONE_API_KEY = os.getenv('PINECONE_API_KEY')
 if OPENAI_API_KEY :
     client = OpenAI(api_key=OPENAI_API_KEY)
     
-def run_process(pdf_file): 
+async def run_process(pdf_file): 
+    message_content = await read_pdf(pdf_file)
+    extracted_content, store_dictionary = process_content(message_content, pdf_file)
     try:
-        message_content = read_pdf(pdf_file)
-        extracted_content, store_dictionary = process_content(message_content, pdf_file)
         upsert_content_pinecone(extracted_content, pdf_file)
         
         return extracted_content
     except Exception as e:
         print(f"Error during process: {e}")
-        update_status_in_database(pdf_file, status="failed")
-        raise HTTPException(status_code=500, detail= f"Error during process: {e}")
+        await update_status_in_database(pdf_file, status="failed")
+        await rollback_all(pdf_file)
 
 
 ### helper functions ###
@@ -153,7 +155,7 @@ def upsert_embeddings(output_dict, extracted_content, index):
             namespace=heading,
         )
 
-def update_status_in_database(pdf_file, status):
+async def update_status_in_database(pdf_file, status):
     try:
         # Extract the file name without extension
         pdf_file = pdf_file.split("\\")[-1].split(".")[0]
@@ -175,16 +177,23 @@ def update_status_in_database(pdf_file, status):
         print(error_message)
         if response.text:
             print(f"Response content: {response.text}")
+
+
+        rollback_all(pdf_file)
         raise HTTPException(status_code=response.status_code, detail=error_message)
     
     except requests.RequestException as req_err:
         error_message = f"Request error occurred while updating status: {req_err}"
         print(error_message)
+
+        rollback_all(pdf_file)
         raise HTTPException(status_code=500, detail=error_message)
     
     except Exception as e:
         error_message = f"Unexpected error during status update: {e}"
         print(error_message)
+
+        rollback_all(pdf_file)
         raise HTTPException(status_code=500, detail=error_message)
     
 
@@ -194,7 +203,7 @@ def update_status_in_database(pdf_file, status):
 
 
 ### main functions ###
-def read_pdf(pdf_file):
+async def read_pdf(pdf_file):
     # upload File
     PDF_file = client.files.create(
         file=open(pdf_file, "rb"),
@@ -230,12 +239,20 @@ def read_pdf(pdf_file):
     max_attempts = 3
     messages = []
 
+    
+
+    print(pdf_file, "pdf_file")
+
     while attempt < max_attempts:
         print(f"Attempt {attempt + 1} of {max_attempts} for run process") 
         # Create a thread:
         message_file = client.files.create(
             file=open(pdf_file, "rb"), purpose="assistants"
         )
+
+        print(OPENAI_API_KEY, "OPENAI_API_KEY")
+
+        print(f"File uploaded successfully. File ID: {message_file.id}")
 
         file_id = pdf_file_id
         query = """
@@ -262,13 +279,17 @@ def read_pdf(pdf_file):
 
         messages = list(client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id))
 
-        if messages and "{" in messages[0].content[0].text.value:
+
+        if messages and len(messages) > 0 and "{" in messages[0].content[0].text.value:
             if messages[0].content[0].text.value.count("{") == 1:
+                print("SUCCESSFULLY EXTRACTED TOC")
                 break
+
+        print("FAILED TO EXTRACT TOC")
         attempt += 1
     
     if not messages:
-        update_status_in_database(pdf_file, status="failed")
+        await update_status_in_database(pdf_file, status="failed")
         raise Exception("No messages found")
     # Process the response content
     message_content = messages[0].content[0].text
@@ -373,6 +394,7 @@ if __name__ == "__main__":
     run_process(pdf_file)
 
     message_content = read_pdf(pdf_file)
+    
     extracted_content, store_dictionary = process_content(message_content, pdf_file)
     
     print(store_dictionary, 'store dictionary')
