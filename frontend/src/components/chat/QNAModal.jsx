@@ -30,8 +30,13 @@ function QNAModal({ closeModal, machine, question }) {
       return;
     }
     const response = await machinequestion(machine, question, token);
+    console.log(response);
     if (response && response.data) {
-      setData(response.data);
+      if (response.status == 200) {
+        setData(response.data);
+      } else {
+        closeModal();
+      }
     }
   };
 
