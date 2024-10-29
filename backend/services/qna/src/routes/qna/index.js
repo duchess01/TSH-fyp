@@ -384,6 +384,30 @@ router.post("/chatbot", async (req, res) => {
 });
 
 // API to return the data by ids
+router.post("/getByIds", async (req, res) => {
+  const { ids } = req.body;
+
+  if (!ids || !Array.isArray(ids)) {
+    return res.status(400).json({ error: "Invalid IDs" });
+  }
+
+  try {
+    const data = await fetchQnaDataByIds(ids);
+
+    // Fetch likes and dislikes for each Q&A item in the results
+    const enrichedResults = await Promise.all(
+      data.map(async (dataArray) => {
+        return await fetchQnaLikesDislikes(req, dataArray.id);
+      })
+    );
+
+    res.status(200).json(enrichedResults);
+  } catch (error) {
+    console.error("Error fetching data by IDs:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // Function to fetch QnA data by IDs
 async function fetchQnaDataByIds(ids) {
   const idList = ids.map((id) => parseInt(id, 10));
