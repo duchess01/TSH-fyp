@@ -20,7 +20,7 @@ import {
 import { AiOutlineMessage } from "react-icons/ai"; // New icon for QnA
 import { FaSpinner } from "react-icons/fa";
 import { changeRating, sendMessageAPI } from "../api/chat";
-import { getAllChatHistoryAPI } from "../api/chat";
+import { getAllChatHistoryAPI, getAllMachinesAPI } from "../api/chat";
 import { useNavigate } from "react-router-dom";
 import {
   FaRegThumbsDown,
@@ -28,7 +28,6 @@ import {
   FaThumbsDown,
   FaThumbsUp,
 } from "react-icons/fa";
-import { MACHIINES } from "../constants";
 
 function Chat() {
   const navigate = useNavigate();
@@ -45,7 +44,7 @@ function Chat() {
   const [isShowSidebar, setIsShowSidebar] = useState(false);
   const scrollToLastItem = useRef(null);
   const [chatSessionId, setChatSessionId] = useState(null);
-  const [machines, setMachines] = useState(MACHIINES);
+  const [machines, setMachines] = useState([]);
   const [selectedMachine, setSelectedMachine] = useState(null);
   const [thumbs, setThumbs] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -78,6 +77,21 @@ function Chat() {
       }
     };
     fetchChats();
+
+    const fetchMachines = async () => {
+      try {
+        const response = await getAllMachinesAPI();
+        if (response.status === 200) {
+          const machines = response.data.data.map(
+            (machine) => machine.machine_name
+          );
+          setMachines(machines);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchMachines();
   }, []);
 
   const newChatSessionId = (chats) => {
@@ -136,7 +150,7 @@ function Chat() {
   }, []);
 
   const handleMachineSelect = (e) => {
-    setSelectedMachine("64164en-pdf");
+    setSelectedMachine(e.target.value);
     setPreviousTitles(getUniqueTitles([...previousChats, ""]));
     setCurrentTitle(e.target.value);
   };
