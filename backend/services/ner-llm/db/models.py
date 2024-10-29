@@ -77,7 +77,7 @@ class KeywordMapping(TimestampedModel):
 class ManualMapping(TimestampedModel):
     __tablename__ = "manual_mapping"
     manual_name = Column(String(255), nullable=False, unique=True, comment="Name of the manual map")
-    
+    machine_name = Column(String(255), nullable=False, comment = "Name of the machine the manual is for")
     # FK -> KeywordMapping
     keyword_mappings = relationship("KeywordMapping", back_populates="manual_mapping", cascade="all, delete-orphan")
     
@@ -93,10 +93,9 @@ class UploadStatus(enum.Enum):
 
 class ManualStatus(TimestampedModel) :
     __tablename__ = "manual_status"
-    manual_name = Column(String(255), nullable=False, unique=True, comment = "Name of the manual")
+    manual_name = Column(String(255), nullable=False, unique=True, comment="Name of the manual")
     status = Column(Enum(UploadStatus), nullable=False, default=UploadStatus.PENDING, comment="Status of the manual upload")
-    manual_mapping_id = Column(UUID(as_uuid=True), ForeignKey('manual_mapping.uuid'), nullable=True, unique=True)
-    
+    manual_mapping_id = Column(UUID(as_uuid=True), ForeignKey('manual_mapping.uuid'), nullable=True)
     # FK -> ManualMapping
     manual_mapping = relationship("ManualMapping", back_populates="status")
 
