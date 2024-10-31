@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from "../components/admin/sidebar";
 import Usertable from "../components/admin/users";
 
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [notification, setNotification] = useState("");
@@ -12,7 +13,7 @@ const AdminDashboard = () => {
     const token = sessionStorage.getItem("token");
     const user = JSON.parse(sessionStorage.getItem("user"));
 
-    if (!token || !user || user.privilege !== 'System Admin') {
+    if (!token || !user ) {
       // If unauthorized, set notification and schedule redirect
       setNotification("You do not have access to the Admin Dashboard. Redirecting to login...");
       setIsAuthorized(false);
