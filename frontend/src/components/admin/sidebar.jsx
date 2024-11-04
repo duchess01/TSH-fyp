@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { FaUsers, FaCog, FaHome, FaLink, FaUser, FaExclamationTriangle, FaChevronLeft, FaChevronRight } from 'react-icons/fa'; // Import icons
+import { Link, useLocation } from 'react-router-dom';
+import { FaUsers, FaCog, FaHome, FaLink, FaUser, FaExclamationTriangle, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
+  const location = useLocation();
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
+  };
+
+  const isActivePath = (path) => {
+    return location.pathname === path;
   };
 
   return (
@@ -25,43 +30,46 @@ const Sidebar = () => {
         {/* Sidebar Links */}
         <nav className="flex flex-col flex-grow space-y-8 p-6 text-gray-700">
           <Link
-            to="/overview"
-            className={`flex items-center ${isOpen ? 'space-x-4' : 'justify-center'} hover:text-blue-600 transition duration-300 ease-in-out transform hover:scale-105`}
+            to="/dashboard"
+            className={`flex items-center ${isOpen ? 'space-x-4' : 'justify-center'} ${
+              isActivePath('/dashboard') ? 'text-blue-600 font-semibold' : 'hover:text-blue-600'
+            } transition duration-300 ease-in-out transform hover:scale-105`}
           >
             <FaHome size={32} />
             {isOpen && <span className="text-xl font-semibold">Dashboard</span>}
           </Link>
           <Link
-            to="/customers"
-            className={`flex items-center ${isOpen ? 'space-x-4' : 'justify-center'} text-blue-600 font-semibold transition duration-300 ease-in-out transform hover:scale-105`}
+            to="/Admin"
+            className={`flex items-center ${isOpen ? 'space-x-4' : 'justify-center'} ${
+              isActivePath('/Admin') ? 'text-blue-600 font-semibold' : 'hover:text-blue-600'
+            } transition duration-300 ease-in-out transform hover:scale-105`}
           >
             <FaUsers size={32} />
             {isOpen && <span className="text-xl font-semibold">Admin Dashboard</span>}
           </Link>
           <Link
-            to="/integrations"
-            className={`flex items-center ${isOpen ? 'space-x-4' : 'justify-center'} hover:text-blue-600 transition duration-300 ease-in-out transform hover:scale-105`}
+            to="/qna"
+            className={`flex items-center ${isOpen ? 'space-x-4' : 'justify-center'} ${
+              isActivePath('/qna') ? 'text-blue-600 font-semibold' : 'hover:text-blue-600'
+            } transition duration-300 ease-in-out transform hover:scale-105`}
           >
             <FaLink size={32} />
-            {isOpen && <span className="text-xl font-semibold">Knowledge Base</span>}
+            {isOpen && <span className="text-xl font-semibold">QnA page</span>}
           </Link>
           <Link
-            to="/settings"
-            className={`flex items-center ${isOpen ? 'space-x-4' : 'justify-center'} hover:text-blue-600 transition duration-300 ease-in-out transform hover:scale-105`}
+            to="/Upload"
+            className={`flex items-center ${isOpen ? 'space-x-4' : 'justify-center'} ${
+              isActivePath('/Upload') ? 'text-blue-600 font-semibold' : 'hover:text-blue-600'
+            } transition duration-300 ease-in-out transform hover:scale-105`}
           >
             <FaCog size={32} />
             {isOpen && <span className="text-xl font-semibold">Add Manual</span>}
           </Link>
           <Link
-            to="/account"
-            className={`flex items-center ${isOpen ? 'space-x-4' : 'justify-center'} hover:text-blue-600 transition duration-300 ease-in-out transform hover:scale-105`}
-          >
-            <FaUser size={32} />
-            {isOpen && <span className="text-xl font-semibold">Add User</span>}
-          </Link>
-          <Link
-            to="/error"
-            className={`flex items-center ${isOpen ? 'space-x-4' : 'justify-center'} hover:text-blue-600 transition duration-300 ease-in-out transform hover:scale-105`}
+            to="/logout"
+            className={`flex items-center ${isOpen ? 'space-x-4' : 'justify-center'} ${
+              isActivePath('/logout') ? 'text-blue-600 font-semibold' : 'hover:text-blue-600'
+            } transition duration-300 ease-in-out transform hover:scale-105`}
           >
             <FaExclamationTriangle size={32} />
             {isOpen && <span className="text-xl font-semibold">Logout</span>}

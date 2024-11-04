@@ -50,6 +50,28 @@ jobs:
 
       - name: Run Docker Compose
         working-directory: backend
+        run: docker-compose -f docker-compose.yml up --build -d
+
+      - name: Wait for User service
+        run: |
+          until curl -s http://localhost:3000/api/v1/healthcheck; do
+            echo "Waiting for User service..."
+            sleep 5
+          done
+
+      - name: Run User tests
+        run: |
+          cd backend/services/user
+          npm install
+          npm run test
+
+      - name: Stop and remove containers
+        if: always()
+        working-directory: backend
+        run: docker-compose -f docker-compose.yml down
+
+      - name: Run Docker Compose
+        working-directory: backend
         run: docker-compose -f docker-compose.test.yml up --build -d
 
       - name: Run tests

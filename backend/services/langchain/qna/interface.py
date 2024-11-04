@@ -14,3 +14,4 @@ class QueryQnA(BaseModel):
 
 class QueryQnAResponse(BaseResponseModel):
     ids: List[str]
+    

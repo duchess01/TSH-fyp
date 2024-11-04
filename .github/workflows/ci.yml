@@ -1,0 +1,57 @@
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: Node.js CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      # - name: Build and run containers
+      #   run: |
+      #     docker-compose up --build -d
+
+      - name: Create .local.env file
+        run: |
+          echo "DUCHESS_API_KEY=${{ secrets.DUCHESS_API_KEY }}" > backend/.local.env
+
+      - name: Run Docker Compose
+        working-directory: backend
+        run: docker-compose -f docker-compose.test.yml up --build -d
+
+      - name: Run User tests
+        run: |
+          cd services/user
+          npm install
+          npm run test
+
+      # - name: Run Chat tests
+      #   run: |
+      #     cd services/chat
+      #     npm install
+      #     npm run test
+
+      # - name: Tear down containers
+      #   if: always()
+      #   run: |
+      #     docker-compose down
+
+      - name: Stop and remove containers
+        if: always()
+        working-directory: backend
+        run: docker-compose -f docker-compose.test.yml down

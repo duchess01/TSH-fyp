@@ -104,14 +104,14 @@ services:
       - "3003:3003"
     restart: always
     environment:
-      - DB_HOST=db_chat
+      - DB_HOST=db_qna
       - DB_PORT=5432
-      - DB_NAME=chat_db
+      - DB_NAME=qna_db
       - DB_USER=myuser
       - DB_PASSWORD=mypassword
       - DOCKER_ENV=true
     depends_on:
-      - db_chat
+      - db_qna
     networks:
       - my-network
 
@@ -169,6 +169,24 @@ services:
     restart: always
 
   #################################
+  # PostgreSQL for QnA microservice
+  #################################
+  db_qna:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: qna_db
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+    ports:
+      - "5436:5432"
+    networks:
+      - my-network
+    volumes:
+      - ./services/qna/src/scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+      - db_qna_data:/var/lib/postgresql/data
+    restart: always
+
+  #################################
   # PostgreSQL for ner microservice
   #################################
   db_ner_llm:
@@ -195,3 +213,4 @@ volumes:
   db_user_data:
   db_chat_data:
   db_ner:
+  db_qna_data:

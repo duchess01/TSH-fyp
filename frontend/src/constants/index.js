@@ -13,3 +13,4 @@ export const COLORS = [
 ];
 
 export const MACHIINES = ["FANUC Series 30/300, 31/310, 32/320-MODEL A"];
+// export const MACHIINES = ["64164en-pdf"];

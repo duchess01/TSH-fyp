@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import SideNavBar from "../components/dashboard/SideNav";
+import SideNavBar from "../components/admin/sidebar";
 import FAQSection from "../components/dashboard/FAQSection";
 import QuestionsReceivedLineGraph from "../components/dashboard/QuestionsReceivedLineGraph";
 import TopicBarChart from "../components/dashboard/CategoryBarGraph";
@@ -38,38 +38,36 @@ const DashboardPage = () => {
       (user.privilege !== "Manager Dashboard" &&
         user.privilege !== "System Admin")
     ) {
-      // If unauthorized, set notification and schedule redirect
       setNotification(
         "You do not have access to the Dashboard. Redirecting to login..."
       );
       setIsAuthorized(false);
 
-      // Redirect after 3 seconds
       setTimeout(() => {
-        navigate("/login"); // Redirect to login page
+        navigate("/login");
       }, 3000);
     } else {
-      // If authorized, show the dashboard page
       setIsAuthorized(true);
     }
   }, [navigate]);
 
   if (isAuthorized === null) {
-    // While authorization is being checked, show a blank page
     return null;
   }
 
   return (
-    <div className="text-black bg-slate-300 min-w-screen min-h-screen grid grid-cols-12">
+    <div className="text-black bg-slate-300">
       {notification && (
-        <div className="fixed top-0 left-0 right-0 bg-red-500 text-white p-4 text-center">
+        <div className="fixed top-0 left-0 right-0 bg-red-500 text-white p-4 text-center z-50">
           {notification}
         </div>
       )}
       {isAuthorized && (
-        <>
-          <SideNavBar />
-          <div className="col-span-11 p-10">
+        <div className="flex min-h-screen">
+          <div className="fixed h-screen">
+            <SideNavBar />
+          </div>
+          <div className="flex-1 ml-64 p-10"> {/* Adjust ml-64 based on your sidebar width */}
             <div className="bg-white w-full min-h-full rounded-lg p-5">
               <FAQSection faqs={faqs} />
               <div className="grid grid-cols-2 grid-rows-2 gap-4 mt-5">
@@ -79,7 +77,7 @@ const DashboardPage = () => {
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

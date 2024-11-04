@@ -20,7 +20,7 @@ import {
 import { AiOutlineMessage } from "react-icons/ai"; // New icon for QnA
 import { FaSpinner } from "react-icons/fa";
 import { changeRating, sendMessageAPI } from "../api/chat";
-import { getAllChatHistoryAPI } from "../api/chat";
+import { getAllChatHistoryAPI, getAllMachinesAPI } from "../api/chat";
 import { useNavigate } from "react-router-dom";
 import {
   FaRegThumbsDown,
@@ -28,8 +28,6 @@ import {
   FaThumbsDown,
   FaThumbsUp,
 } from "react-icons/fa";
-import ChatModal from "../components/chat/chatModal";
-import { MACHIINES } from "../constants";
 
 function Chat() {
   const navigate = useNavigate();
@@ -46,7 +44,7 @@ function Chat() {
   const [isShowSidebar, setIsShowSidebar] = useState(false);
   const scrollToLastItem = useRef(null);
   const [chatSessionId, setChatSessionId] = useState(null);
-  const [machines, setMachines] = useState(MACHIINES);
+  const [machines, setMachines] = useState([]);
   const [selectedMachine, setSelectedMachine] = useState(null);
   const [thumbs, setThumbs] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -79,6 +77,21 @@ function Chat() {
       }
     };
     fetchChats();
+
+    const fetchMachines = async () => {
+      try {
+        const response = await getAllMachinesAPI();
+        if (response.status === 200) {
+          const machines = response.data.data.map(
+            (machine) => machine.machine_name
+          );
+          setMachines(machines);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchMachines();
   }, []);
 
   const newChatSessionId = (chats) => {
@@ -171,6 +184,9 @@ function Chat() {
         text,
         selectedMachine
       );
+      // changing from a list of list in human_response to a list
+      console.log("Response from chatbot: ", response);
+      response.data.human_response = response.data.human_response.flat();
       if (response.status != 201) {
         setErrorText(response.data.message);
         setText("");
@@ -187,6 +203,7 @@ function Chat() {
           {
             message: text,
             response: data.response,
+            human_response: data.human_response,
           },
         ]);
         setPreviousTitles(getUniqueTitles([...previousChats, data]));
@@ -241,7 +258,7 @@ function Chat() {
 
   return (
     <>
-      {isOpen === true ? <ChatModal closeModal={closeModal} /> : null}
+      {/* {isOpen === true ? <ChatModal closeModal={closeModal} /> : null} */}
       <div
         className="min-w-full chat h-screen"
         style={{
@@ -295,7 +312,7 @@ function Chat() {
                 <span className="pl-2">QnA</span>
               </button>
             </div>
-            <div className="sidebar-info-dashboard">
+            <div className="sidebar-info-upgrade">
               <button
                 className="flex items-center border-none bg-transparent cursor-pointer w-full p-2 hover:bg-gray-700"
                 onClick={() => navigate("/dashboard")}
@@ -304,7 +321,7 @@ function Chat() {
                 <span className="pl-2">Dashboard</span>
               </button>
             </div>
-            <div className="sidebar-info-user">
+            <div className="sidebar-info-upgrade">
               <button
                 className="flex items-center border-none bg-transparent cursor-pointer w-full p-2 hover:bg-gray-700"
                 onClick={() => navigate("/admin")}
@@ -313,7 +330,7 @@ function Chat() {
                 <span className="pl-2">Admin</span>
               </button>
             </div>
-            <div className="sidebar-info-logout">
+            <div className="sidebar-info-upgrade">
               <button
                 className="flex items-center border-none bg-transparent cursor-pointer w-full p-2 hover:bg-gray-700"
                 onClick={() => {
@@ -398,12 +415,51 @@ function Chat() {
                     <li>
                       <div className="w-full">
                         <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center">
-                            <img src="images/tsh-logo.PNG" alt="TshGPT" />
-                            <span className="role-title pl-2">TSH GPT</span>
+                          <div className="pt-2 w-full">
+                            <p>
+                              <span className="font-bold">
+                                {isLastMessage && isResponseLoading
+                                  ? ""
+                                  : "LLM response:"}
+                              </span>{" "}
+                              <br /> {chatMsg.response}
+                            </p>
+                            <br />
+                            <p>
+                              <span className="font-bold">
+                                {isLastMessage && isResponseLoading
+                                  ? ""
+                                  : "Human response:"}
+                              </span>{" "}
+                              <br />{" "}
+                              {chatMsg.human_response &&
+                                chatMsg.human_response.map((response, idx) => {
+                                  return (
+                                    <div
+                                      key={idx}
+                                      className="bg-slate-500 rounded mb-4 p-2"
+                                    >
+                                      <span className="font-bold">
+                                        Solution {idx + 1}:
+                                      </span>{" "}
+                                      <br /> {response.solution}
+                                      <p className="flex justify-end">
+                                        <span className="font-bold">
+                                          Likes:
+                                        </span>{" "}
+                                        {response.likes}{" "}
+                                        <span className="ml-4 font-bold">
+                                          Dislikes:
+                                        </span>{" "}
+                                        {response.dislikes}
+                                      </p>
+                                    </div>
+                                  );
+                                })}
+                            </p>
                           </div>
-                          {!isResponseLoading && isLastMessage && (
-                            <div className="flex items-center space-x-2">
+                          {!isResponseLoading && (
+                            <div className="flex item-start space-x-2 pl-2">
                               <button
                                 onClick={() =>
                                   handleThumbsChange(
@@ -441,10 +497,13 @@ function Chat() {
                         </div>
                         {isResponseLoading && isLastMessage ? (
                           <div className="flex items-center justify-center">
-                            <FaSpinner className="animate-spin" />
+                            <FaSpinner
+                              className="animate-spin"
+                              style={{ position: "relative", top: "-30px" }}
+                            />
                           </div>
                         ) : (
-                          <p>{chatMsg.response}</p>
+                          <></>
                         )}
                       </div>
                     </li>

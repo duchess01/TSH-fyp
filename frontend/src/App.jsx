@@ -7,8 +7,8 @@ import DashboardPage from "./Pages/Dashboard";
 import LogoutPage from "./Pages/Logout";
 import AdminPage from "./Pages/Admin";
 import UploadPage from "./Pages/manualupload";
-
 import "./styles/tailwind.css";
+import QnA from "./Pages/QnA";
 
 function App() {
   return (
@@ -20,6 +20,7 @@ function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/Logout" element={<LogoutPage />} />
           <Route path="/Admin" element={<AdminPage />} />
+          <Route path="/qna" element={<QnA />} />
           <Route path="/Upload" element={<UploadPage />} />
           {/* <Route path="*" element={<NotFound />} /> */}
         </Routes>

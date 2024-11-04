@@ -72,3 +72,16 @@ export async function changeRating(msgId, rating) {
     };
   }
 }
+
+export async function getAllMachinesAPI() {
+  try {
+    const response = await axios.get("http://localhost:8000/manual/");
+    return response;
+  } catch (error) {
+    console.log("Error in getting machines from backend: ", error);
+    return {
+      status: error.response ? error.response.status : 500,
+      data: error.response ? error.response.data.message : "Server Error",
+    };
+  }
+}
