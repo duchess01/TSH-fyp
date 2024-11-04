@@ -9,7 +9,7 @@ import {
   useCallback,
   useEffect,
 } from "react";
-import { BiSolidUserCircle, BiLogOut, BiChat } from "react-icons/bi";
+import { BiSolidUserCircle, BiLogOut, BiChat, BiPlus } from "react-icons/bi";
 import {
   MdOutlineArrowLeft,
   MdOutlineArrowRight,
@@ -153,6 +153,7 @@ const QnA = () => {
             role="button"
             onClick={() => setPostQuestionModalOpen(true)}
           >
+            <BiPlus size={20} />
             <button className="border-none bg-transparent cursor-pointer">
               Post Question
             </button>

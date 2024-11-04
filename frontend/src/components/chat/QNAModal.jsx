@@ -99,6 +99,7 @@ function QNAModal({ closeModal, machine, question }) {
     const user_id = user.id;
     const response = await addSolution(
       user_id,
+      null,
       question,
       userSolution,
       query_ids,

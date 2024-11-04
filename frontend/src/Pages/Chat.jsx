@@ -28,6 +28,7 @@ import {
   FaThumbsDown,
   FaThumbsUp,
 } from "react-icons/fa";
+import { addSolution } from "../api/qna";
 
 function Chat() {
   const navigate = useNavigate();
@@ -234,9 +235,15 @@ function Chat() {
     };
   }, []);
 
-  const handleThumbsChange = (input, currentRating, msgId) => {
+  const handleThumbsChange = async (
+    input,
+    currentRating,
+    msgId,
+    machine,
+    question
+  ) => {
     //allowed roles, to be confirmed
-    const allowedRoles = ["admin", "supervisor", "manager"];
+    const allowedRoles = ["Admin", "supervisor", "manager"];
     const newRating = input === currentRating ? null : input;
     const updatedChat = currentChat.map((chat) =>
       chat.id === msgId ? { ...chat, rating: newRating } : chat
@@ -248,7 +255,17 @@ function Chat() {
       input === "down" &&
       currentRating !== "down"
     ) {
-      setIsOpen(true);
+      console.log("ADD TO QNA");
+      const response = await addSolution(
+        null,
+        msgId,
+        question,
+        undefined, // This will use the default value for solution
+        [], // Default for query_ids, can also be omitted if empty array is desired
+        null, // This will use the default value for imageFile
+        machine,
+        sessionStorage.getItem("token")
+      );
     }
   };
 
@@ -402,7 +419,7 @@ function Chat() {
                 return (
                   <div key={idx} ref={isLastMessage ? scrollToLastItem : null}>
                     <li>
-                      {chatMsg.message != "" ? (
+                      {chatMsg.message !== "" && (
                         <div>
                           <div className="flex mb-1">
                             <BiSolidUserCircle size={28.8} />
@@ -410,22 +427,72 @@ function Chat() {
                           </div>
                           <p>{chatMsg.message}</p>
                         </div>
-                      ) : null}
+                      )}
                     </li>
                     <li>
                       <div className="w-full">
                         <div className="flex items-center justify-between mb-1">
-                          <div className="pt-2 w-full">
-                            <p>
-                              <span className="font-bold">
-                                {isLastMessage && isResponseLoading
-                                  ? ""
-                                  : "LLM response:"}
-                              </span>{" "}
-                              <br /> {chatMsg.response}
-                            </p>
-                            <br />
-                            <p>
+                          <span className="font-bold">
+                            {isLastMessage && isResponseLoading
+                              ? ""
+                              : "LLM response:"}
+                          </span>
+                          {/* Thumbs icons container */}
+                          {!isResponseLoading && (
+                            <div className="flex items-center space-x-2">
+                              <button
+                                onClick={() =>
+                                  handleThumbsChange(
+                                    "up",
+                                    chatMsg.rating,
+                                    chatMsg.id,
+                                    chatMsg.machine,
+                                    chatMsg
+                                  )
+                                }
+                                className="focus:outline-none"
+                              >
+                                {chatMsg.rating === "up" ? (
+                                  <FaThumbsUp />
+                                ) : (
+                                  <FaRegThumbsUp />
+                                )}
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleThumbsChange(
+                                    "down",
+                                    chatMsg.rating,
+                                    chatMsg.id,
+                                    chatMsg.machine,
+                                    chatMsg.message
+                                  )
+                                }
+                                className="focus:outline-none"
+                              >
+                                {chatMsg.rating === "down" ? (
+                                  <FaThumbsDown />
+                                ) : (
+                                  <FaRegThumbsDown />
+                                )}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        {/* New line for the actual response */}
+                        <p className="mt-1">{chatMsg.response}</p>
+                        {isResponseLoading && isLastMessage ? (
+                          <div className="flex items-center justify-center">
+                            <FaSpinner
+                              className="animate-spin"
+                              style={{ position: "relative", top: "-30px" }}
+                            />
+                          </div>
+                        ) : (
+                          <>
+                            <p className="mt-4">
+                              {" "}
+                              {/* Added margin here for separation */}
                               <span className="font-bold">
                                 {isLastMessage && isResponseLoading
                                   ? ""
@@ -457,53 +524,7 @@ function Chat() {
                                   );
                                 })}
                             </p>
-                          </div>
-                          {!isResponseLoading && (
-                            <div className="flex item-start space-x-2 pl-2">
-                              <button
-                                onClick={() =>
-                                  handleThumbsChange(
-                                    "up",
-                                    chatMsg.rating,
-                                    chatMsg.id
-                                  )
-                                }
-                                className="focus:outline-none"
-                              >
-                                {chatMsg.rating === "up" ? (
-                                  <FaThumbsUp />
-                                ) : (
-                                  <FaRegThumbsUp />
-                                )}
-                              </button>
-                              <button
-                                onClick={() =>
-                                  handleThumbsChange(
-                                    "down",
-                                    chatMsg.rating,
-                                    chatMsg.id
-                                  )
-                                }
-                                className="focus:outline-none"
-                              >
-                                {chatMsg.rating === "down" ? (
-                                  <FaThumbsDown />
-                                ) : (
-                                  <FaRegThumbsDown />
-                                )}
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                        {isResponseLoading && isLastMessage ? (
-                          <div className="flex items-center justify-center">
-                            <FaSpinner
-                              className="animate-spin"
-                              style={{ position: "relative", top: "-30px" }}
-                            />
-                          </div>
-                        ) : (
-                          <></>
+                          </>
                         )}
                       </div>
                     </li>

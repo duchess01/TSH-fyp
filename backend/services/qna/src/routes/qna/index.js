@@ -26,7 +26,8 @@ router.post(
   verifyToken,
   upload.single("image"),
   async (req, res) => {
-    const { user_id, question, solution, query_ids, machine } = req.body;
+    const { user_id, chat_id, question, solution, query_ids, machine } =
+      req.body;
     const image = req.file ? req.file.buffer : null;
     const imageType = req.file ? req.file.mimetype : null;
 
@@ -34,21 +35,21 @@ router.post(
       ? query_ids
       : JSON.parse(query_ids || "[]");
 
-    if (!user_id || !question || !machine) {
+    if (!question || !machine) {
       return res.status(400).json({ error: "All fields are required" });
     }
-    if (!solution && image == null) {
-      return res
-        .status(400)
-        .json({ error: "At least solution or image needs to be filled." });
-    }
+    // if (!solution && image == null) {
+    //   return res
+    //     .status(400)
+    //     .json({ error: "At least solution or image needs to be filled." });
+    // }
 
     let newRow;
     let newThread = true;
     try {
       if (idsToUse.length === 0) {
         const existingQueryResult = await db.query(
-          "SELECT id FROM qna WHERE question = $1",
+          "SELECT id FROM qna WHERE question = $1 AND chat_id IS NULL",
           [question]
         );
         if (existingQueryResult.rows.length !== 0) {
@@ -58,27 +59,46 @@ router.post(
       }
 
       const result = await db.query(
-        "INSERT INTO qna (user_id, topic, question, solution, solution_image, solution_image_type, machine) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
-        [user_id, "topic", question, solution, image, imageType, machine]
+        "INSERT INTO qna (user_id, chat_id, topic, question, solution, solution_image, solution_image_type, machine) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
+        [
+          user_id,
+          chat_id,
+          "topic",
+          question,
+          solution,
+          image,
+          imageType,
+          machine,
+        ]
       );
 
       newRow = result.rows[0];
       idsToUse.push(newRow.id);
 
       // Send the request to LangChain
-      const lmmResponse = await axios.post(
-        "http://langchain:8001/langchain/qna/upsert",
-        {
-          query: question,
-          ids: idsToUse.map(String),
+      if (chat_id == null) {
+        console.log("Sending to PINECONE");
+        try {
+          const lmmResponse = await axios.post(
+            "http://langchain:8001/langchain/qna/upsert",
+            {
+              query: question,
+              ids: idsToUse.map(String),
+            }
+          );
+        } catch (error) {
+          await db.query("DELETE FROM qna WHERE id = $1", [newRow.id]);
+          return res
+            .status(400)
+            .json({ error: "Upsert failed, created data has been deleted." });
         }
-      );
 
-      if (lmmResponse.data.status !== "success") {
-        await db.query("DELETE FROM qna WHERE id = $1", [newRow.id]);
-        return res
-          .status(400)
-          .json({ error: "Upsert failed, created data has been deleted." });
+        if (lmmResponse.data.status !== "success") {
+          await db.query("DELETE FROM qna WHERE id = $1", [newRow.id]);
+          return res
+            .status(400)
+            .json({ error: "Upsert failed, created data has been deleted." });
+        }
       }
 
       const message = newThread

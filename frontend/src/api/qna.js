@@ -77,11 +77,12 @@ export async function rate(qna_id, user_id, rating_value, token) {
 }
 
 export async function addSolution(
-  user_id,
+  user_id = null,
+  chat_id = null,
   question,
-  solution,
-  query_ids,
-  imageFile,
+  solution = "", // Default value for solution
+  query_ids = [], // Default value for query_ids
+  imageFile = null, // Default value for imageFile
   machine,
   token
 ) {
@@ -89,6 +90,9 @@ export async function addSolution(
     const formData = new FormData();
 
     formData.append("user_id", user_id);
+    if (chat_id !== null) {
+      formData.append("chat_id", chat_id);
+    }
     formData.append("question", question.trim());
     formData.append("solution", solution.trim());
     formData.append("query_ids", JSON.stringify(query_ids));

@@ -5,7 +5,8 @@
 -- Create the qna table
 CREATE TABLE qna (
     id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL,
+    user_id INT,
+    chat_id INT,
     topic VARCHAR(255),
     machine VARCHAR(255),
     question VARCHAR(255),
@@ -26,26 +27,27 @@ CREATE TABLE ratings (
 );
 
 -- Insert sample qna solutions
-INSERT INTO qna (user_id, topic, machine, question, solution, solution_image, solution_image_type)
+INSERT INTO qna (user_id, chat_id, topic, machine, question, solution, solution_image, solution_image_type)
 VALUES
-    (1, 'Installation', 'Machine A', 'How to install Machine A?', 'Follow the installation guide provided in the manual.', NULL, NULL),
-    (2, 'Troubleshooting', 'Machine A', 'Why is Machine A not starting?', 'Check the power supply and ensure all connections are secure.', NULL, NULL),
-    (3, 'Maintenance', 'Machine B', 'How often should Machine B be serviced?', 'Machine B should be serviced every 6 months.', NULL, NULL),
-    (4, 'Operation', 'Machine C', 'What is the maximum load for Machine C?', 'The maximum load for Machine C is 500 kg.', NULL, NULL),
-    (5, 'Safety', 'Machine A', 'What safety precautions should be taken with Machine A?', 'Always wear protective gear and follow the safety manual.', NULL, NULL),
+    (1, NULL, 'Installation', 'Machine A', 'How to install Machine A?', 'Follow the installation guide provided in the manual.', NULL, NULL),
+    (2, NULL, 'Troubleshooting', 'Machine A', 'Why is Machine A not starting?', 'Check the power supply and ensure all connections are secure.', NULL, NULL),
+    (3, NULL, 'Maintenance', 'Machine B', 'How often should Machine B be serviced?', 'Machine B should be serviced every 6 months.', NULL, NULL),
+    (4, NULL, 'Operation', 'Machine C', 'What is the maximum load for Machine C?', 'The maximum load for Machine C is 500 kg.', NULL, NULL),
+    (5, NULL, 'Safety', 'Machine A', 'What safety precautions should be taken with Machine A?', 'Always wear protective gear and follow the safety manual.', NULL, NULL),
 
     -- Same machine and question but different solutions
-    (6, 'Troubleshooting', 'Machine A', 'Why is Machine A not starting?', 'Ensure the machine is plugged in and check the fuse.', NULL, NULL),
-    (7, 'Troubleshooting', 'Machine A', 'Why is Machine A not starting?', 'Verify that the emergency stop is disengaged.', NULL, NULL),
+    (6, NULL, 'Troubleshooting', 'Machine A', 'Why is Machine A not starting?', 'Ensure the machine is plugged in and check the fuse.', NULL, NULL),
+    (7, NULL, 'Troubleshooting', 'Machine A', 'Why is Machine A not starting?', 'Verify that the emergency stop is disengaged.', NULL, NULL),
 
-    (8, 'Installation', 'Machine B', 'What tools are needed to install Machine B?', 'You will need a screwdriver, a wrench, and a level.', NULL, NULL),
-    (9, 'Operation', 'Machine C', 'How to calibrate Machine A?', 'Refer to the calibration section in the user manual.', NULL, NULL),
-    (10, 'Maintenance', 'Machine C', 'How to clean Machine C?', 'Use a soft cloth and appropriate cleaning solution for maintenance.', NULL, NULL),
+    (8, NULL, 'Installation', 'Machine B', 'What tools are needed to install Machine B?', 'You will need a screwdriver, a wrench, and a level.', NULL, NULL),
+    (9, NULL, 'Operation', 'Machine C', 'How to calibrate Machine A?', 'Refer to the calibration section in the user manual.', NULL, NULL),
+    (10, NULL, 'Maintenance', 'Machine C', 'How to clean Machine C?', 'Use a soft cloth and appropriate cleaning solution for maintenance.', NULL, NULL),
 
     -- Example entries with image types
-    (11, 'Installation', 'Machine A', 'How to install Machine A with images?', 'Refer to the images provided.', NULL, 'image/png'),
-    (12, 'Troubleshooting', 'Machine A', 'Why is Machine A not starting? See the image.', 'Check the image for troubleshooting steps.', NULL, 'image/jpeg'),
-    (13, 'Maintenance', 'Machine B', 'Maintenance guide with PDF.', 'See attached PDF for maintenance details. LOREM LOREM LOREM LOREM IPASDAIO MDI MCOANDA NMSKDMADM A KLOREM LOREM LOREM LOREM OKERMIAMDSMAK LOREM', NULL, 'application/pdf');
+    (11, NULL, 'Installation', 'Machine A', 'How to install Machine A with images?', 'Refer to the images provided.', NULL, 'image/png'),
+    (12, NULL, 'Troubleshooting', 'Machine A', 'Why is Machine A not starting? See the image.', 'Check the image for troubleshooting steps.', NULL, 'image/jpeg'),
+    (13, NULL, 'Maintenance', 'Machine B', 'Maintenance guide with PDF.', 'See attached PDF for maintenance details. LOREM LOREM LOREM LOREM IPASDAIO MDI MCOANDA NMSKDMADM A KLOREM LOREM LOREM LOREM OKERMIAMDSMAK LOREM', NULL, 'application/pdf');
+
 
 -- Insert sample ratings ensuring each Q&A has different total counts for likes and dislikes
 INSERT INTO ratings (qna_id, user_id, rating_value)

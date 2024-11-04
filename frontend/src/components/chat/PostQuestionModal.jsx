@@ -34,6 +34,7 @@ function PostQuestionModal({ closeModal }) {
     try {
       const response = await addSolution(
         user_id,
+        null,
         question,
         solution,
         query_ids,
