@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from "../components/admin/sidebar";
 import Usertable from "../components/admin/users";
-import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -55,13 +54,6 @@ const AdminDashboard = () => {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      {notification && (
-        <Alert variant="destructive" className="fixed top-0 left-0 right-0 z-50">
-          <AlertDescription className="text-center">
-            {notification}
-          </AlertDescription>
-        </Alert>
-      )}
       {isAuthorized && (
         <>
           <Sidebar />
