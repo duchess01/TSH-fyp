@@ -26,49 +26,59 @@ async def uploadPdf(
 
 ):
     if not file.filename.endswith(".pdf"):
+       print("[DEBUG] File validation failed: Not a PDF file")
        return GenericResponse(status_code = 400, message = "Bad Request", data = "File must be a pdf file")
    
     tmp_dir = None
     try:
+        print(f"[DEBUG] Starting file upload process for: {file.filename}")
         # PROCESS UPLOADED FILE AS A TMP FILE
         tmp_dir = tempfile.mkdtemp()
         tmp_file_path = os.path.join(tmp_dir, file.filename)
+        print(f"[DEBUG] Created temporary directory at: {tmp_dir}")
         
         with open(tmp_file_path, 'wb') as f:
             shutil.copyfileobj(file.file, f)
+        print(f"[DEBUG] File saved to temporary path: {tmp_file_path}")
             
         relative_url = os.path.relpath(tmp_file_path)
+        print(f"[DEBUG] Relative URL generated: {relative_url}")
         
         # create a manual record in the database
         pdf_file = relative_url.split("\\")[-1].split(".")[0].lower().replace("_", "-")
-        print("pdf_file:", pdf_file, "create a manual")
+        print(f"[DEBUG] Processed PDF filename: {pdf_file}")
         url = "http://localhost:8000/manual/status" 
         data = {
             "manual_name": pdf_file,
             "status": "in_progress"
         }
+        print(f"[DEBUG] Sending status update request to: {url}")
         response = requests.put(url, json=data)
+        print(f"[DEBUG] Status update response code: {response.status_code}")
         
         if response.status_code != 200:
+            print(f"[DEBUG] Status update failed with response: {response.json()}")
             raise HTTPException(status_code=response.status_code, 
                 detail=f"Failed to update status in the database. Status Code: {response.status_code}, Response: {response.json()}")
         
-        
-        
+        print("[DEBUG] Starting text extraction process")
         # process text
         extracted_content = await run_process(relative_url)
-
-        print(extracted_content, "extracted_content")
+        print(f"[DEBUG] Text extraction completed. Content length: {len(str(extracted_content))}")
         
+        print("[DEBUG] Starting heading processing and keyword extraction")
         # run NER to extract keywords + embed keywords
         processed_output = process_headings(extracted_content)
+        print(f"[DEBUG] Heading processing completed. Number of sections: {len(processed_output)}")
         
         file_name = file.filename.split("\\")[-1].split(".")[0].lower().replace("_", "-")
-
-
         file_name = f"{file_name}.json"
+        print(f"[DEBUG] Generated output filename: {file_name}")
+
         # Upsert to file 
+        print("[DEBUG] Saving processed output to file")
         save_output_to_file(processed_output, file_name)
+        print("[DEBUG] Processed output saved to file")
         
         
         # upsert mapping
