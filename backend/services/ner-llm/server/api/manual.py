@@ -396,13 +396,20 @@ async def getAllManualMachineMappings(session: Session = Depends(get_session)) -
         result = session.execute(stmt)
         mappings = result.all()
 
-        # Convert the result to a list of dictionaries
+        # Group manuals by machine name
+        machine_mappings = {}
+        for mapping in mappings:
+            if mapping.machine_name not in machine_mappings:
+                machine_mappings[mapping.machine_name] = []
+            machine_mappings[mapping.machine_name].append(mapping.manual_name)
+
+        # Convert to list of dictionaries
         mapping_list = [
             {
-                "manual_name": mapping.manual_name,
-                "machine_name": mapping.machine_name
+                "machine_name": machine_name,
+                "manual_names": manual_names
             }
-            for mapping in mappings
+            for machine_name, manual_names in machine_mappings.items()
         ]
 
         return GenericResponse(
