@@ -70,29 +70,43 @@ def createManualMapping(
     session: Session = Depends(get_session)
 ) -> GenericResponse:
     try:
+        print(f"[DEBUG] Starting manual mapping creation for: {manual_request.manual_name}")
+        
         # Check if manual already exists
         existing_manual = session.query(ManualMapping).filter(ManualMapping.manual_name == manual_request.manual_name).first()
+        print(f"[DEBUG] Existing manual check result: {existing_manual is not None}")
+        
         if existing_manual:
+            print(f"[DEBUG] Manual '{manual_request.manual_name}' already exists")
             raise HTTPException(
                 status_code=400, detail=f"Manual '{manual_request.manual_name}' already exists"
             )
 
         # Check if ManualStatus exists and is in the correct state
         manual_status = session.query(ManualStatus).filter(ManualStatus.manual_name == manual_request.manual_name).first()
+        print(f"[DEBUG] Manual status found: {manual_status is not None}")
+        
         if not manual_status:
+            print(f"[DEBUG] ManualStatus not found for '{manual_request.manual_name}'")
             raise HTTPException(
                 status_code=404, detail=f"ManualStatus for '{manual_request.manual_name}' not found"
             )
+        print(f"[DEBUG] Current manual status: {manual_status.status}")
+        
         if manual_status.status != UploadStatus.IN_PROGRESS:
+            print(f"[DEBUG] Invalid status: {manual_status.status}")
             raise HTTPException(
                 status_code=400, detail=f"Manual '{manual_request.manual_name}' is not in the correct state for mapping"
             )
 
         # Create new ManualMapping
-        new_manual = ManualMapping(manual_name=manual_request.manual_name)
+        new_manual = ManualMapping(manual_name=manual_request.manual_name, machine_name = manual_request.machine_name )
+        print(f"[DEBUG] Created new manual mapping object")
 
         # Associate existing KeywordMappings with the new ManualMapping
+        print(f"[DEBUG] Processing {len(manual_request.manual_mappings)} sections")
         for section, data in manual_request.manual_mappings.items():
+            print(f"[DEBUG] Processing section: {section}")
             keyword_data = data['data']
             keyword_mapping = KeywordMapping(
                 namespace=section,
@@ -102,10 +116,12 @@ def createManualMapping(
             new_manual.keyword_mappings.append(keyword_mapping)
           
         session.add(new_manual)
+        print(f"[DEBUG] Added new manual to session")
 
         # Update ManualStatus
         manual_status.status = UploadStatus.COMPLETED
         manual_status.manual_mapping = new_manual
+        print(f"[DEBUG] Updated manual status to COMPLETED")
         
         response = {
             "manual_name": new_manual.manual_name,
@@ -115,12 +131,15 @@ def createManualMapping(
             
             
         }
+        print(f"[DEBUG] Prepared response data")
 
         session.commit()
+        print(f"[DEBUG] Successfully committed changes to database")
         return GenericResponse(message=f"Manual mapping '{manual_request.manual_name}' created successfully", data=response)
 
     except SQLAlchemyError as e:
         session.rollback()
+        print(f"[DEBUG] Database error occurred: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Database error: {str(e)}"
         )

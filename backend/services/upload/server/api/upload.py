@@ -1,4 +1,4 @@
-from fastapi import APIRouter,UploadFile, File
+from fastapi import APIRouter,UploadFile, File, Form
 from fastapi.responses import JSONResponse
 from server.models.responses import GenericResponse
 from PyPDF2 import PdfReader
@@ -22,6 +22,7 @@ router = APIRouter(
 @router.post("", summary = "upload a pdf file", description="endpoint to upload a pdf file, file will be processed.")
 async def uploadPdf(
     file : UploadFile = File(...),
+    machine_name : str = Form(...)
 
 ):
     if not file.filename.endswith(".pdf"):
@@ -63,17 +64,22 @@ async def uploadPdf(
         processed_output = process_headings(extracted_content)
         
         file_name = file.filename.split("\\")[-1].split(".")[0].lower().replace("_", "-")
-        
+
+
         file_name = f"{file_name}.json"
         # Upsert to file 
         save_output_to_file(processed_output, file_name)
+        
+        
+        # upsert mapping
 
         # update database to status = success
         print("pdf_file:", pdf_file, "create manual in db")
         url = "http://localhost:8000/manual/create" 
         data = {
             "manual_name": pdf_file,
-            "manual_mappings": processed_output
+            "manual_mappings": processed_output,
+            "machine_name" : machine_name
         }
         
         headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
@@ -81,9 +87,9 @@ async def uploadPdf(
         
         if response.status_code != 200:
             # roll back db
-            rollback_all(pdf_file)
+            await rollback_all(pdf_file)
             raise HTTPException(status_code=response.status_code, 
-                detail=f"Failed to update status in the database. Status Code: {response.status_code}")
+                detail=f"Failed to update manual in the database. Status Code: {response.status_code}")
         
         return GenericResponse(message="File uploaded successfully", data={
             'extracted_content': extracted_content, 
