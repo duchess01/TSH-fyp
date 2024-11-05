@@ -388,5 +388,32 @@ def deleteManualStatus(
             status_code=500, detail=f"Database error: {str(e)}"
         )
 
+@router.get("/machine-mappings", summary="Get all manual to machine mappings", description="Get a list of all manual names and their corresponding machine names")
+async def getAllManualMachineMappings(session: Session = Depends(get_session)) -> GenericResponse:
+    try:
+        # Query for all ManualMappings, selecting only manual_name and machine_name
+        stmt = select(ManualMapping.manual_name, ManualMapping.machine_name)
+        result = session.execute(stmt)
+        mappings = result.all()
+
+        # Convert the result to a list of dictionaries
+        mapping_list = [
+            {
+                "manual_name": mapping.manual_name,
+                "machine_name": mapping.machine_name
+            }
+            for mapping in mappings
+        ]
+
+        return GenericResponse(
+            message="Successfully retrieved all manual to machine mappings",
+            data=mapping_list
+        )
+
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=500, detail=f"Database error: {str(e)}"
+        )
+
 
 
