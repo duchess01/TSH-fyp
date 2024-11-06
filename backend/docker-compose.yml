@@ -55,7 +55,7 @@ services:
   # ner microservice
   #################################
   ner-llm:
-    # image: teamduchess/ner-llm:latest
+    image: teamduchess/ner-llm:latest
     build:
       context: ./services/ner-llm
       dockerfile: ./Dockerfile
@@ -97,6 +97,7 @@ services:
   # The Qna microservice
   #################################
   qna:
+    image: teamduchess/qna:latest
     build:
       context: ./services/qna
       dockerfile: Dockerfile
@@ -119,6 +120,7 @@ services:
   # The Langchain microservice
   #################################
   langchain:
+    image: teamduchess/langchain:latest
     build:
       context: ./services/langchain
       dockerfile: Dockerfile
