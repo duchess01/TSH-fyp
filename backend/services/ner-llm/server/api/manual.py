@@ -320,7 +320,8 @@ def getAllManualStatuses(session: Session = Depends(get_session)) -> GenericResp
                 "manual_name": status.manual_name,
                 "status": status.status,
                 "created_at": status.created_at,
-                "updated_at": status.updated_at
+                "updated_at": status.updated_at,
+                "machine_name" : status.manual_mapping.machine_name if status.manual_mapping else None
             }
             for status in manual_statuses
         ]
