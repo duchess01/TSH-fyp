@@ -75,6 +75,30 @@ services:
     networks:
       - my-network
 
+    #################################
+  # ner microservice
+  #################################
+  upload:
+    # image: teamduchess/ner-llm:latest
+    build:
+      context: ./services/upload
+      dockerfile: ./Dockerfile
+      target: development
+    env_file:
+      - .local.env
+    environment:
+      - NER_LLM_URL=http://ner-llm:8000
+      - DOCKER_ENV=true
+    ports:
+      - "8002:8002"
+    depends_on:
+      db_ner_llm:
+        condition: service_healthy
+    volumes:
+      - ./services/upload:/usr/src/app/upload
+    networks:
+      - my-network
+
   #################################
   # Analytics microservice
   #################################

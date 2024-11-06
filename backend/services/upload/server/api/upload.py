@@ -14,6 +14,8 @@ from utils.rollback import rollback_all
 
 from utils.process_manuals import process_headings, save_output_to_file
 
+DOCKER_ENV = os.getenv("DOCKER_ENV", False)
+
 router = APIRouter(
     prefix = "/upload",
     tags = ["Upload PDF for processing"],
@@ -44,10 +46,18 @@ async def uploadPdf(
         relative_url = os.path.relpath(tmp_file_path)
         print(f"[DEBUG] Relative URL generated: {relative_url}")
         
-        # create a manual record in the database
-        pdf_file = relative_url.split("\\")[-1].split(".")[0].lower().replace("_", "-")
+        if DOCKER_ENV:
+            # Use forward slash for Docker
+            pdf_file = relative_url.split('/')[-1].split('.')[0].lower().replace('_', '-')
+        else:
+            # Use os.path.sep for local environment
+            pdf_file = relative_url.split(os.path.sep)[-1].split('.')[0].lower().replace('_', '-')
+            
         print(f"[DEBUG] Processed PDF filename: {pdf_file}")
-        url = "http://localhost:8000/manual/status" 
+        
+        ner_llm_url = os.getenv("NER_LLM_URL", "http://localhost:8000")
+        
+        url = f"{ner_llm_url}/manual/status" 
         data = {
             "manual_name": pdf_file,
             "status": "in_progress"
@@ -76,16 +86,16 @@ async def uploadPdf(
         print(f"[DEBUG] Generated output filename: {file_name}")
 
         # Upsert to file 
-        print("[DEBUG] Saving processed output to file")
-        save_output_to_file(processed_output, file_name)
-        print("[DEBUG] Processed output saved to file")
+        # print("[DEBUG] Saving processed output to file")
+        # save_output_to_file(processed_output, file_name)
+        # print("[DEBUG] Processed output saved to file")
         
         
         # upsert mapping
 
         # update database to status = success
         print("pdf_file:", pdf_file, "create manual in db")
-        url = "http://localhost:8000/manual/create" 
+        url = f"{ner_llm_url}/manual/create" 
         data = {
             "manual_name": pdf_file,
             "manual_mappings": processed_output,

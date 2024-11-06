@@ -13,6 +13,9 @@ from utils.rollback import rollback_all
 load_dotenv()
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 PINECONE_API_KEY = os.getenv('PINECONE_API_KEY')
+NER_LLM_URL = os.getenv('NER_LLM_URL')
+DOCKER_ENV = os.getenv('DOCKER_ENV', 'false').lower() == 'true'
+
 
 if OPENAI_API_KEY :
     client = OpenAI(api_key=OPENAI_API_KEY)
@@ -160,7 +163,7 @@ async def update_status_in_database(pdf_file, status):
         # Extract the file name without extension
         pdf_file = pdf_file.split("\\")[-1].split(".")[0]
         
-        url = "http://localhost:8000/manual/status"  # Consider making this URL configurable
+        url = f"{NER_LLM_URL}/manual/status"  # Consider making this URL configurable
         data = {
             "manual_name": pdf_file,
             "status": status
@@ -361,8 +364,15 @@ async def upsert_content_pinecone(extracted_content, pdf_file):
         
     # insert into pinecone
     pc = Pinecone(api_key=PINECONE_API_KEY)
-
-    index_name = pdf_file.split("\\")[-1].split(".")[0].lower().replace("_", "-")
+    
+    print("PDF FILE", pdf_file)
+    
+    print("USING DOCKER_ENV", DOCKER_ENV)
+    
+    if DOCKER_ENV :
+        index_name = pdf_file.split("/")[-1].split(".")[0].lower().replace("_", "-")
+    else :
+        index_name = pdf_file.split("\\")[-1].split(".")[0].lower().replace("_", "-")
 
     print("INDEX NAME", index_name)
     

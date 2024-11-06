@@ -5,7 +5,7 @@ import sys
 import requests
 from .manual_content import manual_dictionary
 
-BASE_URL = "http://localhost:8000"
+BASE_URL = os.getenv("NER_LLM_URL", "http://localhost:8000")
 
 def extract_keywords(content):
     url = f"{BASE_URL}/extractkeywords"
