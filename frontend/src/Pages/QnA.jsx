@@ -139,6 +139,7 @@ const QnA = () => {
           closeModal={closeModal}
           machine={selectedRowData?.Machine}
           question={selectedRowData?.Question}
+          topic={selectedRowData?.Topic}
         />
       )}
       {postQuestionModalOpen && (
