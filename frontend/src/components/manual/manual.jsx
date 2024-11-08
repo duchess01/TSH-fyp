@@ -45,6 +45,7 @@ const ManualUpload = () => {
   const [successMessage, setSuccessMessage] = useState(null);
   const [uploadingManual, setUploadingManual] = useState(null);
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, manualName: null });
+  const [machineName, setMachineName] = useState('');
 
   useEffect(() => {
     fetchManuals();
@@ -85,6 +86,7 @@ const ManualUpload = () => {
 
     const fileName = file.name;
 
+
     // Validate file extension
     if (!fileName.toLowerCase().endsWith('.pdf')) {
       setError('Please upload only PDF files.');
@@ -109,15 +111,22 @@ const ManualUpload = () => {
       return;
     }
 
+    if (!machineName) {
+      setError('Please enter a machine name before uploading.');
+      return;
+    }
+
     setUploading(true);
     setUploadingManual({
       manual_name: fileName,
       status: 'in_progress',
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      machine_name: machineName
     });
 
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('machine_name', machineName);
 
     try {
       const response = await fetch('http://localhost:8002/upload', {
@@ -140,8 +149,10 @@ const ManualUpload = () => {
       setUploading(false);
       setUploadingManual(null);
       event.target.value = '';
+      setMachineName('');
     }
   };
+
 
   const handleDelete = async () => {
     const manualName = deleteModal.manualName;
@@ -232,14 +243,22 @@ const ManualUpload = () => {
               </div>
               <button
                 className={`text-white px-4 py-2 rounded-lg ${
-                  uploading ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-500 hover:bg-indigo-600'
+                  uploading || !machineName ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-500 hover:bg-indigo-600'
                 }`}
-                disabled={uploading}
+                disabled={uploading || !machineName}
               >
                 {uploading ? 'Upload in progress...' : 'Upload'}
               </button>
             </div>
           </div>
+          <input
+            type="text"
+            value={machineName}
+            onChange={(e) => setMachineName(e.target.value)}
+            placeholder="Enter machine name"
+            className="px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg w-64"
+            required
+          />
         </div>
 
         {uploading && (
@@ -258,6 +277,7 @@ const ManualUpload = () => {
             <thead>
               <tr className="border-b">
                 <th className="px-4 py-3">Manual Name</th>
+                <th className="px-4 py-3">Machine Name</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Created At</th>
                 <th className="px-4 py-3">Actions</th>
@@ -267,6 +287,7 @@ const ManualUpload = () => {
               {allManuals.map((manual) => (
                 <tr key={manual.manual_name} className="border-b hover:bg-gray-100 transition-colors">
                   <td className="px-4 py-3">{manual.manual_name}</td>
+                  <td className="px-4 py-3">{manual.machine_name}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center space-x-2">
                       {manual.status === 'completed' ? (

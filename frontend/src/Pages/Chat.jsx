@@ -49,6 +49,8 @@ function Chat() {
   const [selectedMachine, setSelectedMachine] = useState(null);
   const [thumbs, setThumbs] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [manualMachineMapping, setManualMachineMapping] = useState([]);
+  const [manualSelected, setManualSelected] = useState(null);
 
   useEffect(() => {
     const user = JSON.parse(sessionStorage.getItem("user")); // fetching user details from session storage
@@ -86,6 +88,7 @@ function Chat() {
           const machines = response.data.data.map(
             (machine) => machine.machine_name
           );
+          setManualMachineMapping(response.data.data);
           setMachines(machines);
         }
       } catch (e) {
@@ -150,8 +153,8 @@ function Chat() {
     setIsShowSidebar((prev) => !prev);
   }, []);
 
-  const handleMachineSelect = (e) => {
-    setSelectedMachine(e.target.value);
+  const handleManualSelect = (e) => {
+    setManualSelected(e.target.value);
     setPreviousTitles(getUniqueTitles([...previousChats, ""]));
     setCurrentTitle(e.target.value);
   };
@@ -183,7 +186,7 @@ function Chat() {
         chatSessionId,
         currentUser.id,
         text,
-        selectedMachine
+        manualSelected
       );
       // changing from a list of list in human_response to a list
       console.log("Response from chatbot: ", response);
@@ -375,12 +378,26 @@ function Chat() {
               <h3>Choose a machine from the dropdown below to start</h3>
               <select
                 className="p-1 rounded-lg text-black"
-                onChange={handleMachineSelect}
+                onChange={(e) => setSelectedMachine(e.target.value)}
               >
                 <option>Select a machine</option>
                 {machines.map((machine, idx) => {
                   return <option key={idx}>{machine}</option>;
                 })}
+              </select>
+              <select
+                className="p-1 rounded-lg text-black"
+                onChange={handleManualSelect}
+              >
+                <option>Select a manual</option>
+                {selectedMachine &&
+                  manualMachineMapping
+                    .filter(
+                      (machine) => machine.machine_name === selectedMachine
+                    )[0]
+                    .manual_names.map((manual, idx) => {
+                      return <option key={idx}>{manual}</option>;
+                    })}
               </select>
             </div>
           )}
@@ -400,7 +417,7 @@ function Chat() {
           )}
           <div className="main-header">
             <ul>
-              {selectedMachine != null && (
+              {selectedMachine != null && manualSelected != null && (
                 <li>
                   <div>
                     <div className="flex mb-1">
@@ -408,8 +425,8 @@ function Chat() {
                       <span className="role-title pl-2">TSH GPT</span>
                     </div>
                     <p>
-                      Selected machine: {selectedMachine}. Please ask a
-                      question.
+                      Selected machine: {selectedMachine}, Selected manual:{" "}
+                      {manualSelected}. Please ask a question.
                     </p>
                   </div>
                 </li>
