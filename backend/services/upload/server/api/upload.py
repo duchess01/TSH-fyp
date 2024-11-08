@@ -80,8 +80,14 @@ async def uploadPdf(
         # run NER to extract keywords + embed keywords
         processed_output = process_headings(extracted_content)
         print(f"[DEBUG] Heading processing completed. Number of sections: {len(processed_output)}")
-        
-        file_name = file.filename.split("\\")[-1].split(".")[0].lower().replace("_", "-")
+
+
+
+        if DOCKER_ENV : 
+            file_name = file.filename.split("/")[-1].split(".")[0].lower().replace("_", "-")
+        else :
+            file_name = file.filename.split("\\")[-1].split(".")[0].lower().replace("_", "-")
+            
         file_name = f"{file_name}.json"
         print(f"[DEBUG] Generated output filename: {file_name}")
 

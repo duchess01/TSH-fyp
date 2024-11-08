@@ -161,7 +161,10 @@ def upsert_embeddings(output_dict, extracted_content, index):
 async def update_status_in_database(pdf_file, status):
     try:
         # Extract the file name without extension
-        pdf_file = pdf_file.split("\\")[-1].split(".")[0]
+        if DOCKER_ENV : 
+            pdf_file = pdf_file.split("/")[-1].split(".")[0]
+        else :
+            pdf_file = pdf_file.split("\\")[-1].split(".")[0]
         
         url = f"{NER_LLM_URL}/manual/status"  # Consider making this URL configurable
         data = {
