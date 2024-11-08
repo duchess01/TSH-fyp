@@ -9,11 +9,15 @@ NER_LLM_URL = os.getenv('NER_LLM_URL')
 PINECONE_API_KEY = os.getenv('PINECONE_API_KEY')
 PINECONE_ENVIRONMENT = os.getenv('PINECONE_ENVIRONMENT')
 PINECONE_INDEX_NAME = os.getenv('PINECONE_INDEX_NAME')
+DOCKER_ENV = os.getenv('DOCKER_ENV')
 
 pc = Pinecone(api_key=PINECONE_API_KEY)
 
 async def rollback_all(manual_url: str):
-    manual_name = manual_url.split("\\")[-1].split(".")[0]
+    if DOCKER_ENV : 
+        manual_name = manual_url.split("/")[-1].split(".")[0]
+    else :
+        manual_name = manual_url.split("\\")[-1].split(".")[0]
     print(f"STARTING ROLLBACK FOR {manual_name}")
 
     errors = []
