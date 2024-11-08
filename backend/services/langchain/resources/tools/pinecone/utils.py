@@ -81,7 +81,7 @@ class TopicExtractor:
                     messages=[
                         {
                             "role": "user",
-                            "content": f"You will be provided with a list of topics and a query, check if this query can match with any ONE topic in the list of topics provided, if not generate ONE new topic. \n\nQuery: {query} \n\nTopics: {topics}. Your response will always be a single word or phrase.",
+                            "content": f"You will be provided with a list of topics and a query, check if this query can match with any ONE topic in the list of topics provided, if not generate ONE new topic. Your new topic generated should be specific to machinery terms and NOT general terms. If the query includes error code, the new topic should include the code. \n\nQuery: {query} \n\nTopics: {topics}. Your response will always be a single word or phrase.",
                         }
                     ]
                 )

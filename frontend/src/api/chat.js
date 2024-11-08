@@ -75,7 +75,9 @@ export async function changeRating(msgId, rating) {
 
 export async function getAllMachinesAPI() {
   try {
-    const response = await axios.get("http://localhost:8000/manual/");
+    const response = await axios.get(
+      "http://localhost:8000/manual/machine-mappings"
+    );
     return response;
   } catch (error) {
     console.log("Error in getting machines from backend: ", error);

@@ -55,10 +55,15 @@ async def query_qna(query: QueryQnA):
         query_embedding = get_embedding(query.query)
         query_response = index.query(
             vector=query_embedding,
-            top_k=3,
+            top_k=1,
+            score_threshold=0.7,
             include_values=True,
             include_metadata=True
         )
+
+        if not query_response["matches"]:
+            return {"status": "no_match", "ids": []}
+
         res = []
         for match in query_response["matches"]:
             res.append(match["metadata"]["ids"])

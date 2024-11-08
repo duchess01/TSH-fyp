@@ -13,15 +13,18 @@ from utils.rollback import rollback_all
 load_dotenv()
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 PINECONE_API_KEY = os.getenv('PINECONE_API_KEY')
+NER_LLM_URL = os.getenv('NER_LLM_URL')
+DOCKER_ENV = os.getenv('DOCKER_ENV', 'false').lower() == 'true'
+
 
 if OPENAI_API_KEY :
     client = OpenAI(api_key=OPENAI_API_KEY)
     
 async def run_process(pdf_file): 
     message_content = await read_pdf(pdf_file)
-    extracted_content, store_dictionary = process_content(message_content, pdf_file)
+    extracted_content, store_dictionary = await process_content(message_content, pdf_file)
     try:
-        upsert_content_pinecone(extracted_content, pdf_file)
+        await upsert_content_pinecone(extracted_content, pdf_file)
         
         return extracted_content
     except Exception as e:
@@ -160,7 +163,7 @@ async def update_status_in_database(pdf_file, status):
         # Extract the file name without extension
         pdf_file = pdf_file.split("\\")[-1].split(".")[0]
         
-        url = "http://localhost:8000/manual/status"  # Consider making this URL configurable
+        url = f"{NER_LLM_URL}/manual/status"  # Consider making this URL configurable
         data = {
             "manual_name": pdf_file,
             "status": status
@@ -179,21 +182,21 @@ async def update_status_in_database(pdf_file, status):
             print(f"Response content: {response.text}")
 
 
-        rollback_all(pdf_file)
+        await rollback_all(pdf_file)
         raise HTTPException(status_code=response.status_code, detail=error_message)
     
     except requests.RequestException as req_err:
         error_message = f"Request error occurred while updating status: {req_err}"
         print(error_message)
 
-        rollback_all(pdf_file)
+        await rollback_all(pdf_file)
         raise HTTPException(status_code=500, detail=error_message)
     
     except Exception as e:
         error_message = f"Unexpected error during status update: {e}"
         print(error_message)
 
-        rollback_all(pdf_file)
+        await rollback_all(pdf_file)
         raise HTTPException(status_code=500, detail=error_message)
     
 
@@ -297,7 +300,7 @@ async def read_pdf(pdf_file):
 
     return message_content.value
 
-def process_content(message_content, pdf_file):
+async def process_content(message_content, pdf_file):
     # print("message content", message_content)
     # Extract dictionary from message content
     start = message_content.find("{")
@@ -330,7 +333,7 @@ def process_content(message_content, pdf_file):
     
     print(offsets, 'OFFSETS')
     if not offsets:
-        update_status_in_database(pdf_file, status="failed")
+        await update_status_in_database(pdf_file, status="failed")
         raise Exception("No offsets found")
         ## Retry Mechanism ##
     
@@ -351,7 +354,7 @@ def process_content(message_content, pdf_file):
 
     return extracted_content, store_dictionary
 
-def upsert_content_pinecone(extracted_content, pdf_file):
+async def upsert_content_pinecone(extracted_content, pdf_file):
     print("upsert content to pine cone ")
     output_dict = {}
     for heading, pages in extracted_content.items():
@@ -361,8 +364,15 @@ def upsert_content_pinecone(extracted_content, pdf_file):
         
     # insert into pinecone
     pc = Pinecone(api_key=PINECONE_API_KEY)
-
-    index_name = pdf_file.split("\\")[-1].split(".")[0].lower().replace("_", "-")
+    
+    print("PDF FILE", pdf_file)
+    
+    print("USING DOCKER_ENV", DOCKER_ENV)
+    
+    if DOCKER_ENV :
+        index_name = pdf_file.split("/")[-1].split(".")[0].lower().replace("_", "-")
+    else :
+        index_name = pdf_file.split("\\")[-1].split(".")[0].lower().replace("_", "-")
 
     print("INDEX NAME", index_name)
     
@@ -384,7 +394,7 @@ def upsert_content_pinecone(extracted_content, pdf_file):
     except Exception as e:
         print(f"Error upserting embeddings: {e}")
         
-        update_status_in_database(pdf_file, status="failed")
+        await update_status_in_database(pdf_file, status="failed")
         raise HTTPException(status_code=500, detail= f"Error upserting embeddings: {e}")
         
 

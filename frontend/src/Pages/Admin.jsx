@@ -6,44 +6,59 @@ import Usertable from "../components/admin/users";
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [notification, setNotification] = useState("");
-  const [isAuthorized, setIsAuthorized] = useState(null); // State to track authorization
+  const [isAuthorized, setIsAuthorized] = useState(null);
 
   useEffect(() => {
-    const token = sessionStorage.getItem("token");
-    const user = JSON.parse(sessionStorage.getItem("user"));
+    const checkAuthorization = () => {
+      const token = sessionStorage.getItem("token");
+      let user;
+      
+      try {
+        user = JSON.parse(sessionStorage.getItem("user"));
+      } catch (error) {
+        console.error("Error parsing user data:", error);
+        return false;
+      }
 
-    if (!token || !user || user.privilege !== 'System Admin') {
-      // If unauthorized, set notification and schedule redirect
-      setNotification("You do not have access to the Admin Dashboard. Redirecting to login...");
+      // Check if token exists, user exists, and user has System Admin privilege
+      if (!token || !user || !user.privileges) {
+        return false;
+      }
+
+      return user.privileges.includes("System Admin");
+    };
+
+    const isUserAuthorized = checkAuthorization();
+
+    if (!isUserAuthorized) {
+      setNotification("Access denied. Only System Administrators can access this page.");
       setIsAuthorized(false);
 
       // Redirect after 3 seconds
       setTimeout(() => {
-        navigate("/login"); // Redirect to login page
-      }, 3000);
+        navigate("/login");
+      }, 5000);
     } else {
-      // If authorized, show the admin page
       setIsAuthorized(true);
     }
   }, [navigate]);
 
+  // Show loading state while checking authorization
   if (isAuthorized === null) {
-    // While authorization is being checked, show a blank page
-    return null;
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
   }
 
   return (
     <div className="flex h-screen overflow-hidden">
-      {notification && (
-        <div className="fixed top-0 left-0 right-0 bg-red-500 text-white p-4 text-center">
-          {notification}
-        </div>
-      )}
       {isAuthorized && (
         <>
-          <Sidebar /> {/* Sidebar on the left */}
+          <Sidebar />
           <div className="flex-1 flex flex-col overflow-hidden">
-            <Usertable /> {/* Main content on the right */}
+            <Usertable />
           </div>
         </>
       )}

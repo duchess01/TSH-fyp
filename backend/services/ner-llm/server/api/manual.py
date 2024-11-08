@@ -70,29 +70,43 @@ def createManualMapping(
     session: Session = Depends(get_session)
 ) -> GenericResponse:
     try:
+        print(f"[DEBUG] Starting manual mapping creation for: {manual_request.manual_name}")
+        
         # Check if manual already exists
         existing_manual = session.query(ManualMapping).filter(ManualMapping.manual_name == manual_request.manual_name).first()
+        print(f"[DEBUG] Existing manual check result: {existing_manual is not None}")
+        
         if existing_manual:
+            print(f"[DEBUG] Manual '{manual_request.manual_name}' already exists")
             raise HTTPException(
                 status_code=400, detail=f"Manual '{manual_request.manual_name}' already exists"
             )
 
         # Check if ManualStatus exists and is in the correct state
         manual_status = session.query(ManualStatus).filter(ManualStatus.manual_name == manual_request.manual_name).first()
+        print(f"[DEBUG] Manual status found: {manual_status is not None}")
+        
         if not manual_status:
+            print(f"[DEBUG] ManualStatus not found for '{manual_request.manual_name}'")
             raise HTTPException(
                 status_code=404, detail=f"ManualStatus for '{manual_request.manual_name}' not found"
             )
+        print(f"[DEBUG] Current manual status: {manual_status.status}")
+        
         if manual_status.status != UploadStatus.IN_PROGRESS:
+            print(f"[DEBUG] Invalid status: {manual_status.status}")
             raise HTTPException(
                 status_code=400, detail=f"Manual '{manual_request.manual_name}' is not in the correct state for mapping"
             )
 
         # Create new ManualMapping
-        new_manual = ManualMapping(manual_name=manual_request.manual_name)
+        new_manual = ManualMapping(manual_name=manual_request.manual_name, machine_name = manual_request.machine_name )
+        print(f"[DEBUG] Created new manual mapping object")
 
         # Associate existing KeywordMappings with the new ManualMapping
+        print(f"[DEBUG] Processing {len(manual_request.manual_mappings)} sections")
         for section, data in manual_request.manual_mappings.items():
+            print(f"[DEBUG] Processing section: {section}")
             keyword_data = data['data']
             keyword_mapping = KeywordMapping(
                 namespace=section,
@@ -102,10 +116,12 @@ def createManualMapping(
             new_manual.keyword_mappings.append(keyword_mapping)
           
         session.add(new_manual)
+        print(f"[DEBUG] Added new manual to session")
 
         # Update ManualStatus
         manual_status.status = UploadStatus.COMPLETED
         manual_status.manual_mapping = new_manual
+        print(f"[DEBUG] Updated manual status to COMPLETED")
         
         response = {
             "manual_name": new_manual.manual_name,
@@ -115,12 +131,15 @@ def createManualMapping(
             
             
         }
+        print(f"[DEBUG] Prepared response data")
 
         session.commit()
+        print(f"[DEBUG] Successfully committed changes to database")
         return GenericResponse(message=f"Manual mapping '{manual_request.manual_name}' created successfully", data=response)
 
     except SQLAlchemyError as e:
         session.rollback()
+        print(f"[DEBUG] Database error occurred: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Database error: {str(e)}"
         )
@@ -128,43 +147,47 @@ def createManualMapping(
 @router.delete("/delete/{manual_name}", summary="Delete a manual", description="Delete a manual, its associated JSON file, and Pinecone vectors")
 async def deleteManual(manual_name: str, session: Session = Depends(get_session)) -> GenericResponse:
     try:
+        print(f"[DEBUG] Starting deletion process for manual: {manual_name}")
+        
         # Check database entries
         manual = session.query(ManualMapping).filter(ManualMapping.manual_name == manual_name).first()
+        print(f"[DEBUG] Manual mapping found in database: {manual is not None}")
+        
         manual_status = session.query(ManualStatus).filter(ManualStatus.manual_name == manual_name).first()
+        print(f"[DEBUG] Manual status found in database: {manual_status is not None}")
 
         # Check JSON file
         json_file_path = os.path.join('db', 'keywords', f"{manual_name}.json")
         file_exists = os.path.exists(json_file_path)
+        print(f"[DEBUG] JSON file exists at {json_file_path}: {file_exists}")
 
         # Check if Pinecone index exists
-        
+        print("[DEBUG] Checking Pinecone indexes...")
         print(pc.list_indexes().names(), "pc.list_indexes().names()")
         pinecone_index_exists = manual_name in pc.list_indexes().names()
+        print(f"[DEBUG] Pinecone index exists for {manual_name}: {pinecone_index_exists}")
         
         print(pinecone_index_exists, "pinecone_index_exists")
         print(manual, "manual")
         print(file_exists, "file_exists")
         
         if manual_status:
+            print(f"[DEBUG] Current manual status: {manual_status.status}")
             print(manual_status.status, "manual_status.status")
         
         # If manual status is FAILED, we should proceed with deletion of whatever resources exist
         if manual_status and manual_status.status == UploadStatus.FAILED:
-            # No need to check for existence of all resources
+            print("[DEBUG] Manual status is FAILED, proceeding with deletion of existing resources")
             pass
-        # If manual status is COMPLETED, check for consistency
-        elif manual_status and manual_status.status == UploadStatus.COMPLETED:
-            if manual is None or not file_exists or not pinecone_index_exists:
-                raise HTTPException(
-                    status_code=404, detail=f"Manual '{manual_name}' not found in database, file system, or Pinecone"
-                )
+
         # If no manual status or it's in any other state, only raise 404 if nothing exists
         elif not manual and not file_exists and not pinecone_index_exists and not manual_status:
+            print("[DEBUG] No resources found for manual")
             raise HTTPException(
                 status_code=404, detail=f"No resources found for manual '{manual_name}'"
             )
 
-        # Proceed with deletion of whatever resources exist
+        print("[DEBUG] Preparing response data structure")
         response_data = {
             "manual_name": manual_name,
             "resources": {
@@ -176,25 +199,35 @@ async def deleteManual(manual_name: str, session: Session = Depends(get_session)
 
         if pinecone_index_exists:
             try:
+                print(f"[DEBUG] Attempting to delete Pinecone index: {manual_name}")
                 pc.delete_index(manual_name)
                 response_data["resources"]["pinecone"]["deleted"] = True
+                print("[DEBUG] Pinecone index deleted successfully")
             except Exception as e:
+                print(f"[DEBUG] Error deleting vectors from Pinecone: {str(e)}")
                 print(f"Error deleting vectors from Pinecone: {str(e)}")
 
         if manual:
+            print("[DEBUG] Deleting database entries")
             # Delete associated ManualStatus if it exists
             if manual_status:
+                print("[DEBUG] Deleting manual status")
                 session.delete(manual_status)
 
             # Delete the ManualMapping (this will also delete associated KeywordMappings due to cascade)
+            print("[DEBUG] Deleting manual mapping")
             session.delete(manual)
             session.commit()
             response_data["resources"]["database"]["deleted"] = True
+            print("[DEBUG] Database entries deleted successfully")
 
         if file_exists:
+            print(f"[DEBUG] Deleting JSON file: {json_file_path}")
             os.remove(json_file_path)
             response_data["resources"]["json_file"]["deleted"] = True
+            print("[DEBUG] JSON file deleted successfully")
 
+        print(f"[DEBUG] Deletion process completed for manual: {manual_name}")
         return GenericResponse(
             message=f"Manual '{manual_name}' deletion process completed",
             data=response_data
@@ -301,7 +334,8 @@ def getAllManualStatuses(session: Session = Depends(get_session)) -> GenericResp
                 "manual_name": status.manual_name,
                 "status": status.status,
                 "created_at": status.created_at,
-                "updated_at": status.updated_at
+                "updated_at": status.updated_at,
+                "machine_name" : status.manual_mapping.machine_name if status.manual_mapping else None
             }
             for status in manual_statuses
         ]
@@ -365,6 +399,40 @@ def deleteManualStatus(
 
     except SQLAlchemyError as e:
         session.rollback()
+        raise HTTPException(
+            status_code=500, detail=f"Database error: {str(e)}"
+        )
+
+@router.get("/machine-mappings", summary="Get all manual to machine mappings", description="Get a list of all manual names and their corresponding machine names")
+async def getAllManualMachineMappings(session: Session = Depends(get_session)) -> GenericResponse:
+    try:
+        # Query for all ManualMappings, selecting only manual_name and machine_name
+        stmt = select(ManualMapping.manual_name, ManualMapping.machine_name)
+        result = session.execute(stmt)
+        mappings = result.all()
+
+        # Group manuals by machine name
+        machine_mappings = {}
+        for mapping in mappings:
+            if mapping.machine_name not in machine_mappings:
+                machine_mappings[mapping.machine_name] = []
+            machine_mappings[mapping.machine_name].append(mapping.manual_name)
+
+        # Convert to list of dictionaries
+        mapping_list = [
+            {
+                "machine_name": machine_name,
+                "manual_names": manual_names
+            }
+            for machine_name, manual_names in machine_mappings.items()
+        ]
+
+        return GenericResponse(
+            message="Successfully retrieved all manual to machine mappings",
+            data=mapping_list
+        )
+
+    except SQLAlchemyError as e:
         raise HTTPException(
             status_code=500, detail=f"Database error: {str(e)}"
         )

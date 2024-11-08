@@ -29,7 +29,7 @@ COPY . ./upload
 
 
 
-EXPOSE 8000
+EXPOSE 8002
 
 
 CMD ["uvicorn", "app.main:app", "--host", ]
@@ -49,12 +49,12 @@ RUN chmod +x ./upload/scripts/entrypoint.sh
 FROM base as development
 
 
-ENTRYPOINT ["bash", "./ner-llm/scripts/entrypoint.sh"]
+ENTRYPOINT ["bash", "./upload/scripts/entrypoint.sh"]
 
 # testing staging
 
-FROM base as testing
+# FROM base as testing
 
-RUN pip install --no-cache-dir pytest pytest-cov pytest-asyncio
+# RUN pip install --no-cache-dir pytest pytest-cov pytest-asyncio
 
-ENTRYPOINT ["bash", "./ner-llm/scripts/test_entrypoint.sh"]
+# ENTRYPOINT ["bash", "./ner-llm/scripts/test_entrypoint.sh"]

@@ -36,9 +36,14 @@ router.get("/getUserDetails/:id", verifyToken, async (req, res) => {
 
 // Update user by ID
 router.put("/update/:id", verifyToken, async (req, res) => {
-  const { name, email, role, privilege } = req.body;
+  const { name, email, role, privileges } = req.body;
 
   try {
+    // Validate privileges array
+    if (!Array.isArray(privileges)) {
+      return res.status(400).json({ error: "Privileges must be an array" });
+    }
+
     // Check if user exists
     const { rows: existingUser } = await db.query(
       "SELECT * FROM users WHERE id = $1",
@@ -51,8 +56,8 @@ router.put("/update/:id", verifyToken, async (req, res) => {
 
     // Update the user in the database
     const updatedUser = await db.query(
-      "UPDATE users SET name = $1, email = $2, role = $3, privilege = $4 WHERE id = $5 RETURNING *",
-      [name, email, role, privilege, req.params.id]
+      "UPDATE users SET name = $1, email = $2, role = $3, privileges = $4 WHERE id = $5 RETURNING *",
+      [name, email, role, privileges, req.params.id]
     );
 
     res.status(200).json(updatedUser.rows[0]);
@@ -110,9 +115,14 @@ router.delete("/delete/:id", async (req, res) => {
 
 //Add new user
 router.post("/add", verifyToken, async (req, res) => {
-  const { name, email, password, role, privilege } = req.body;
+  const { name, email, password, role, privileges } = req.body;
 
   try {
+    // Validate privileges array
+    if (!Array.isArray(privileges)) {
+      return res.status(400).json({ error: "Privileges must be an array" });
+    }
+
     // Check if user already exists by email
     const { rows: existingUser } = await db.query(
       "SELECT * FROM users WHERE email = $1",
@@ -128,8 +138,8 @@ router.post("/add", verifyToken, async (req, res) => {
 
     // Insert new user into the database
     const newUser = await db.query(
-      "INSERT INTO users (name, email, password, role, privilege) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-      [name, email, hashedPassword, role, privilege]
+      "INSERT INTO users (name, email, password, role, privileges) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+      [name, email, hashedPassword, role, privileges]
     );
 
     res.status(201).json(newUser.rows[0]);

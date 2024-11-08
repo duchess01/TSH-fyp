@@ -49,7 +49,7 @@ def insert_manuals_and_keywords():
 
                 # Create a new ManualStatus
                 manual_status = ManualStatus(
-                    manual_name = "FANUC Series 30i/300",
+                    manual_name = manual_name,
                 
                     status=UploadStatus.COMPLETED,
                     manual_mapping=manual_mapping

@@ -51,7 +51,7 @@ async def rollback_all(manual_url: str):
             if "index not found" in str(pe).lower():
                 print(f"Pinecone index '{PINECONE_INDEX_NAME}' not found. Skipping Pinecone rollback.")
             else:
-                print(f"Failed to rollback Pinecone: {str(e)}")  # Re-raise if it's a different Pinecone error
+                print(f"Failed to rollback Pinecone: {str(pe)}")  # Re-raise if it's a different Pinecone error
     except Exception as e:
         errors.append(f"Failed to rollback Pinecone: {str(e)}")
 

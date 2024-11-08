@@ -78,6 +78,9 @@ class ManualMapping(TimestampedModel):
     __tablename__ = "manual_mapping"
     manual_name = Column(String(255), nullable=False, unique=True, comment="Name of the manual map")
     machine_name = Column(String(255), nullable=False, comment = "Name of the machine the manual is for")
+
+    # FK -> MachineNameManualMapping
+    machines = relationship("MachineNameManualMapping", back_populates="manual_mapping", cascade="all, delete-orphan")
     # FK -> KeywordMapping
     keyword_mappings = relationship("KeywordMapping", back_populates="manual_mapping", cascade="all, delete-orphan")
     
@@ -89,6 +92,14 @@ class UploadStatus(enum.Enum):
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
     FAILED = "failed"
+
+# table is to store machine and manual mapping, 1 is to many relationship
+class MachineNameManualMapping(TimestampedModel):
+    __tablename__ = "machine_name_manual_mapping"
+    machine_name = Column(String(255), nullable=False, unique=True, comment="Name of the machine")
+    manual_mapping_id = Column(UUID(as_uuid=True), ForeignKey('manual_mapping.uuid'), nullable=False)
+    manual_mapping = relationship("ManualMapping", back_populates="machines")
+    
 
 
 class ManualStatus(TimestampedModel) :
