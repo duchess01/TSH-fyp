@@ -40,7 +40,8 @@ function PostQuestionModal({ closeModal }) {
         query_ids,
         imageFile,
         selectedMachine,
-        sessionStorage.getItem("token")
+        sessionStorage.getItem("token"),
+        ""
       );
       if (response.status === 201) {
         Swal.fire({

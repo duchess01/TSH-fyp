@@ -54,6 +54,11 @@ const QnA = () => {
         flex: 2,
       },
       {
+        field: "Topic",
+        filter: "agTextColumnFilter",
+        flex: 2,
+      },
+      {
         field: "Question",
         filter: "agTextColumnFilter",
       },
@@ -97,6 +102,7 @@ const QnA = () => {
         Question: item.question,
         Answers: parseInt(item.count),
         Last_Updated: new Date(item.latest_date).toLocaleDateString("en-GB"),
+        Topic: item.topic,
       }));
       setRowData(transformedData);
     }

@@ -243,7 +243,8 @@ function Chat() {
     currentRating,
     msgId,
     machine,
-    question
+    question,
+    solution
   ) => {
     //allowed roles, to be confirmed
     const allowedRoles = ["Admin", "supervisor", "manager"];
@@ -258,16 +259,16 @@ function Chat() {
       input === "down" &&
       currentRating !== "down"
     ) {
-      console.log("ADD TO QNA");
       const response = await addSolution(
         null,
         msgId,
         question,
-        undefined, // This will use the default value for solution
-        [], // Default for query_ids, can also be omitted if empty array is desired
-        null, // This will use the default value for imageFile
+        solution,
+        [],
+        null,
         machine,
-        sessionStorage.getItem("token")
+        sessionStorage.getItem("token"),
+        ""
       );
     }
   };
@@ -482,7 +483,8 @@ function Chat() {
                                     chatMsg.rating,
                                     chatMsg.id,
                                     chatMsg.machine,
-                                    chatMsg.message
+                                    chatMsg.message,
+                                    chatMsg.response
                                   )
                                 }
                                 className="focus:outline-none"

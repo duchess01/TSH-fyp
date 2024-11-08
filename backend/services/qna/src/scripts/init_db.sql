@@ -5,8 +5,8 @@
 -- Create the qna table
 CREATE TABLE qna (
     id SERIAL PRIMARY KEY,
-    user_id INT,
-    chat_id INT,
+    user_id INT, 
+    chat_id INT, -- Null if user-entered solution
     topic VARCHAR(255),
     machine VARCHAR(255),
     question VARCHAR(255),
