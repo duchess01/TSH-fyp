@@ -37,7 +37,7 @@ function Chat() {
   const [text, setText] = useState("");
   const [message, setMessage] = useState(null);
   const [previousChats, setPreviousChats] = useState([]);
-  const [previousTitles, setPreviousTitles] = useState([]);
+  const [previousTitles, setPreviousTitles] = useState([{}]);
   const [currentChat, setCurrentChat] = useState([]);
   const [currentTitle, setCurrentTitle] = useState(null);
   const [isResponseLoading, setIsResponseLoading] = useState(false);
@@ -105,13 +105,18 @@ function Chat() {
         currHighestChatSessionId = chat.chat_session_id;
       }
     });
+    currHighestChatSessionId = Number(currHighestChatSessionId);
     const newChatId = currHighestChatSessionId + 1;
     return newChatId;
   };
 
   const getUniqueTitles = (chats) => {
     const uniqueTitles = chats.reduce((acc, curr) => {
-      const exists = acc.find((item) => item.title === curr.title);
+      const exists = acc.find(
+        (item) =>
+          item.title === curr.title &&
+          item.chat_session_id === curr.chat_session_id
+      );
       if (!exists) {
         acc.push({
           title: curr.title,
@@ -133,13 +138,14 @@ function Chat() {
     setSelectedMachine(null);
   };
 
-  const backToHistoryPrompt = (uniqueTitle) => {
-    const currChat = previousChats.filter((chat) => chat.title === uniqueTitle);
-    setCurrentChat(currChat);
-    setSelectedMachine(currChat[0].machine);
-    setChatSessionId(
-      previousChats.find((chat) => chat.title === uniqueTitle).chat_session_id
+  const backToHistoryPrompt = (uniqueTitle, id) => {
+    const currChat = previousChats.filter(
+      (chat) => chat.title == uniqueTitle && chat.chat_session_id == id
     );
+    setCurrentChat(currChat);
+    console.log("Current chat: ", currChat);
+    setSelectedMachine(currChat[0].machine);
+    setChatSessionId(id);
     setCurrentTitle(uniqueTitle);
     setMessage(null);
     setText("");
@@ -156,7 +162,9 @@ function Chat() {
 
   const handleManualSelect = (e) => {
     setManualSelected(e.target.value);
-    setPreviousTitles(getUniqueTitles([...previousChats, ""]));
+    setPreviousTitles(
+      getUniqueTitles([...previousChats, { title: "", id: chatSessionId }])
+    );
     setCurrentTitle(e.target.value);
   };
 
@@ -312,9 +320,16 @@ function Chat() {
 
                     return (
                       <li
-                        className={currentTitle === ele.title ? "active" : ""}
+                        className={
+                          currentTitle == ele.title &&
+                          chatSessionId == ele.chat_session_id
+                            ? "active"
+                            : ""
+                        }
                         key={idx}
-                        onClick={() => backToHistoryPrompt(ele.title)}
+                        onClick={() =>
+                          backToHistoryPrompt(ele.title, ele.chat_session_id)
+                        }
                       >
                         {ele.title}
                       </li>
@@ -521,27 +536,31 @@ function Chat() {
                               <br />{" "}
                               {chatMsg.human_response &&
                                 chatMsg.human_response.map((response, idx) => {
-                                  return (
-                                    <div
-                                      key={idx}
-                                      className="bg-slate-500 rounded mb-4 p-2"
-                                    >
-                                      <span className="font-bold">
-                                        Solution {idx + 1}:
-                                      </span>{" "}
-                                      <br /> {response.solution}
-                                      <p className="flex justify-end">
+                                  if (response != null) {
+                                    return (
+                                      <div
+                                        key={idx}
+                                        className="bg-slate-500 rounded mb-4 p-2"
+                                      >
                                         <span className="font-bold">
-                                          Likes:
+                                          Solution {idx + 1}:
                                         </span>{" "}
-                                        {response.likes}{" "}
-                                        <span className="ml-4 font-bold">
-                                          Dislikes:
-                                        </span>{" "}
-                                        {response.dislikes}
-                                      </p>
-                                    </div>
-                                  );
+                                        <br /> {response.solution}
+                                        <p className="flex justify-end">
+                                          <span className="font-bold">
+                                            Likes:
+                                          </span>{" "}
+                                          {response.likes}{" "}
+                                          <span className="ml-4 font-bold">
+                                            Dislikes:
+                                          </span>{" "}
+                                          {response.dislikes}
+                                        </p>
+                                      </div>
+                                    );
+                                  } else {
+                                    return "";
+                                  }
                                 })}
                             </p>
                           </>
