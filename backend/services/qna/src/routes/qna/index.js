@@ -451,14 +451,21 @@ router.post("/chatbot", async (req, res) => {
     );
 
     if (retrieveQna && retrieveQna.data && retrieveQna.data.ids) {
+      console.log(retrieveQna.data.ids, " THIS IS RETRIEVEQNA");
       const idsArray = retrieveQna.data.ids;
       const results = [];
 
       for (const ids of idsArray) {
         if (ids.length > 0) {
-          const data = await fetchQnaDataByIds(ids);
-          // Store data as an array in results
-          results.push(data);
+          // Ensure that each id in the ids array is an integer
+          const validIds = ids.filter((id) => Number.isInteger(id));
+
+          if (validIds.length > 0) {
+            const data = await fetchQnaDataByIds(validIds); // Fetch data for valid IDs
+            results.push(data);
+          } else {
+            results.push([]); // If no valid IDs, push an empty array
+          }
         } else {
           results.push([]); // Retain empty array for empty IDs
         }
@@ -474,6 +481,7 @@ router.post("/chatbot", async (req, res) => {
           );
         })
       );
+      console.log(enrichedResults, " THIS IS ENRICHED RESULTS");
 
       res.status(200).json({ status: "success", data: enrichedResults });
     } else {
