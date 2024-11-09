@@ -347,6 +347,12 @@ router.post("/chatbot", async (req, res) => {
       "http://langchain:8001/langchain/qna/retrieveQna",
       { query: query }
     );
+    // let retrieveQna = {
+    //   data: {
+    //     ids: [],
+    //   },
+    // };
+    console.log("this is reponse from langchain qna", retrieveQna.data);
 
     if (retrieveQna && retrieveQna.data && retrieveQna.data.ids) {
       const idsArray = retrieveQna.data.ids;
@@ -405,7 +411,6 @@ router.post("/getByIds", async (req, res) => {
         return await fetchQnaLikesDislikes(req, dataArray.id);
       })
     );
-
     res.status(200).json(enrichedResults);
   } catch (error) {
     console.error("Error fetching data by IDs:", error);
