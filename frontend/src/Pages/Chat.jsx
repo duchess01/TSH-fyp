@@ -129,6 +129,7 @@ function Chat() {
     setCurrentTitle(null);
     setCurrentChat([]);
     setChatSessionId(newChatSessionId(previousChats));
+    setSelectedMachine(null);
   };
 
   const backToHistoryPrompt = (uniqueTitle) => {
