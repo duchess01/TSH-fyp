@@ -495,7 +495,12 @@ router.post("/chatbot", async (req, res) => {
 
 // API to return the data by ids
 router.post("/getByIds", async (req, res) => {
-  const { ids } = req.body;
+  let { ids } = req.body;
+  // loop through ids and only return the valid numbers
+  ids = ids.filter((id) => {
+    let intid = parseInt(id);
+    return !isNaN(intid);
+  });
 
   if (!ids || !Array.isArray(ids)) {
     return res.status(400).json({ error: "Invalid IDs" });
