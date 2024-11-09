@@ -11,7 +11,7 @@ export async function sendMessageAPI(chatSessionId, userId, message, machine) {
       },
     };
     const data = {
-      chatSessionId: chatSessionId,
+      chatSessionId: String(chatSessionId),
       userId: userId,
       message: message,
       machine: machine,

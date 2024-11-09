@@ -177,6 +177,7 @@ router.post("/", async (req, res) => {
       res.status(langchainResponse.status).json(langchainResponse.data);
       return;
     }
+    console.log("this is response from langchain service", langchainResponse);
 
     // Destructure the response and topic from the Langchain service
     const { agent_response, topic } = langchainResponse;
@@ -189,6 +190,7 @@ router.post("/", async (req, res) => {
         query: message,
       }
     );
+    console.log("this is reposnse from qna", data);
 
     // getting the list of ids
     let ids = [];
