@@ -31,12 +31,13 @@ const DashboardPage = () => {
   useEffect(() => {
     const token = sessionStorage.getItem("token");
     const user = JSON.parse(sessionStorage.getItem("user"));
+    console.log("user", user);
 
     if (
       !token ||
-      !user ||
-      (user.privilege !== "Manager Dashboard" &&
-        user.privilege !== "System Admin")
+      !user || // looping through user.privileges to see if it includes "System Admin" or "Manager Dashboard"
+      (!user.privileges.includes("System Admin") &&
+        !user.privileges.includes("Manager Dashboard"))
     ) {
       setNotification(
         "You do not have access to the Dashboard. Redirecting to login..."
@@ -67,7 +68,9 @@ const DashboardPage = () => {
           <div className="fixed h-screen">
             <SideNavBar />
           </div>
-          <div className="flex-1 ml-64 p-10"> {/* Adjust ml-64 based on your sidebar width */}
+          <div className="flex-1 ml-64 p-10">
+            {" "}
+            {/* Adjust ml-64 based on your sidebar width */}
             <div className="bg-white w-full min-h-full rounded-lg p-5">
               <FAQSection faqs={faqs} />
               <div className="grid grid-cols-2 grid-rows-2 gap-4 mt-5">

@@ -17,11 +17,11 @@ services:
       - "3000:3000"
     restart: always
     environment:
-      - DB_HOST=db_user
-      - DB_PORT=5432
-      - DB_NAME=user_db
-      - DB_USER=myuser
-      - DB_PASSWORD=mypassword
+      - DB_HOST_DOCKER=db_user
+      - DB_PORT_DOCKER=5432
+      - DB_NAME_DOCKER=user_db
+      - DB_USER_DOCKER=myuser
+      - DB_PASSWORD_DOCKER=mypassword
       - DOCKER_ENV=true
     depends_on:
       - db_user
@@ -40,11 +40,11 @@ services:
       - "3001:3001"
     restart: always
     environment:
-      - DB_HOST=db_chat
-      - DB_PORT=5432
-      - DB_NAME=chat_db
-      - DB_USER=myuser
-      - DB_PASSWORD=mypassword
+      - DB_HOST_DOCKER=db_chat
+      - DB_PORT_DOCKER=5432
+      - DB_NAME_DOCKER=chat_db
+      - DB_USER_DOCKER=myuser
+      - DB_PASSWORD_DOCKER=mypassword
       - DOCKER_ENV=true
     depends_on:
       - db_chat
@@ -129,11 +129,11 @@ services:
       - "3003:3003"
     restart: always
     environment:
-      - DB_HOST=db_qna
-      - DB_PORT=5432
-      - DB_NAME=qna_db
-      - DB_USER=myuser
-      - DB_PASSWORD=mypassword
+      - DB_HOST_DOCKER=db_qna
+      - DB_PORT_DOCKER=5432
+      - DB_NAME_DOCKER=qna_db
+      - DB_USER_DOCKER=myuser
+      - DB_PASSWORD_DOCKER=mypassword
       - DOCKER_ENV=true
     depends_on:
       - db_qna
