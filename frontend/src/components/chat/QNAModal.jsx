@@ -95,7 +95,7 @@ function QNAModal({ closeModal, machine, question, topic }) {
 
   const handleSubmit = async () => {
     setLoading(true);
-    const query_ids = data.map((item) => item.user_id);
+    const query_ids = data.map((item) => item.id);
     const user_id = user.id;
     const response = await addSolution(
       user_id,

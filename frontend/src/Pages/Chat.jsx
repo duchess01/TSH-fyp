@@ -28,7 +28,9 @@ import {
   FaThumbsDown,
   FaThumbsUp,
 } from "react-icons/fa";
-import { addSolution } from "../api/qna";
+import { addSolution, rate } from "../api/qna";
+import { Tooltip } from "@mui/material";
+import { format } from "date-fns";
 
 function Chat() {
   const navigate = useNavigate();
@@ -52,34 +54,36 @@ function Chat() {
   const [manualMachineMapping, setManualMachineMapping] = useState([]);
   const [manualSelected, setManualSelected] = useState(null);
 
+  const fetchChats = async (user_Id) => {
+    try {
+      const response = await getAllChatHistoryAPI(
+        user_Id,
+        sessionStorage.getItem("token")
+      );
+      if (response.status === 200) {
+        setPreviousChats(response.data);
+
+        let newId = newChatSessionId(response.data);
+        setChatSessionId(newId);
+
+        const uniqueTitles = getUniqueTitles(response.data);
+        setPreviousTitles(uniqueTitles);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   useEffect(() => {
     const user = JSON.parse(sessionStorage.getItem("user")); // fetching user details from session storage
     if (user === null) {
       // user not logged in or session expired. Redirect to login page
       navigate("/login");
     }
-    // console.log("User details: ", user);
-
     setCurrentUser(user);
 
     // fetching previous chats
-    const fetchChats = async () => {
-      try {
-        const response = await getAllChatHistoryAPI(user.id);
-        if (response.status === 200) {
-          setPreviousChats(response.data);
-
-          let newId = newChatSessionId(response.data);
-          setChatSessionId(newId);
-
-          const uniqueTitles = getUniqueTitles(response.data);
-          setPreviousTitles(uniqueTitles);
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    };
-    fetchChats();
+    fetchChats(user.id);
 
     const fetchMachines = async () => {
       try {
@@ -143,7 +147,6 @@ function Chat() {
       (chat) => chat.title == uniqueTitle && chat.chat_session_id == id
     );
     setCurrentChat(currChat);
-    console.log("Current chat: ", currChat);
     setSelectedMachine(currChat[0].machine);
     setChatSessionId(id);
     setCurrentTitle(uniqueTitle);
@@ -195,10 +198,10 @@ function Chat() {
         chatSessionId,
         currentUser.id,
         text,
-        manualSelected
+        manualSelected,
+        sessionStorage.getItem("token")
       );
       // changing from a list of list in human_response to a list
-      console.log("Response from chatbot: ", response);
       response.data.human_response = response.data.human_response.flat();
       if (response.status != 201) {
         setErrorText(response.data.message);
@@ -251,7 +254,7 @@ function Chat() {
     input,
     currentRating,
     msgId,
-    machine,
+    manual,
     question,
     solution
   ) => {
@@ -260,6 +263,9 @@ function Chat() {
     const newRating = input === currentRating ? null : input;
     const updatedChat = currentChat.map((chat) =>
       chat.id === msgId ? { ...chat, rating: newRating } : chat
+    );
+    const machine = manualMachineMapping.find((machine) =>
+      machine.manual_names.includes(manual)
     );
     setCurrentChat(updatedChat);
     changeRating(msgId, newRating);
@@ -275,7 +281,7 @@ function Chat() {
         solution,
         [],
         null,
-        machine,
+        machine.machine_name,
         sessionStorage.getItem("token"),
         ""
       );
@@ -284,6 +290,34 @@ function Chat() {
 
   const closeModal = () => {
     setIsOpen(false);
+  };
+
+  const handleRatingClick = async (type, item) => {
+    const isLiked = item.liked_by.some((u) => u.id === currentUser.id);
+    const isDisliked = item.disliked_by.some((u) => u.id === currentUser.id);
+
+    let rating;
+
+    if (type === "Like") {
+      rating = isLiked ? null : true;
+    } else if (type === "Dislike") {
+      rating = isDisliked ? null : false;
+    }
+
+    const response = await rate(
+      item.id,
+      currentUser.id,
+      rating,
+      sessionStorage.getItem("token")
+    );
+    if (response.status !== 200) {
+      console.log("Error when rating.");
+    }
+    await fetchChats(currentUser.id);
+  };
+
+  const formatDate = (dateString) => {
+    return format(new Date(dateString), "dd-MM-yyyy");
   };
 
   return (
@@ -536,30 +570,168 @@ function Chat() {
                               <br />{" "}
                               {chatMsg.human_response &&
                                 chatMsg.human_response.map((response, idx) => {
+                                  console.log(chatMsg, " THIS IS CHATMSG");
+                                  const isLiked = response.liked_by.some(
+                                    (u) => u.id === currentUser.id
+                                  );
+                                  const isDisliked = response.disliked_by.some(
+                                    (u) => u.id === currentUser.id
+                                  );
                                   if (response != null) {
                                     return (
                                       <div
                                         key={idx}
                                         className="bg-slate-500 rounded mb-4 p-2"
                                       >
-                                        <span className="font-bold">
-                                          Solution {idx + 1}:
-                                        </span>{" "}
-                                        <br /> {response.solution}
-                                        <p className="flex justify-end">
+                                        <div className="flex justify-between items-center">
                                           <span className="font-bold">
-                                            Likes:
-                                          </span>{" "}
-                                          {response.likes}{" "}
-                                          <span className="ml-4 font-bold">
-                                            Dislikes:
-                                          </span>{" "}
-                                          {response.dislikes}
-                                        </p>
+                                            Solution {idx + 1}:
+                                          </span>
+                                          <div className="flex items-center">
+                                            {/* Like Button */}
+                                            <button
+                                              onClick={() =>
+                                                handleRatingClick(
+                                                  "Like",
+                                                  response
+                                                )
+                                              }
+                                              className="bg-transparent hover:bg-green-900 p-1 rounded-full"
+                                              aria-label="Like"
+                                            >
+                                              {isLiked ? (
+                                                <FaThumbsUp />
+                                              ) : (
+                                                <FaRegThumbsUp />
+                                              )}
+                                            </button>
+                                            <Tooltip
+                                              title={
+                                                response.likes > 0 ? (
+                                                  <div
+                                                    style={{
+                                                      maxHeight: "200px",
+                                                      overflowY: "auto",
+                                                    }}
+                                                  >
+                                                    {response.liked_by.map(
+                                                      (user) => (
+                                                        <div key={user.id}>
+                                                          {user.name} -{" "}
+                                                          {formatDate(
+                                                            user.created_at
+                                                          )}
+                                                        </div>
+                                                      )
+                                                    )}
+                                                    {response.likes >
+                                                      response.liked_by
+                                                        .length &&
+                                                      Array.from(
+                                                        {
+                                                          length:
+                                                            response.likes -
+                                                            response.liked_by
+                                                              .length,
+                                                        },
+                                                        (_, index) => (
+                                                          <div
+                                                            key={`deleted-like-${index}`}
+                                                          >
+                                                            Deleted User
+                                                          </div>
+                                                        )
+                                                      )}
+                                                  </div>
+                                                ) : (
+                                                  "There are no likes."
+                                                )
+                                              }
+                                              arrow
+                                              placement="top"
+                                            >
+                                              <span className="text-sm cursor-pointer">
+                                                {response.likes}
+                                              </span>
+                                            </Tooltip>
+
+                                            <div className="mr-4"></div>
+
+                                            {/* Dislike Button */}
+                                            <button
+                                              onClick={() =>
+                                                handleRatingClick(
+                                                  "Dislike",
+                                                  response
+                                                )
+                                              }
+                                              className="bg-transparent hover:bg-red-900 p-1 rounded-full"
+                                              aria-label="Dislike"
+                                            >
+                                              {isDisliked ? (
+                                                <FaThumbsDown />
+                                              ) : (
+                                                <FaRegThumbsDown />
+                                              )}
+                                            </button>
+                                            <Tooltip
+                                              title={
+                                                response.dislikes > 0 ? (
+                                                  <div
+                                                    style={{
+                                                      maxHeight: "200px",
+                                                      overflowY: "auto",
+                                                    }}
+                                                  >
+                                                    {response.disliked_by.map(
+                                                      (user) => (
+                                                        <div key={user.id}>
+                                                          {user.name} -{" "}
+                                                          {formatDate(
+                                                            user.created_at
+                                                          )}
+                                                        </div>
+                                                      )
+                                                    )}
+                                                    {response.dislikes >
+                                                      response.disliked_by
+                                                        .length &&
+                                                      Array.from(
+                                                        {
+                                                          length:
+                                                            response.dislikes -
+                                                            response.disliked_by
+                                                              .length,
+                                                        },
+                                                        (_, index) => (
+                                                          <div
+                                                            key={`deleted-dislike-${index}`}
+                                                          >
+                                                            Deleted User
+                                                          </div>
+                                                        )
+                                                      )}
+                                                  </div>
+                                                ) : (
+                                                  "There are no dislikes."
+                                                )
+                                              }
+                                              arrow
+                                              placement="top"
+                                            >
+                                              <span className="text-sm cursor-pointer">
+                                                {response.dislikes}
+                                              </span>
+                                            </Tooltip>
+                                          </div>
+                                        </div>
+
+                                        <br />
+                                        {response.solution}
                                       </div>
                                     );
                                   } else {
-                                    return "";
+                                    return null;
                                   }
                                 })}
                             </p>

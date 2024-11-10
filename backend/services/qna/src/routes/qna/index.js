@@ -70,7 +70,6 @@ router.post(
           .json({ error: "Error while fetching existing topics." });
       }
 
-      console.log(topicArr);
       // Get Topic of request
       try {
         const topicResponse = await axios.post(
@@ -154,6 +153,15 @@ router.post(
 
         let newRow = result.rows[0];
         idsToUse.push(newRow.id);
+        idsToUse = Array.from(new Set(idsToUse));
+
+        idsToUse = idsToUse.filter(
+          (id) => !isNaN(id) && typeof id === "number"
+        );
+
+        if (idsToUse.length === 0) {
+          return res.status(400).json({ error: "Invalid or empty IDs array." });
+        }
 
         try {
           const lmmResponse = await axios.post(
@@ -443,37 +451,33 @@ router.get("/ratings/:id", verifyToken, async (req, res) => {
 // Integration with Chatbot + retrieveQna
 router.post("/chatbot", async (req, res) => {
   const { query } = req.body;
-
+  const authHeader = req.header("Authorization");
+  const token = authHeader && authHeader.split(" ")[1];
   try {
     const retrieveQna = await axios.post(
       "http://langchain:8001/langchain/qna/retrieveQna",
       { query: query }
     );
-    // let retrieveQna = {
-    //   data: {
-    //     ids: [],
-    //   },
-    // };
-    console.log("this is reponse from langchain qna", retrieveQna.data);
 
     if (retrieveQna && retrieveQna.data && retrieveQna.data.ids) {
-      console.log(retrieveQna.data.ids, " THIS IS RETRIEVEQNA");
       const idsArray = retrieveQna.data.ids;
       const results = [];
 
+      // Loop through each array of ids and process them
       for (const ids of idsArray) {
         if (ids.length > 0) {
-          // Ensure that each id in the ids array is an integer
-          const validIds = ids.filter((id) => Number.isInteger(id));
+          const validIds = ids
+            .map((id) => Number(id))
+            .filter((id) => Number.isInteger(id));
 
           if (validIds.length > 0) {
             const data = await fetchQnaDataByIds(validIds); // Fetch data for valid IDs
             results.push(data);
           } else {
-            results.push([]); // If no valid IDs, push an empty array
+            results.push([]); // No valid IDs, push an empty array
           }
         } else {
-          results.push([]); // Retain empty array for empty IDs
+          results.push([]); // Empty ids array, push an empty array
         }
       }
 
@@ -482,12 +486,11 @@ router.post("/chatbot", async (req, res) => {
         results.map(async (dataArray) => {
           return await Promise.all(
             dataArray.map(async (item) => {
-              return await fetchQnaLikesDislikes(req, item.id);
+              return await fetchQnaLikesDislikes(token, item.id);
             })
           );
         })
       );
-      console.log(enrichedResults, " THIS IS ENRICHED RESULTS");
 
       res.status(200).json({ status: "success", data: enrichedResults });
     } else {
@@ -502,6 +505,8 @@ router.post("/chatbot", async (req, res) => {
 // API to return the data by ids
 router.post("/getByIds", async (req, res) => {
   let { ids } = req.body;
+  const authHeader = req.header("Authorization");
+  const token = authHeader && authHeader.split(" ")[1];
   // loop through ids and only return the valid numbers
   ids = ids.filter((id) => {
     let intid = parseInt(id);
@@ -518,7 +523,7 @@ router.post("/getByIds", async (req, res) => {
     // Fetch likes and dislikes for each Q&A item in the results
     const enrichedResults = await Promise.all(
       data.map(async (dataArray) => {
-        return await fetchQnaLikesDislikes(req, dataArray.id);
+        return await fetchQnaLikesDislikes(token, dataArray.id);
       })
     );
     res.status(200).json(enrichedResults);
@@ -531,7 +536,6 @@ router.post("/getByIds", async (req, res) => {
 // Function to fetch QnA data by IDs
 async function fetchQnaDataByIds(ids) {
   const idList = ids.map((id) => parseInt(id, 10));
-
   const placeholders = idList.map((_, index) => `$${index + 1}`).join(",");
   const query = `SELECT * FROM qna WHERE id IN (${placeholders})`;
 
@@ -545,10 +549,7 @@ async function fetchQnaDataByIds(ids) {
 }
 
 // Function to fetch likes and dislikes for a given Q&A ID
-async function fetchQnaLikesDislikes(req, qnaId) {
-  const authHeader = req.header("Authorization");
-  const token = authHeader && authHeader.split(" ")[1];
-
+async function fetchQnaLikesDislikes(token, qnaId) {
   try {
     const { rows } = await db.query(
       `
@@ -571,29 +572,29 @@ async function fetchQnaLikesDislikes(req, qnaId) {
     );
 
     if (rows.length === 0) {
-      return null; // Or handle the case where no Q&A found
+      return null; // No Q&A found, return null
     }
 
-    const row = rows[0];
+    const row = rows[0]; // First row, since we're querying by ID
 
     // Fetch user details for liked and disliked users
     const likedUsers = await Promise.all(
       row.liked_user_ids
         .filter((id) => id !== null)
-        .map((id) => fetchUserDetails(token, id))
+        .map((id) => fetchUserDetails(token, id)) // Pass token to fetchUserDetails
     );
     const dislikedUsers = await Promise.all(
       row.disliked_user_ids
         .filter((id) => id !== null)
-        .map((id) => fetchUserDetails(token, id))
+        .map((id) => fetchUserDetails(token, id)) // Pass token to fetchUserDetails
     );
 
     const { liked_user_ids, disliked_user_ids, ...rest } = row;
 
     return {
       ...rest,
-      liked_by: likedUsers.filter((user) => user !== null),
-      disliked_by: dislikedUsers.filter((user) => user !== null),
+      liked_by: likedUsers.filter((user) => user !== null), // Filter out null values
+      disliked_by: dislikedUsers.filter((user) => user !== null), // Filter out null values
     };
   } catch (error) {
     console.error("Error fetching likes and dislikes:", error);
@@ -602,21 +603,23 @@ async function fetchQnaLikesDislikes(req, qnaId) {
 }
 
 // Function to fetch user details
+// Function to fetch user details
 async function fetchUserDetails(token, userId) {
   if (!userId) return null;
+
   try {
     const response = await axios.get(
-      `http://user:3000/api/v1/users/getUserDetails/${userId}`,
+      `http://user:3000/api/v1/users/getUserDetails/${userId}`, // Assuming user service is hosted here
       {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`, // Use the token in the Authorization header
         },
       }
     );
-    return response.data;
+    return response.data; // Return the user details from the API response
   } catch (error) {
     console.error(`Error fetching user details for ID ${userId}:`, error);
-    return null;
+    return null; // Return null in case of error
   }
 }
 
