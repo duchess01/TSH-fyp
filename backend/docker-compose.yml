@@ -79,7 +79,7 @@ services:
   # ner microservice
   #################################
   upload:
-    # image: teamduchess/ner-llm:latest
+    image: teamduchess/upload:latest
     build:
       context: ./services/upload
       dockerfile: ./Dockerfile
