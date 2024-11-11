@@ -1,5 +1,4 @@
 import axios from "axios";
-import { BiLeftTopArrowCircle } from "react-icons/bi";
 
 const CHAT_BASE_URL = "http://localhost:3001";
 

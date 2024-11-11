@@ -5,19 +5,13 @@ import {
   useCallback,
   useLayoutEffect,
 } from "react";
-import {
-  BiPlus,
-  BiUser,
-  BiSend,
-  BiSolidUserCircle,
-  BiLogOut,
-} from "react-icons/bi";
+import { BiPlus, BiSend, BiSolidUserCircle, BiLogOut } from "react-icons/bi";
 import {
   MdOutlineArrowLeft,
   MdOutlineArrowRight,
   MdOutlineDashboard,
 } from "react-icons/md";
-import { AiOutlineMessage } from "react-icons/ai"; // New icon for QnA
+import { AiOutlineMessage } from "react-icons/ai";
 import { FaSpinner } from "react-icons/fa";
 import { changeRating, sendMessageAPI } from "../api/chat";
 import { getAllChatHistoryAPI, getAllMachinesAPI } from "../api/chat";
@@ -49,8 +43,6 @@ function Chat() {
   const [chatSessionId, setChatSessionId] = useState(null);
   const [machines, setMachines] = useState([]);
   const [selectedMachine, setSelectedMachine] = useState(null);
-  const [thumbs, setThumbs] = useState([]);
-  const [isOpen, setIsOpen] = useState(false);
   const [manualMachineMapping, setManualMachineMapping] = useState([]);
   const [manualSelected, setManualSelected] = useState(null);
 
@@ -61,7 +53,7 @@ function Chat() {
         sessionStorage.getItem("token")
       );
       if (response.status === 200) {
-        setPreviousChats(response.data);
+        await setPreviousChats(response.data);
 
         let newId = newChatSessionId(response.data);
         setChatSessionId(newId);
@@ -146,6 +138,7 @@ function Chat() {
     const currChat = previousChats.filter(
       (chat) => chat.title == uniqueTitle && chat.chat_session_id == id
     );
+
     setCurrentChat(currChat);
     setSelectedMachine(currChat[0].machine);
     setChatSessionId(id);
@@ -274,55 +267,136 @@ function Chat() {
       input === "down" &&
       currentRating !== "down"
     ) {
-      const response = await addSolution(
-        null,
-        msgId,
-        question,
-        solution,
-        [],
-        null,
-        machine.machine_name,
-        sessionStorage.getItem("token"),
-        ""
-      );
+      try {
+        const response = await addSolution(
+          null,
+          msgId,
+          question,
+          solution,
+          [],
+          null,
+          machine.machine_name,
+          sessionStorage.getItem("token"),
+          ""
+        );
+      } catch (error) {
+        console.error("Error while adding to QnA: ", error);
+      }
     }
-  };
-
-  const closeModal = () => {
-    setIsOpen(false);
   };
 
   const handleRatingClick = async (type, item) => {
     const isLiked = item.liked_by.some((u) => u.id === currentUser.id);
     const isDisliked = item.disliked_by.some((u) => u.id === currentUser.id);
 
+    // Convert likes and dislikes to numbers in case they are stored as strings
+    let likes = parseInt(item.likes, 10) || 0;
+    let dislikes = parseInt(item.dislikes, 10) || 0;
+
     let rating;
 
+    // Handle optimistic update for like/dislike
     if (type === "Like") {
+      // Toggle like status
       rating = isLiked ? null : true;
+
+      // Optimistically update likes/dislikes immediately
+      likes = isLiked ? likes - 1 : likes + 1;
+      item.likes = likes;
+      item.liked_by = isLiked
+        ? item.liked_by.filter((u) => u.id !== currentUser.id) // Remove user if already liked
+        : [...item.liked_by, currentUser]; // Add user if not already liked
+
+      // If the user was previously disliked, remove the dislike
+      if (isDisliked) {
+        dislikes -= 1;
+        item.dislikes = dislikes;
+        item.disliked_by = item.disliked_by.filter(
+          (u) => u.id !== currentUser.id
+        );
+      }
     } else if (type === "Dislike") {
+      // Toggle dislike status
       rating = isDisliked ? null : false;
+
+      // Optimistically update likes/dislikes immediately
+      dislikes = isDisliked ? dislikes - 1 : dislikes + 1;
+      item.dislikes = dislikes;
+      item.disliked_by = isDisliked
+        ? item.disliked_by.filter((u) => u.id !== currentUser.id) // Remove user if already disliked
+        : [...item.disliked_by, currentUser]; // Add user if not already disliked
+
+      // If the user was previously liked, remove the like
+      if (isLiked) {
+        likes -= 1;
+        item.likes = likes;
+        item.liked_by = item.liked_by.filter((u) => u.id !== currentUser.id);
+      }
     }
 
-    const response = await rate(
-      item.id,
-      currentUser.id,
-      rating,
-      sessionStorage.getItem("token")
+    // Optimistically update the currentChat state
+    setCurrentChat((prevChat) =>
+      prevChat.map((chatItem) =>
+        chatItem.id === item.id ? { ...chatItem, ...item } : chatItem
+      )
     );
-    if (response.status !== 200) {
-      console.log("Error when rating.");
+
+    try {
+      // Send the rating update to the backend
+      const response = await rate(
+        item.id,
+        currentUser.id,
+        rating,
+        sessionStorage.getItem("token")
+      );
+    } catch (error) {
+      console.error("Error while rating QnA: ", error);
+
+      // If the backend request fails, rollback the optimistic UI changes
+      if (type === "Like") {
+        likes = isLiked ? likes + 1 : likes - 1;
+        item.likes = likes;
+        item.liked_by = isLiked
+          ? [...item.liked_by, currentUser]
+          : item.liked_by.filter((u) => u.id !== currentUser.id);
+
+        if (isDisliked) {
+          dislikes += 1;
+          item.dislikes = dislikes;
+          item.disliked_by = [...item.disliked_by, currentUser];
+        }
+      } else if (type === "Dislike") {
+        dislikes = isDisliked ? dislikes + 1 : dislikes - 1;
+        item.dislikes = dislikes;
+        item.disliked_by = isDisliked
+          ? [...item.disliked_by, currentUser]
+          : item.disliked_by.filter((u) => u.id !== currentUser.id);
+
+        if (isLiked) {
+          likes += 1;
+          item.likes = likes;
+          item.liked_by = [...item.liked_by, currentUser];
+        }
+      }
+
+      // Rollback optimistic update in state
+      setCurrentChat((prevChat) =>
+        prevChat.map((chatItem) =>
+          chatItem.id === item.id ? { ...chatItem, ...item } : chatItem
+        )
+      );
     }
-    await fetchChats(currentUser.id);
   };
 
   const formatDate = (dateString) => {
-    return format(new Date(dateString), "dd-MM-yyyy");
+    if (dateString) {
+      return format(new Date(dateString), "dd-MM-yyyy");
+    }
+    return format(new Date(), "dd-MM-yyyy");
   };
 
   return (
     <>
-      {/* {isOpen === true ? <ChatModal closeModal={closeModal} /> : null} */}
       <div
         className="min-w-full chat h-screen"
         style={{
@@ -570,7 +644,6 @@ function Chat() {
                               <br />{" "}
                               {chatMsg.human_response &&
                                 chatMsg.human_response.map((response, idx) => {
-                                  console.log(chatMsg, " THIS IS CHATMSG");
                                   const isLiked = response.liked_by.some(
                                     (u) => u.id === currentUser.id
                                   );
