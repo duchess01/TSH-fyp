@@ -189,7 +189,7 @@ function Chat() {
     try {
       const response = await sendMessageAPI(
         chatSessionId,
-        currentUser.id,
+        String(currentUser.id),
         text,
         manualSelected,
         sessionStorage.getItem("token")
