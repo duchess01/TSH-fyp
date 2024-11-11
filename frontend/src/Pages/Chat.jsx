@@ -628,186 +628,200 @@ function Chat() {
                           <div className="flex items-center justify-center">
                             <FaSpinner
                               className="animate-spin"
-                              style={{ position: "relative", top: "-30px" }}
+                              style={{ fontSize: "24px" }}
                             />
                           </div>
                         ) : (
                           <>
-                            <p className="mt-4">
-                              {" "}
-                              {/* Added margin here for separation */}
-                              <span className="font-bold">
-                                {isLastMessage && isResponseLoading
-                                  ? ""
-                                  : "Human response:"}
-                              </span>{" "}
-                              <br />{" "}
-                              {chatMsg.human_response &&
-                                chatMsg.human_response.map((response, idx) => {
-                                  const isLiked = response.liked_by.some(
-                                    (u) => u.id === currentUser.id
-                                  );
-                                  const isDisliked = response.disliked_by.some(
-                                    (u) => u.id === currentUser.id
-                                  );
-                                  if (response != null) {
-                                    return (
-                                      <div
-                                        key={idx}
-                                        className="bg-slate-500 rounded mb-4 p-2"
-                                      >
-                                        <div className="flex justify-between items-center">
-                                          <span className="font-bold">
-                                            Solution {idx + 1}:
-                                          </span>
-                                          <div className="flex items-center">
-                                            {/* Like Button */}
-                                            <button
-                                              onClick={() =>
-                                                handleRatingClick(
-                                                  "Like",
-                                                  response
-                                                )
-                                              }
-                                              className="bg-transparent hover:bg-green-900 p-1 rounded-full"
-                                              aria-label="Like"
-                                            >
-                                              {isLiked ? (
-                                                <FaThumbsUp />
-                                              ) : (
-                                                <FaRegThumbsUp />
-                                              )}
-                                            </button>
-                                            <Tooltip
-                                              title={
-                                                response.likes > 0 ? (
-                                                  <div
-                                                    style={{
-                                                      maxHeight: "200px",
-                                                      overflowY: "auto",
-                                                    }}
-                                                  >
-                                                    {response.liked_by.map(
-                                                      (user) => (
-                                                        <div key={user.id}>
-                                                          {user.name} -{" "}
-                                                          {formatDate(
-                                                            user.created_at
-                                                          )}
-                                                        </div>
-                                                      )
-                                                    )}
-                                                    {response.likes >
-                                                      response.liked_by
-                                                        .length &&
-                                                      Array.from(
-                                                        {
-                                                          length:
-                                                            response.likes -
-                                                            response.liked_by
-                                                              .length,
-                                                        },
-                                                        (_, index) => (
-                                                          <div
-                                                            key={`deleted-like-${index}`}
-                                                          >
-                                                            Deleted User
-                                                          </div>
-                                                        )
-                                                      )}
-                                                  </div>
-                                                ) : (
-                                                  "There are no likes."
-                                                )
-                                              }
-                                              arrow
-                                              placement="top"
-                                            >
-                                              <span className="text-sm cursor-pointer">
-                                                {response.likes}
-                                              </span>
-                                            </Tooltip>
+                            {chatMsg.human_response &&
+                              chatMsg.human_response.some(
+                                (response) => response !== null
+                              ) && (
+                                <p className="mt-4">
+                                  {/* Conditionally render "Human response:" text only if there are valid responses */}
+                                  {chatMsg.human_response &&
+                                  chatMsg.human_response.some(
+                                    (response) => response !== null
+                                  ) ? (
+                                    <span className="font-bold">
+                                      {isLastMessage && isResponseLoading
+                                        ? ""
+                                        : "Human response:"}
+                                    </span>
+                                  ) : null}
 
-                                            <div className="mr-4"></div>
+                                  <br />
 
-                                            {/* Dislike Button */}
-                                            <button
-                                              onClick={() =>
-                                                handleRatingClick(
-                                                  "Dislike",
-                                                  response
-                                                )
-                                              }
-                                              className="bg-transparent hover:bg-red-900 p-1 rounded-full"
-                                              aria-label="Dislike"
-                                            >
-                                              {isDisliked ? (
-                                                <FaThumbsDown />
-                                              ) : (
-                                                <FaRegThumbsDown />
-                                              )}
-                                            </button>
-                                            <Tooltip
-                                              title={
-                                                response.dislikes > 0 ? (
-                                                  <div
-                                                    style={{
-                                                      maxHeight: "200px",
-                                                      overflowY: "auto",
-                                                    }}
-                                                  >
-                                                    {response.disliked_by.map(
-                                                      (user) => (
-                                                        <div key={user.id}>
-                                                          {user.name} -{" "}
-                                                          {formatDate(
-                                                            user.created_at
-                                                          )}
-                                                        </div>
-                                                      )
-                                                    )}
-                                                    {response.dislikes >
-                                                      response.disliked_by
-                                                        .length &&
-                                                      Array.from(
-                                                        {
-                                                          length:
-                                                            response.dislikes -
-                                                            response.disliked_by
-                                                              .length,
-                                                        },
-                                                        (_, index) => (
-                                                          <div
-                                                            key={`deleted-dislike-${index}`}
-                                                          >
-                                                            Deleted User
-                                                          </div>
-                                                        )
-                                                      )}
-                                                  </div>
-                                                ) : (
-                                                  "There are no dislikes."
-                                                )
-                                              }
-                                              arrow
-                                              placement="top"
-                                            >
-                                              <span className="text-sm cursor-pointer">
-                                                {response.dislikes}
+                                  {/* Render human responses only if valid responses exist */}
+                                  {chatMsg.human_response &&
+                                    chatMsg.human_response
+                                      .filter((response) => response !== null) // Remove null values
+                                      .map((response, idx) => {
+                                        const isLiked = response.liked_by.some(
+                                          (u) => u.id === currentUser.id
+                                        );
+                                        const isDisliked =
+                                          response.disliked_by.some(
+                                            (u) => u.id === currentUser.id
+                                          );
+
+                                        return (
+                                          <div
+                                            key={idx}
+                                            className="bg-slate-500 rounded mb-4 p-2"
+                                          >
+                                            <div className="flex justify-between items-center">
+                                              <span className="font-bold">
+                                                Solution {idx + 1}:
                                               </span>
-                                            </Tooltip>
+                                              <div className="flex items-center">
+                                                {/* Like Button */}
+                                                <button
+                                                  onClick={() =>
+                                                    handleRatingClick(
+                                                      "Like",
+                                                      response
+                                                    )
+                                                  }
+                                                  className="bg-transparent hover:bg-green-900 p-1 rounded-full"
+                                                  aria-label="Like"
+                                                >
+                                                  {isLiked ? (
+                                                    <FaThumbsUp />
+                                                  ) : (
+                                                    <FaRegThumbsUp />
+                                                  )}
+                                                </button>
+                                                <Tooltip
+                                                  title={
+                                                    response.likes > 0 ? (
+                                                      <div
+                                                        style={{
+                                                          maxHeight: "200px",
+                                                          overflowY: "auto",
+                                                        }}
+                                                      >
+                                                        {response.liked_by.map(
+                                                          (user) => (
+                                                            <div key={user.id}>
+                                                              {user.name} -{" "}
+                                                              {formatDate(
+                                                                user.created_at
+                                                              )}
+                                                            </div>
+                                                          )
+                                                        )}
+                                                        {response.likes >
+                                                          response.liked_by
+                                                            .length &&
+                                                          Array.from(
+                                                            {
+                                                              length:
+                                                                response.likes -
+                                                                response
+                                                                  .liked_by
+                                                                  .length,
+                                                            },
+                                                            (_, index) => (
+                                                              <div
+                                                                key={`deleted-like-${index}`}
+                                                              >
+                                                                Deleted User
+                                                              </div>
+                                                            )
+                                                          )}
+                                                      </div>
+                                                    ) : (
+                                                      "There are no likes."
+                                                    )
+                                                  }
+                                                  arrow
+                                                  placement="top"
+                                                >
+                                                  <span className="text-sm cursor-pointer">
+                                                    {response.likes}
+                                                  </span>
+                                                </Tooltip>
+
+                                                <div className="mr-4"></div>
+
+                                                {/* Dislike Button */}
+                                                <button
+                                                  onClick={() =>
+                                                    handleRatingClick(
+                                                      "Dislike",
+                                                      response
+                                                    )
+                                                  }
+                                                  className="bg-transparent hover:bg-red-900 p-1 rounded-full"
+                                                  aria-label="Dislike"
+                                                >
+                                                  {isDisliked ? (
+                                                    <FaThumbsDown />
+                                                  ) : (
+                                                    <FaRegThumbsDown />
+                                                  )}
+                                                </button>
+                                                <Tooltip
+                                                  title={
+                                                    response.dislikes > 0 ? (
+                                                      <div
+                                                        style={{
+                                                          maxHeight: "200px",
+                                                          overflowY: "auto",
+                                                        }}
+                                                      >
+                                                        {response.disliked_by.map(
+                                                          (user) => (
+                                                            <div key={user.id}>
+                                                              {user.name} -{" "}
+                                                              {formatDate(
+                                                                user.created_at
+                                                              )}
+                                                            </div>
+                                                          )
+                                                        )}
+                                                        {response.dislikes >
+                                                          response.disliked_by
+                                                            .length &&
+                                                          Array.from(
+                                                            {
+                                                              length:
+                                                                response.dislikes -
+                                                                response
+                                                                  .disliked_by
+                                                                  .length,
+                                                            },
+                                                            (_, index) => (
+                                                              <div
+                                                                key={`deleted-dislike-${index}`}
+                                                              >
+                                                                Deleted User
+                                                              </div>
+                                                            )
+                                                          )}
+                                                      </div>
+                                                    ) : (
+                                                      "There are no dislikes."
+                                                    )
+                                                  }
+                                                  arrow
+                                                  placement="top"
+                                                >
+                                                  <span className="text-sm cursor-pointer">
+                                                    {response.dislikes}
+                                                  </span>
+                                                </Tooltip>
+                                              </div>
+                                            </div>
+
+                                            <br />
+                                            {response.solution}
                                           </div>
-                                        </div>
-
-                                        <br />
-                                        {response.solution}
-                                      </div>
-                                    );
-                                  } else {
-                                    return null;
-                                  }
-                                })}
-                            </p>
+                                        );
+                                      })}
+                                </p>
+                              )}
                           </>
                         )}
                       </div>
