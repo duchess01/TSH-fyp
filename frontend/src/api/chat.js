@@ -1,9 +1,14 @@
 import axios from "axios";
-import { BiLeftTopArrowCircle } from "react-icons/bi";
 
 const CHAT_BASE_URL = "http://localhost:3001";
 
-export async function sendMessageAPI(chatSessionId, userId, message, machine) {
+export async function sendMessageAPI(
+  chatSessionId,
+  userId,
+  message,
+  machine,
+  token
+) {
   try {
     const config = {
       headers: {
@@ -15,6 +20,7 @@ export async function sendMessageAPI(chatSessionId, userId, message, machine) {
       userId: userId,
       message: message,
       machine: machine,
+      token: token,
     };
 
     const response = await axios.post(
@@ -32,10 +38,17 @@ export async function sendMessageAPI(chatSessionId, userId, message, machine) {
   }
 }
 
-export async function getAllChatHistoryAPI(userId) {
+export async function getAllChatHistoryAPI(userId, token) {
   try {
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    };
     const response = await axios.get(
-      CHAT_BASE_URL + `/api/v1/chat/allHistory?userId=${userId}`
+      CHAT_BASE_URL + `/api/v1/chat/allHistory?userId=${userId}`,
+      config
     );
     return response;
   } catch (error) {

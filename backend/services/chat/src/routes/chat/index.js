@@ -55,6 +55,8 @@ router.put("/:id", async (req, res) => {
 router.get("/allHistory", async (req, res) => {
   try {
     const { userId } = req.query;
+    const authHeader = req.header("Authorization");
+    const token = authHeader && authHeader.split(" ")[1];
     const { rows } = await db.query("SELECT * FROM chat WHERE user_id = $1", [
       userId,
     ]);
@@ -83,6 +85,11 @@ router.get("/allHistory", async (req, res) => {
           "http://qna:3003/api/v1/qna/getByIds",
           {
             ids: ids,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           }
         );
         console.log("this is human response", human_response.data);
@@ -146,7 +153,8 @@ router.get("/history", async (req, res) => {
 // sending a message
 router.post("/", async (req, res) => {
   try {
-    const { chatSessionId, userId, message, machine } = req.body;
+    const { chatSessionId, userId, message, machine, token } = req.body;
+    console.log(token, " THIS IS TOKEN IN CHAT API");
 
     // Query to see if chat session already exists in the db
     const { rows: existingChats } = await db.query(
@@ -163,16 +171,7 @@ router.post("/", async (req, res) => {
       chatSessionId,
       machine
     );
-    // const langchainResponse = {
-    //   status_code: 201,
-    //   message: "success",
-    //   topic: "test",
-    //   user_query: "hello",
-    //   agent_response:
-    //     "Question: hello  \n" +
-    //     "Thought: The input does not contain a specific question regarding status codes or error codes. I need to wait for a valid question to proceed.  \n" +
-    //     "Action: None",
-    // };
+
     if (langchainResponse.status_code !== 201) {
       res.status(langchainResponse.status).json(langchainResponse.data);
       return;
@@ -188,6 +187,11 @@ router.post("/", async (req, res) => {
       "http://qna:3003/api/v1/qna/chatbot",
       {
         query: message,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // Pass token in the Authorization header
+        },
       }
     );
     console.log("this is reposnse from qna", data);

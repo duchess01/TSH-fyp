@@ -34,12 +34,14 @@ function PostQuestionModal({ closeModal }) {
     try {
       const response = await addSolution(
         user_id,
+        null,
         question,
         solution,
         query_ids,
         imageFile,
         selectedMachine,
-        sessionStorage.getItem("token")
+        sessionStorage.getItem("token"),
+        ""
       );
       if (response.status === 201) {
         Swal.fire({

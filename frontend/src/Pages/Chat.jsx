@@ -5,19 +5,13 @@ import {
   useCallback,
   useLayoutEffect,
 } from "react";
-import {
-  BiPlus,
-  BiUser,
-  BiSend,
-  BiSolidUserCircle,
-  BiLogOut,
-} from "react-icons/bi";
+import { BiPlus, BiSend, BiSolidUserCircle, BiLogOut } from "react-icons/bi";
 import {
   MdOutlineArrowLeft,
   MdOutlineArrowRight,
   MdOutlineDashboard,
 } from "react-icons/md";
-import { AiOutlineMessage } from "react-icons/ai"; // New icon for QnA
+import { AiOutlineMessage } from "react-icons/ai";
 import { FaSpinner } from "react-icons/fa";
 import { changeRating, sendMessageAPI } from "../api/chat";
 import { getAllChatHistoryAPI, getAllMachinesAPI } from "../api/chat";
@@ -28,6 +22,9 @@ import {
   FaThumbsDown,
   FaThumbsUp,
 } from "react-icons/fa";
+import { addSolution, rate } from "../api/qna";
+import { Tooltip } from "@mui/material";
+import { format } from "date-fns";
 
 function Chat() {
   const navigate = useNavigate();
@@ -46,10 +43,28 @@ function Chat() {
   const [chatSessionId, setChatSessionId] = useState(null);
   const [machines, setMachines] = useState([]);
   const [selectedMachine, setSelectedMachine] = useState(null);
-  const [thumbs, setThumbs] = useState([]);
-  const [isOpen, setIsOpen] = useState(false);
   const [manualMachineMapping, setManualMachineMapping] = useState([]);
   const [manualSelected, setManualSelected] = useState(null);
+
+  const fetchChats = async (user_Id) => {
+    try {
+      const response = await getAllChatHistoryAPI(
+        user_Id,
+        sessionStorage.getItem("token")
+      );
+      if (response.status === 200) {
+        await setPreviousChats(response.data);
+
+        let newId = newChatSessionId(response.data);
+        setChatSessionId(newId);
+
+        const uniqueTitles = getUniqueTitles(response.data);
+        setPreviousTitles(uniqueTitles);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   useEffect(() => {
     const user = JSON.parse(sessionStorage.getItem("user")); // fetching user details from session storage
@@ -57,28 +72,10 @@ function Chat() {
       // user not logged in or session expired. Redirect to login page
       navigate("/login");
     }
-    // console.log("User details: ", user);
-
     setCurrentUser(user);
 
     // fetching previous chats
-    const fetchChats = async () => {
-      try {
-        const response = await getAllChatHistoryAPI(user.id);
-        if (response.status === 200) {
-          setPreviousChats(response.data);
-
-          let newId = newChatSessionId(response.data);
-          setChatSessionId(newId);
-
-          const uniqueTitles = getUniqueTitles(response.data);
-          setPreviousTitles(uniqueTitles);
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    };
-    fetchChats();
+    fetchChats(user.id);
 
     const fetchMachines = async () => {
       try {
@@ -141,8 +138,8 @@ function Chat() {
     const currChat = previousChats.filter(
       (chat) => chat.title == uniqueTitle && chat.chat_session_id == id
     );
+
     setCurrentChat(currChat);
-    console.log("Current chat: ", currChat);
     setSelectedMachine(currChat[0].machine);
     setChatSessionId(id);
     setCurrentTitle(uniqueTitle);
@@ -192,12 +189,12 @@ function Chat() {
     try {
       const response = await sendMessageAPI(
         chatSessionId,
-        currentUser.id,
+        String(currentUser.id),
         text,
-        manualSelected
+        manualSelected,
+        sessionStorage.getItem("token")
       );
       // changing from a list of list in human_response to a list
-      console.log("Response from chatbot: ", response);
       response.data.human_response = response.data.human_response.flat();
       if (response.status != 201) {
         setErrorText(response.data.message);
@@ -246,12 +243,22 @@ function Chat() {
     };
   }, []);
 
-  const handleThumbsChange = (input, currentRating, msgId) => {
+  const handleThumbsChange = async (
+    input,
+    currentRating,
+    msgId,
+    manual,
+    question,
+    solution
+  ) => {
     //allowed roles, to be confirmed
-    const allowedRoles = ["admin", "supervisor", "manager"];
+    const allowedRoles = ["Admin", "supervisor", "manager"];
     const newRating = input === currentRating ? null : input;
     const updatedChat = currentChat.map((chat) =>
       chat.id === msgId ? { ...chat, rating: newRating } : chat
+    );
+    const machine = manualMachineMapping.find((machine) =>
+      machine.manual_names.includes(manual)
     );
     setCurrentChat(updatedChat);
     changeRating(msgId, newRating);
@@ -260,17 +267,136 @@ function Chat() {
       input === "down" &&
       currentRating !== "down"
     ) {
-      setIsOpen(true);
+      try {
+        const response = await addSolution(
+          null,
+          msgId,
+          question,
+          solution,
+          [],
+          null,
+          machine.machine_name,
+          sessionStorage.getItem("token"),
+          ""
+        );
+      } catch (error) {
+        console.error("Error while adding to QnA: ", error);
+      }
     }
   };
 
-  const closeModal = () => {
-    setIsOpen(false);
+  const handleRatingClick = async (type, item) => {
+    const isLiked = item.liked_by.some((u) => u.id === currentUser.id);
+    const isDisliked = item.disliked_by.some((u) => u.id === currentUser.id);
+
+    // Convert likes and dislikes to numbers in case they are stored as strings
+    let likes = parseInt(item.likes, 10) || 0;
+    let dislikes = parseInt(item.dislikes, 10) || 0;
+
+    let rating;
+
+    // Handle optimistic update for like/dislike
+    if (type === "Like") {
+      // Toggle like status
+      rating = isLiked ? null : true;
+
+      // Optimistically update likes/dislikes immediately
+      likes = isLiked ? likes - 1 : likes + 1;
+      item.likes = likes;
+      item.liked_by = isLiked
+        ? item.liked_by.filter((u) => u.id !== currentUser.id) // Remove user if already liked
+        : [...item.liked_by, currentUser]; // Add user if not already liked
+
+      // If the user was previously disliked, remove the dislike
+      if (isDisliked) {
+        dislikes -= 1;
+        item.dislikes = dislikes;
+        item.disliked_by = item.disliked_by.filter(
+          (u) => u.id !== currentUser.id
+        );
+      }
+    } else if (type === "Dislike") {
+      // Toggle dislike status
+      rating = isDisliked ? null : false;
+
+      // Optimistically update likes/dislikes immediately
+      dislikes = isDisliked ? dislikes - 1 : dislikes + 1;
+      item.dislikes = dislikes;
+      item.disliked_by = isDisliked
+        ? item.disliked_by.filter((u) => u.id !== currentUser.id) // Remove user if already disliked
+        : [...item.disliked_by, currentUser]; // Add user if not already disliked
+
+      // If the user was previously liked, remove the like
+      if (isLiked) {
+        likes -= 1;
+        item.likes = likes;
+        item.liked_by = item.liked_by.filter((u) => u.id !== currentUser.id);
+      }
+    }
+
+    // Optimistically update the currentChat state
+    setCurrentChat((prevChat) =>
+      prevChat.map((chatItem) =>
+        chatItem.id === item.id ? { ...chatItem, ...item } : chatItem
+      )
+    );
+
+    try {
+      // Send the rating update to the backend
+      const response = await rate(
+        item.id,
+        currentUser.id,
+        rating,
+        sessionStorage.getItem("token")
+      );
+    } catch (error) {
+      console.error("Error while rating QnA: ", error);
+
+      // If the backend request fails, rollback the optimistic UI changes
+      if (type === "Like") {
+        likes = isLiked ? likes + 1 : likes - 1;
+        item.likes = likes;
+        item.liked_by = isLiked
+          ? [...item.liked_by, currentUser]
+          : item.liked_by.filter((u) => u.id !== currentUser.id);
+
+        if (isDisliked) {
+          dislikes += 1;
+          item.dislikes = dislikes;
+          item.disliked_by = [...item.disliked_by, currentUser];
+        }
+      } else if (type === "Dislike") {
+        dislikes = isDisliked ? dislikes + 1 : dislikes - 1;
+        item.dislikes = dislikes;
+        item.disliked_by = isDisliked
+          ? [...item.disliked_by, currentUser]
+          : item.disliked_by.filter((u) => u.id !== currentUser.id);
+
+        if (isLiked) {
+          likes += 1;
+          item.likes = likes;
+          item.liked_by = [...item.liked_by, currentUser];
+        }
+      }
+
+      // Rollback optimistic update in state
+      setCurrentChat((prevChat) =>
+        prevChat.map((chatItem) =>
+          chatItem.id === item.id ? { ...chatItem, ...item } : chatItem
+        )
+      );
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (dateString) {
+      return format(new Date(dateString), "dd-MM-yyyy");
+    }
+    return format(new Date(), "dd-MM-yyyy");
   };
 
   return (
     <>
-      {/* {isOpen === true ? <ChatModal closeModal={closeModal} /> : null} */}
       <div
         className="min-w-full chat h-screen"
         style={{
@@ -435,7 +561,7 @@ function Chat() {
                 return (
                   <div key={idx} ref={isLastMessage ? scrollToLastItem : null}>
                     <li>
-                      {chatMsg.message != "" ? (
+                      {chatMsg.message !== "" && (
                         <div>
                           <div className="flex mb-1">
                             <BiSolidUserCircle size={28.8} />
@@ -443,66 +569,27 @@ function Chat() {
                           </div>
                           <p>{chatMsg.message}</p>
                         </div>
-                      ) : null}
+                      )}
                     </li>
                     <li>
                       <div className="w-full">
                         <div className="flex items-center justify-between mb-1">
-                          <div className="pt-2 w-full">
-                            <p>
-                              <span className="font-bold">
-                                {isLastMessage && isResponseLoading
-                                  ? ""
-                                  : "LLM response:"}
-                              </span>{" "}
-                              <br /> {chatMsg.response}
-                            </p>
-                            <br />
-                            <p>
-                              <span className="font-bold">
-                                {isLastMessage && isResponseLoading
-                                  ? ""
-                                  : "Human response:"}
-                              </span>{" "}
-                              <br />{" "}
-                              {chatMsg.human_response &&
-                                chatMsg.human_response.map((response, idx) => {
-                                  if (response != null) {
-                                    return (
-                                      <div
-                                        key={idx}
-                                        className="bg-slate-500 rounded mb-4 p-2"
-                                      >
-                                        <span className="font-bold">
-                                          Solution {idx + 1}:
-                                        </span>{" "}
-                                        <br /> {response.solution}
-                                        <p className="flex justify-end">
-                                          <span className="font-bold">
-                                            Likes:
-                                          </span>{" "}
-                                          {response.likes}{" "}
-                                          <span className="ml-4 font-bold">
-                                            Dislikes:
-                                          </span>{" "}
-                                          {response.dislikes}
-                                        </p>
-                                      </div>
-                                    );
-                                  } else {
-                                    return "";
-                                  }
-                                })}
-                            </p>
-                          </div>
+                          <span className="font-bold">
+                            {isLastMessage && isResponseLoading
+                              ? ""
+                              : "LLM response:"}
+                          </span>
+                          {/* Thumbs icons container */}
                           {!isResponseLoading && (
-                            <div className="flex item-start space-x-2 pl-2">
+                            <div className="flex items-center space-x-2">
                               <button
                                 onClick={() =>
                                   handleThumbsChange(
                                     "up",
                                     chatMsg.rating,
-                                    chatMsg.id
+                                    chatMsg.id,
+                                    chatMsg.machine,
+                                    chatMsg
                                   )
                                 }
                                 className="focus:outline-none"
@@ -518,7 +605,10 @@ function Chat() {
                                   handleThumbsChange(
                                     "down",
                                     chatMsg.rating,
-                                    chatMsg.id
+                                    chatMsg.id,
+                                    chatMsg.machine,
+                                    chatMsg.message,
+                                    chatMsg.response
                                   )
                                 }
                                 className="focus:outline-none"
@@ -532,15 +622,207 @@ function Chat() {
                             </div>
                           )}
                         </div>
+                        {/* New line for the actual response */}
+                        <p className="mt-1">{chatMsg.response}</p>
                         {isResponseLoading && isLastMessage ? (
                           <div className="flex items-center justify-center">
                             <FaSpinner
                               className="animate-spin"
-                              style={{ position: "relative", top: "-30px" }}
+                              style={{ fontSize: "24px" }}
                             />
                           </div>
                         ) : (
-                          <></>
+                          <>
+                            {chatMsg.human_response &&
+                              chatMsg.human_response.some(
+                                (response) => response !== null
+                              ) && (
+                                <p className="mt-4">
+                                  {/* Conditionally render "Human response:" text only if there are valid responses */}
+                                  {chatMsg.human_response &&
+                                  chatMsg.human_response.some(
+                                    (response) => response !== null
+                                  ) ? (
+                                    <span className="font-bold">
+                                      {isLastMessage && isResponseLoading
+                                        ? ""
+                                        : "Human response:"}
+                                    </span>
+                                  ) : null}
+
+                                  <br />
+
+                                  {/* Render human responses only if valid responses exist */}
+                                  {chatMsg.human_response &&
+                                    chatMsg.human_response
+                                      .filter((response) => response !== null) // Remove null values
+                                      .map((response, idx) => {
+                                        const isLiked = response.liked_by.some(
+                                          (u) => u.id === currentUser.id
+                                        );
+                                        const isDisliked =
+                                          response.disliked_by.some(
+                                            (u) => u.id === currentUser.id
+                                          );
+
+                                        return (
+                                          <div
+                                            key={idx}
+                                            className="bg-slate-500 rounded mb-4 p-2"
+                                          >
+                                            <div className="flex justify-between items-center">
+                                              <span className="font-bold">
+                                                Solution {idx + 1}:
+                                              </span>
+                                              <div className="flex items-center">
+                                                {/* Like Button */}
+                                                <button
+                                                  onClick={() =>
+                                                    handleRatingClick(
+                                                      "Like",
+                                                      response
+                                                    )
+                                                  }
+                                                  className="bg-transparent hover:bg-green-900 p-1 rounded-full"
+                                                  aria-label="Like"
+                                                >
+                                                  {isLiked ? (
+                                                    <FaThumbsUp />
+                                                  ) : (
+                                                    <FaRegThumbsUp />
+                                                  )}
+                                                </button>
+                                                <Tooltip
+                                                  title={
+                                                    response.likes > 0 ? (
+                                                      <div
+                                                        style={{
+                                                          maxHeight: "200px",
+                                                          overflowY: "auto",
+                                                        }}
+                                                      >
+                                                        {response.liked_by.map(
+                                                          (user) => (
+                                                            <div key={user.id}>
+                                                              {user.name} -{" "}
+                                                              {formatDate(
+                                                                user.created_at
+                                                              )}
+                                                            </div>
+                                                          )
+                                                        )}
+                                                        {response.likes >
+                                                          response.liked_by
+                                                            .length &&
+                                                          Array.from(
+                                                            {
+                                                              length:
+                                                                response.likes -
+                                                                response
+                                                                  .liked_by
+                                                                  .length,
+                                                            },
+                                                            (_, index) => (
+                                                              <div
+                                                                key={`deleted-like-${index}`}
+                                                              >
+                                                                Deleted User
+                                                              </div>
+                                                            )
+                                                          )}
+                                                      </div>
+                                                    ) : (
+                                                      "There are no likes."
+                                                    )
+                                                  }
+                                                  arrow
+                                                  placement="top"
+                                                >
+                                                  <span className="text-sm cursor-pointer">
+                                                    {response.likes}
+                                                  </span>
+                                                </Tooltip>
+
+                                                <div className="mr-4"></div>
+
+                                                {/* Dislike Button */}
+                                                <button
+                                                  onClick={() =>
+                                                    handleRatingClick(
+                                                      "Dislike",
+                                                      response
+                                                    )
+                                                  }
+                                                  className="bg-transparent hover:bg-red-900 p-1 rounded-full"
+                                                  aria-label="Dislike"
+                                                >
+                                                  {isDisliked ? (
+                                                    <FaThumbsDown />
+                                                  ) : (
+                                                    <FaRegThumbsDown />
+                                                  )}
+                                                </button>
+                                                <Tooltip
+                                                  title={
+                                                    response.dislikes > 0 ? (
+                                                      <div
+                                                        style={{
+                                                          maxHeight: "200px",
+                                                          overflowY: "auto",
+                                                        }}
+                                                      >
+                                                        {response.disliked_by.map(
+                                                          (user) => (
+                                                            <div key={user.id}>
+                                                              {user.name} -{" "}
+                                                              {formatDate(
+                                                                user.created_at
+                                                              )}
+                                                            </div>
+                                                          )
+                                                        )}
+                                                        {response.dislikes >
+                                                          response.disliked_by
+                                                            .length &&
+                                                          Array.from(
+                                                            {
+                                                              length:
+                                                                response.dislikes -
+                                                                response
+                                                                  .disliked_by
+                                                                  .length,
+                                                            },
+                                                            (_, index) => (
+                                                              <div
+                                                                key={`deleted-dislike-${index}`}
+                                                              >
+                                                                Deleted User
+                                                              </div>
+                                                            )
+                                                          )}
+                                                      </div>
+                                                    ) : (
+                                                      "There are no dislikes."
+                                                    )
+                                                  }
+                                                  arrow
+                                                  placement="top"
+                                                >
+                                                  <span className="text-sm cursor-pointer">
+                                                    {response.dislikes}
+                                                  </span>
+                                                </Tooltip>
+                                              </div>
+                                            </div>
+
+                                            <br />
+                                            {response.solution}
+                                          </div>
+                                        );
+                                      })}
+                                </p>
+                              )}
+                          </>
                         )}
                       </div>
                     </li>

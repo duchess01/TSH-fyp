@@ -9,7 +9,7 @@ import {
   useCallback,
   useEffect,
 } from "react";
-import { BiSolidUserCircle, BiLogOut, BiChat } from "react-icons/bi";
+import { BiSolidUserCircle, BiLogOut, BiChat, BiPlus } from "react-icons/bi";
 import {
   MdOutlineArrowLeft,
   MdOutlineArrowRight,
@@ -50,6 +50,11 @@ const QnA = () => {
     () => [
       {
         field: "Machine",
+        filter: "agTextColumnFilter",
+        flex: 2,
+      },
+      {
+        field: "Topic",
         filter: "agTextColumnFilter",
         flex: 2,
       },
@@ -97,6 +102,7 @@ const QnA = () => {
         Question: item.question,
         Answers: parseInt(item.count),
         Last_Updated: new Date(item.latest_date).toLocaleDateString("en-GB"),
+        Topic: item.topic,
       }));
       setRowData(transformedData);
     }
@@ -133,6 +139,7 @@ const QnA = () => {
           closeModal={closeModal}
           machine={selectedRowData?.Machine}
           question={selectedRowData?.Question}
+          topic={selectedRowData?.Topic}
         />
       )}
       {postQuestionModalOpen && (
@@ -153,6 +160,7 @@ const QnA = () => {
             role="button"
             onClick={() => setPostQuestionModalOpen(true)}
           >
+            <BiPlus size={20} />
             <button className="border-none bg-transparent cursor-pointer">
               Post Question
             </button>
