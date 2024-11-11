@@ -140,7 +140,7 @@ function Chat() {
     );
 
     setCurrentChat(currChat);
-    setSelectedMachine(currChat[0].machine);
+    setManualSelected(currChat[0].machine);
     setChatSessionId(id);
     setCurrentTitle(uniqueTitle);
     setMessage(null);
