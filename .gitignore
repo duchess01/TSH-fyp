@@ -169,3 +169,5 @@ cython_debug/
 .env.*
 !.env.example
 .local.env
+
+*/secrets.sh

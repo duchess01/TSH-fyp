@@ -2,6 +2,9 @@ FROM python:3.10.6-slim as base
 
 WORKDIR /usr/src/app
 
+ENV NER_LLM_URL=http://ner-llm:8000
+ENV DOCKER_ENV=true
+
 # set the default shell to bash rather than sh
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 

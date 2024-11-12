@@ -4,6 +4,8 @@ FROM node:18
 # Set the working directory in the container
 WORKDIR /usr/src/app
 
+ENV DOCKER_ENV=true
+
 # Copy package.json and package-lock.json
 # This allows Docker to cache dependencies
 COPY package*.json ./

@@ -2,6 +2,9 @@ FROM python:3.10.6-slim as base
 
 WORKDIR /usr/src/app
 
+ENV PG_HOST=db_ner_llm
+ENV CORS_ORIGINS=http://localhost:3000
+
 # set the default shell to bash rather than sh
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 

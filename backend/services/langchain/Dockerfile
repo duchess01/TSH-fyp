@@ -11,6 +11,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Set the working directory inside the container
 WORKDIR /usr/src/app
 
+ENV ENVIRONMENT=docker
+
 # Copy only requirements.txt first to leverage Docker cache
 COPY requirements.txt .
 
