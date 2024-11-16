@@ -17,14 +17,14 @@ services:
       - "3000:3000"
     restart: always
     environment:
-      - DB_HOST_DOCKER=db_user
+      - DB_HOST_DOCKER=db-user
       - DB_PORT_DOCKER=5432
       - DB_NAME_DOCKER=user_db
       - DB_USER_DOCKER=myuser
       - DB_PASSWORD_DOCKER=mypassword
       - DOCKER_ENV=true
     depends_on:
-      - db_user
+      - db-user
     networks:
       - my-network
 
@@ -40,14 +40,14 @@ services:
       - "3001:3001"
     restart: always
     environment:
-      - DB_HOST_DOCKER=db_chat
+      - DB_HOST_DOCKER=db-chat
       - DB_PORT_DOCKER=5432
       - DB_NAME_DOCKER=chat_db
       - DB_USER_DOCKER=myuser
       - DB_PASSWORD_DOCKER=mypassword
       - DOCKER_ENV=true
     depends_on:
-      - db_chat
+      - db-chat
     networks:
       - my-network
 
@@ -63,12 +63,12 @@ services:
     env_file:
       - .local.env
     environment:
-      - PG_HOST=db_ner_llm
+      - PG_HOST=db-ner-llm
       - CORS_ORIGINS=http://localhost:3000
     ports:
       - "8000:8000"
     depends_on:
-      db_ner_llm:
+      db-ner-llm:
         condition: service_healthy
     volumes:
       - ./services/ner-llm:/usr/src/app/ner-llm
@@ -92,7 +92,7 @@ services:
     ports:
       - "8002:8002"
     depends_on:
-      db_ner_llm:
+      db-ner-llm:
         condition: service_healthy
     volumes:
       - ./services/upload:/usr/src/app/upload
@@ -129,14 +129,14 @@ services:
       - "3003:3003"
     restart: always
     environment:
-      - DB_HOST_DOCKER=db_qna
+      - DB_HOST_DOCKER=db-qna
       - DB_PORT_DOCKER=5432
       - DB_NAME_DOCKER=qna_db
       - DB_USER_DOCKER=myuser
       - DB_PASSWORD_DOCKER=mypassword
       - DOCKER_ENV=true
     depends_on:
-      - db_qna
+      - db-qna
     networks:
       - my-network
 
@@ -161,7 +161,7 @@ services:
   #################################
   # PostgreSQL for User microservice
   #################################
-  db_user:
+  db-user:
     image: postgres:13
     environment:
       POSTGRES_DB: user_db
@@ -173,13 +173,13 @@ services:
       - my-network
     volumes:
       - ./services/user/src/scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
-      - db_user_data:/var/lib/postgresql/data
+      - db-user_data:/var/lib/postgresql/data
     restart: always
 
   #################################
   # PostgreSQL for Chat microservice
   #################################
-  db_chat:
+  db-chat:
     image: postgres:13
     environment:
       POSTGRES_DB: chat_db
@@ -191,16 +191,16 @@ services:
       - my-network
     volumes:
       - ./services/chat/src/scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
-      - db_chat_data:/var/lib/postgresql/data
+      - db-chat_data:/var/lib/postgresql/data
     restart: always
 
   #################################
   # PostgreSQL for QnA microservice
   #################################
-  db_qna:
+  db-qna:
     image: postgres:13
     environment:
-      POSTGRES_DB: qna_db
+      POSTGRES_DB: qna-db
       POSTGRES_USER: myuser
       POSTGRES_PASSWORD: mypassword
     ports:
@@ -209,13 +209,13 @@ services:
       - my-network
     volumes:
       - ./services/qna/src/scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
-      - db_qna_data:/var/lib/postgresql/data
+      - db-qna-data:/var/lib/postgresql/data
     restart: always
 
   #################################
   # PostgreSQL for ner microservice
   #################################
-  db_ner_llm:
+  db-ner-llm:
     image: postgres:16
     expose:
       - "5432"
@@ -226,7 +226,7 @@ services:
       POSTGRES_USER: langchain
       POSTGRES_PASSWORD: langchain
     volumes:
-      - db_ner:/var/lib/postgresql/data
+      - db-ner:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U langchain"]
       interval: 10s
@@ -236,7 +236,7 @@ services:
       - my-network
 
 volumes:
-  db_user_data:
-  db_chat_data:
-  db_ner:
-  db_qna_data:
+  db-user-data:
+  db-chat-data:
+  db-ner:
+  db-qna-data:
