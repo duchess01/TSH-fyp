@@ -83,42 +83,8 @@ done
 
 
 # Deploy to Azure Container Apps
-# Deploy to Azure Container Apps
 echo "🚀 Deploying to Azure Container Apps..."
-# services=$(docker-compose config --services)
-# for service in $services; do
-#     # Skip database services
-#     if [[ $service == db-* ]]; then
-#         echo "Skipping database service: $service"
-#         continue
-#     fi
-    
-#     echo "Deploying $service..."
-    
-#     # Get the port from docker-compose.yml
-#     port=$(docker-compose config | grep -A 10 "  $service:" | grep -m 1 "ports:" -A 1 | grep -o '"[0-9]*:' | cut -d'"' -f2 | cut -d':' -f1)
-    
-#     if [ -z "$port" ]; then
-#         echo "⚠️ No port found for $service, using default port 8000"
-#         port=8000
-#     fi
-    
-#     echo "📍 Using port $port for $service"
-    
-#     # Create or update Container App
-#     az containerapp create \
-#         --name "$AZURE_APP_NAME-$service" \
-#         --resource-group $AZURE_RESOURCE_GROUP \
-#         --image "$ACR_LOGIN_SERVER/${service}:${DEPLOY_TAG}" \
-#         --registry-server "$ACR_LOGIN_SERVER" \
-#         --target-port "$port" \
-#         --ingress external \
-#         --min-replicas 1 \
-#         --max-replicas 3 \
-#         --env-vars "DOCKER_REGISTRY=$ACR_LOGIN_SERVER"
-# done
 
-# echo "✅ Deployment completed successfully!"
 
 echo "🔧 Setting up Azure PostgreSQL..."
 SERVER_NAME="fyp-postgres"
@@ -207,27 +173,7 @@ if [ $? -ne 0 ]; then
     echo $ACR_PASSWORD2 | docker login $ACR_LOGIN_SERVER --username $ACR_USERNAME --password-stdin
 fi
 
-# for env copy it from .local.env under /backend
-echo "📝 Creating production environment file..."
-if [ -f .local.env ]; then
-    # Copy .local.env to a new file
-    cp .local.env .prod.env
-    
-    # Append or update ACR and database variables
-    cat << EOF >> .prod.env
-# Azure Container Registry
-ACR_LOGIN_SERVER=$ACR_LOGIN_SERVER
-IMAGE_TAG=$IMAGE_TAG
 
-# Azure Configuration
-AZURE_APP_NAME=$AZURE_APP_NAME
-EOF
-
-    echo "✅ Production environment file created at backend/.prod.env"
-else
-    echo "❌ Error: backend/.local.env file not found!"
-    exit 1
-fi
 
 
 
@@ -235,127 +181,137 @@ fi
 echo "📋 Verifying images in ACR..."
 az acr repository list --name $AZURE_CONTAINER_REGISTRY --output table
 
-# ... (your existing script) ...
 
 # Deploy all services to Container Apps
 echo "🚀 Deploying services to Container Apps..."
 
 # Deploy User service
 echo "📱 Deploying User service..."
-az container create \
+az containerapp create \
     --name "$AZURE_APP_NAME-user" \
     --resource-group "$AZURE_RESOURCE_GROUP" \
     --environment "$AZURE_ENVIRONMENT" \
     --image "$ACR_LOGIN_SERVER/user:${IMAGE_TAG}" \
-    --registry-login-server "$ACR_LOGIN_SERVER" \
-    --registry-username "$ACR_USERNAME" \
-    --registry-password "$ACR_PASSWORD1" \
+    --registry-server "$ACR_LOGIN_SERVER" \
     --target-port 3000 \
-    --environment-variables \
-        "PG_HOST=${AZURE_POSTGRES_HOST}" \
-        "PG_PORT=5432" \
-        "PG_DATABASE=${AZURE_USER_DB_NAME}" \
-        "PG_USER=${AZURE_POSTGRES_USER}" \
-        "PG_PASSWORD=${AZURE_POSTGRES_PASSWORD}" \
-        "DOCKER_ENV=true"
+    --ingress external \
+    --min-replicas 1 \
+    --max-replicas 5 \
+    --env-vars \
+        PG_HOST="${AZURE_POSTGRES_HOST}" \
+        PG_PORT="5432" \
+        PG_DATABASE="${AZURE_USER_DB_NAME}" \
+        PG_USER="${AZURE_POSTGRES_USER}" \
+        PG_PASSWORD="${AZURE_POSTGRES_PASSWORD}" \
+        DOCKER_ENV="true"
 
 # Deploy Chat service
 echo "💬 Deploying Chat service..."
-az container create \
+az containerapp create \
     --name "$AZURE_APP_NAME-chat" \
     --resource-group "$AZURE_RESOURCE_GROUP" \
     --environment "$AZURE_ENVIRONMENT" \
     --image "$ACR_LOGIN_SERVER/chat:${IMAGE_TAG}" \
-    --registry-login-server "$ACR_LOGIN_SERVER" \
-    --registry-username "$ACR_USERNAME" \
-    --registry-password "$ACR_PASSWORD1" \
+    --registry-server "$ACR_LOGIN_SERVER" \
     --target-port 3001 \
-    --environment-variables \
-        "DB_HOST=${AZURE_POSTGRES_HOST}" \
-        "DB_PORT=5432" \
-        "DB_NAME=${AZURE_CHAT_DB_NAME}" \
-        "DB_USER=${AZURE_POSTGRES_USER}" \
-        "DB_PASSWORD=${AZURE_POSTGRES_PASSWORD}" \
-        "DOCKER_ENV=true"
+    --ingress external \
+    --min-replicas 1 \
+    --max-replicas 5 \
+    --env-vars \
+        DB_HOST="${AZURE_POSTGRES_HOST}" \
+        DB_PORT="5432" \
+        DB_NAME="${AZURE_CHAT_DB_NAME}" \
+        DB_USER="${AZURE_POSTGRES_USER}" \
+        DB_PASSWORD="${AZURE_POSTGRES_PASSWORD}" \
+        DOCKER_ENV="true"
+
+        
 
 # Deploy NER-LLM service
 echo "🤖 Deploying NER-LLM service..."
-az container create \
+az containerapp create \
     --name "$AZURE_APP_NAME-ner-llm" \
     --resource-group "$AZURE_RESOURCE_GROUP" \
     --environment "$AZURE_ENVIRONMENT" \
     --image "$ACR_LOGIN_SERVER/ner-llm:${IMAGE_TAG}" \
-    --registry-login-server "$ACR_LOGIN_SERVER" \
-    --registry-username "$ACR_USERNAME" \
-    --registry-password "$ACR_PASSWORD1" \
+    --registry-server "$ACR_LOGIN_SERVER" \
     --target-port 8000 \
-    --environment-variables \
-        "PG_HOST=${AZURE_POSTGRES_HOST}" \
-        "PG_PORT=5432" \
-        "PG_DATABASE=${AZURE_NER_DB_NAME}" \
-        "PG_USER=${AZURE_POSTGRES_USER}" \
-        "PG_PASSWORD=${AZURE_POSTGRES_PASSWORD}" \
-        "CORS_ORIGINS=${ALLOWED_ORIGINS}"
-
+    --ingress external \
+    --min-replicas 1 \
+    --max-replicas 5 \
+    --env-vars \
+        PG_HOST="${AZURE_POSTGRES_HOST}" \
+        PG_PORT="5432" \
+        PG_DATABASE="${AZURE_NER_DB_NAME}" \
+        PG_USER="${AZURE_POSTGRES_USER}" \
+        PG_PASSWORD="${AZURE_POSTGRES_PASSWORD}" \
+ 
 # Deploy Upload service
 echo "📤 Deploying Upload service..."
-az container create \
+az containerapp create \
     --name "$AZURE_APP_NAME-upload" \
     --resource-group "$AZURE_RESOURCE_GROUP" \
     --environment "$AZURE_ENVIRONMENT" \
     --image "$ACR_LOGIN_SERVER/upload:${IMAGE_TAG}" \
-    --registry-login-server "$ACR_LOGIN_SERVER" \
-    --registry-username "$ACR_USERNAME" \
-    --registry-password "$ACR_PASSWORD1" \
+    --registry-server "$ACR_LOGIN_SERVER" \
     --target-port 8002 \
-    --environment-variables \
-        "NER_LLM_URL=https://${AZURE_APP_NAME}-ner-llm.azurecontainerapps.io" \
-        "DOCKER_ENV=true"
+    --ingress external \
+    --min-replicas 1 \
+    --max-replicas 5 \
+    --env-vars \
+        NER_LLM_URL="https://${AZURE_APP_NAME}-ner-llm.azurecontainerapps.io" \
+        DOCKER_ENV="true"
 
 # Deploy Analytics service
 echo "📊 Deploying Analytics service..."
-az container create \
+az containerapp create \
     --name "$AZURE_APP_NAME-analytics" \
     --resource-group "$AZURE_RESOURCE_GROUP" \
     --environment "$AZURE_ENVIRONMENT" \
     --image "$ACR_LOGIN_SERVER/analytics:${IMAGE_TAG}" \
-    --registry-login-server "$ACR_LOGIN_SERVER" \
-    --registry-username "$ACR_USERNAME" \
-    --registry-password "$ACR_PASSWORD1" \
+    --registry-server "$ACR_LOGIN_SERVER" \
     --target-port 3002 \
-    --environment-variables "DOCKER_ENV=true"
+    --ingress external \
+    --min-replicas 1 \
+    --max-replicas 5 \
+    --env-vars \
+        DOCKER_ENV="true"
 
 # Deploy QnA service
 echo "❓ Deploying QnA service..."
-az container create \
+az containerapp create \
     --name "$AZURE_APP_NAME-qna" \
     --resource-group "$AZURE_RESOURCE_GROUP" \
     --environment "$AZURE_ENVIRONMENT" \
     --image "$ACR_LOGIN_SERVER/qna:${IMAGE_TAG}" \
-    --registry-login-server "$ACR_LOGIN_SERVER" \
-    --registry-username "$ACR_USERNAME" \
-    --registry-password "$ACR_PASSWORD1" \
+    --registry-server "$ACR_LOGIN_SERVER" \
     --target-port 3003 \
-    --environment-variables \
-        "DB_HOST=${AZURE_POSTGRES_HOST}" \
-        "DB_PORT=5432" \
-        "DB_NAME=${AZURE_QNA_DB_NAME}" \
-        "DB_USER=${AZURE_POSTGRES_USER}" \
-        "DB_PASSWORD=${AZURE_POSTGRES_PASSWORD}" \
-        "DOCKER_ENV=true"
+    --ingress external \
+    --min-replicas 1 \
+    --max-replicas 5 \
+    --env-vars \
+        DB_HOST="${AZURE_POSTGRES_HOST}" \
+        DB_PORT="5432" \
+        DB_NAME="${AZURE_QNA_DB_NAME}" \
+        DB_USER="${AZURE_POSTGRES_USER}" \
+        DB_PASSWORD="${AZURE_POSTGRES_PASSWORD}" \
+        DOCKER_ENV="true"
 
 # Deploy Langchain service
 echo "🔗 Deploying Langchain service..."
-az container create \
+az containerapp create \
     --name "$AZURE_APP_NAME-langchain" \
     --resource-group "$AZURE_RESOURCE_GROUP" \
     --environment "$AZURE_ENVIRONMENT" \
     --image "$ACR_LOGIN_SERVER/langchain:${IMAGE_TAG}" \
-    --registry-login-server "$ACR_LOGIN_SERVER" \
-    --registry-username "$ACR_USERNAME" \
-    --registry-password "$ACR_PASSWORD1" \
+    --registry-server "$ACR_LOGIN_SERVER" \
     --target-port 8001 \
-    --environment-variables "ENVIRONMENT=docker"
+    --ingress external \
+    --min-replicas 1 \
+    --max-replicas 5 \
+    --env-vars \
+        ENVIRONMENT="docker" \
+
 
 # Get all service URLs
 echo "🌐 Getting service URLs..."
@@ -368,3 +324,71 @@ for service in user chat ner-llm upload analytics qna langchain; do
 done
 
 echo "✅ Deployment completed successfully!"
+
+# Check for .local.env and create production secrets
+cd backend
+if [ -f .local.env ]; then
+    echo "📝 Creating production secrets from .local.env..."
+    
+    # Create array for secrets
+    declare -a secrets=()
+    
+    # Read .local.env and process each line
+    while IFS='=' read -r key value || [ -n "$key" ]; do
+        # Skip empty lines and comments
+        [[ $key =~ ^#.*$ ]] && continue
+        [[ -z "$key" ]] && continue
+        
+        # Trim whitespace and convert key to valid format
+        key=$(echo "$key" | xargs | tr '[:upper:]' '[:lower:]' | tr '_' '-')
+        value=$(echo "$value" | xargs | tr -d '"' | tr -d "'")
+        
+        # Add to secrets array
+        secrets+=("$key=$value")
+    done < .local.env
+    
+    echo "🔒 Setting Container App secrets..."
+    # Debug: print secrets (without values)
+    for secret in "${secrets[@]}"; do
+        echo "Adding secret: ${secret%%=*}"
+    done
+
+    # Set all variables as secrets
+    az containerapp secret set \
+        --name "$AZURE_APP_NAME-langchain" \
+        --resource-group "$AZURE_RESOURCE_GROUP" \
+        --secrets "${secrets[@]}"
+
+    az containerapp secret set \
+        --name "$AZURE_APP_NAME-ner-llm" \
+        --resource-group "$AZURE_RESOURCE_GROUP" \
+        --secrets "${secrets[@]}"
+    
+    echo "✅ Production configuration completed!"
+else
+    echo "❌ Error: backend/.local.env file not found!"
+    exit 1
+fi
+
+# update containers secrets
+az containerapp update \
+    --name "$AZURE_APP_NAME-langchain" \
+    --resource-group "$AZURE_RESOURCE_GROUP" \
+    --set-env-vars \
+        PINECONE_API_KEY=secretref:pinecone-api-key \
+        PINECONE_INDEX_NAME=secretref:pinecone-index-name \
+        GROQ_API_KEY=secretref:groq-api-key \
+        OPENAI_API_KEY=secretref:openai-api-key \
+        FIREWORKS_API_KEY=secretref:fireworks-api-key
+
+az containerapp update \
+    --name "$AZURE_APP_NAME-ner-llm" \
+    --resource-group "$AZURE_RESOURCE_GROUP" \
+    --set-env-vars \
+        PINECONE_API_KEY=secretref:pinecone-api-key \
+        PINECONE_INDEX_NAME=secretref:pinecone-index-name \
+        GROQ_API_KEY=secretref:groq-api-key \
+        OPENAI_API_KEY=secretref:openai-api-key \
+        FIREWORKS_API_KEY=secretref:fireworks-api-key
+
+echo "✅ Container App secrets updated!"
