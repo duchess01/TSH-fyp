@@ -78,25 +78,27 @@ The application follows a microservices architecture with the following key comp
 
 1. Clone the repository:
 
-````bash
+```bash
 git clone https://github.com/duchess01/TSH-fyp.git
-cd TSH-fyp```
-
+cd TSH-fyp
+```
 
 2. Environment Setup:
-  - Create `.local.env` file in the backend directory with required credentials:
+   Create `.local.env` file in the backend directory with required credentials:
 
-```bash
-DUCHESS_API_KEY=your_api_key_here```
-
+```
+DUCHESS_API_KEY=your_api_key_here
+```
 
 3. Docker Setup:
+
 ```bash
 cd backend
-docker-compose up --build```
-
+docker-compose up --build
+```
 
 This will start all microservices defined in the docker-compose.yml:
+
 - User service on port 3000
 - Chat service on port 3001
 - Analytics service on port 3002
@@ -110,22 +112,26 @@ This will start all microservices defined in the docker-compose.yml:
 ### Development Mode
 
 1. Start all services using Docker Compose:
+
 ```bash
-docker-compose up --build```
+docker-compose up --build
+```
 
 2. To stop all services:
-```bash
-docker-compose down -v```
 
+```bash
+docker-compose down -v
+```
 
 ## Development
 
 ### Adding New Features
 
 1. Create a new branch:
-```bash
-git checkout -b feature/your-feature-name```
 
+```bash
+git checkout -b feature/your-feature-name
+```
 
 2. Make your changes
 3. Submit a pull request
@@ -133,6 +139,7 @@ git checkout -b feature/your-feature-name```
 ### Database Management
 
 The project uses multiple PostgreSQL instances for different services:
+
 - User DB (Port 5433)
 - Chat DB (Port 5434)
 - NER DB (Port 5435)
@@ -141,6 +148,7 @@ The project uses multiple PostgreSQL instances for different services:
 ## API Documentation
 
 ### User Service Endpoints
+
 - POST `/api/users/login` - User authentication
 - POST `/api/users/add` - Add new user
 - GET `/api/users/getUserDetails/:id` - Get user details
@@ -148,6 +156,7 @@ The project uses multiple PostgreSQL instances for different services:
 - DELETE `/api/users/delete/:id` - Delete user
 
 ### Upload Service Endpoints
+
 - POST `/upload` - Upload and process PDF files
 - GET `/ready` - Health check endpoint
 
@@ -160,4 +169,5 @@ The project uses multiple PostgreSQL instances for different services:
 5. Create a Pull Request
 
 ## License
-````
+
+[Add License Information]
