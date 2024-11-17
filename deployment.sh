@@ -326,7 +326,6 @@ done
 echo "✅ Deployment completed successfully!"
 
 # Check for .local.env and create production secrets
-cd backend
 if [ -f .local.env ]; then
     echo "📝 Creating production secrets from .local.env..."
     
