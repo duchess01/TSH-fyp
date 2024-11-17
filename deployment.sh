@@ -58,7 +58,7 @@ services=$(docker-compose config --services)
 for service in $services; do
 
    # Skip database services
-    if [[ $service == db-* ]]; then
+    if [[ $service == db_* ]]; then
         echo "Skipping database service: $service"
         continue
     fi

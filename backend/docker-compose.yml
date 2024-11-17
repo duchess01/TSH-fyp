@@ -63,15 +63,15 @@ services:
     env_file:
       - .local.env
     environment:
-      - PG_HOST=db_ner-llm
+      - PG_HOST=db_ner_llm
       - CORS_ORIGINS=http://localhost:3000
     ports:
       - "8000:8000"
     depends_on:
-      db_ner-llm:
+      db_ner_llm:
         condition: service_healthy
     volumes:
-      - ./services/ner-llm:/usr/src/app/ner-llm
+      - ./services/ner_llm:/usr/src/app/ner_llm
     networks:
       - my-network
 
@@ -87,12 +87,12 @@ services:
     env_file:
       - .local.env
     environment:
-      - NER_LLM_URL=http://ner-llm:8000
+      - NER_LLM_URL=http://ner_llm:8000
       - DOCKER_ENV=true
     ports:
       - "8002:8002"
     depends_on:
-      db_ner-llm:
+      db_ner_llm:
         condition: service_healthy
     volumes:
       - ./services/upload:/usr/src/app/upload
@@ -215,7 +215,7 @@ services:
   #################################
   # PostgreSQL for ner microservice
   #################################
-  db_ner-llm:
+  db_ner_llm:
     image: postgres:16
     expose:
       - "5432"
