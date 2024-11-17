@@ -1,0 +1,97 @@
+version: "3.8"
+
+networks:
+  my-network:
+    driver: bridge
+
+services:
+  #################################
+  # The User microservice
+  #################################
+  user:
+    image: ${ACR_LOGIN_SERVER}/user:${IMAGE_TAG}
+    ports:
+      - "3000:3000"
+    environment:
+      - PG_HOST=${AZURE_POSTGRES_HOST}
+      - PG_PORT=5432
+      - PG_DATABASE=${AZURE_USER_DB_NAME}
+      - PG_USER=${AZURE_POSTGRES_USER}
+      - PG_PASSWORD=${AZURE_POSTGRES_PASSWORD}
+      - DOCKER_ENV=true
+
+  #################################
+  # The Chat microservice
+  #################################
+  chat:
+    image: ${ACR_LOGIN_SERVER}/chat:${IMAGE_TAG}
+    ports:
+      - "3001:3001"
+    environment:
+      - DB_HOST=${AZURE_POSTGRES_HOST}
+      - DB_PORT=5432
+      - DB_NAME=${AZURE_CHAT_DB_NAME}
+      - DB_USER=${AZURE_POSTGRES_USER}
+      - DB_PASSWORD=${AZURE_POSTGRES_PASSWORD}
+      - DOCKER_ENV=true
+
+  #################################
+  # ner microservice
+  #################################
+  ner-llm:
+    image: ${ACR_LOGIN_SERVER}/ner-llm:${IMAGE_TAG}
+    environment:
+      - PG_HOST=${AZURE_POSTGRES_HOST}
+      - PG_PORT=5432
+      - PG_DATABASE=${AZURE_NER_DB_NAME}
+      - PG_USER=${AZURE_POSTGRES_USER}
+      - PG_PASSWORD=${AZURE_POSTGRES_PASSWORD}
+      - CORS_ORIGINS=${ALLOWED_ORIGINS}
+    ports:
+      - "8000:8000"
+
+    #################################
+  # ner microservice
+  #################################
+  upload:
+    image: ${ACR_LOGIN_SERVER}/upload:${IMAGE_TAG}
+    environment:
+      - NER_LLM_URL=https://${AZURE_APP_NAME}-ner-llm.azurecontainerapps.io
+      - DOCKER_ENV=true
+    ports:
+      - "8002:8002"
+
+  #################################
+  # Analytics microservice
+  #################################
+  analytics:
+    image: ${ACR_LOGIN_SERVER}/analytics:${IMAGE_TAG}
+    ports:
+      - "3002:3002"
+    environment:
+      - DOCKER_ENV=true
+
+  #################################
+  # The Qna microservice
+  #################################
+  qna:
+    image: ${ACR_LOGIN_SERVER}/qna:${IMAGE_TAG}
+    ports:
+      - "3003:3003"
+    environment:
+      - DB_HOST=${AZURE_POSTGRES_HOST}
+      - DB_PORT=5432
+      - DB_NAME=${AZURE_QNA_DB_NAME}
+      - DB_USER=${AZURE_POSTGRES_USER}
+      - DB_PASSWORD=${AZURE_POSTGRES_PASSWORD}
+      - DOCKER_ENV=true
+
+  #################################
+  # The Langchain microservice
+  #################################
+  langchain:
+    image: ${ACR_LOGIN_SERVER}/langchain:${IMAGE_TAG}
+    ports:
+      - "8001:8001"
+    environment:
+      - ENVIRONMENT=docker

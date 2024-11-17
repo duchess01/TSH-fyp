@@ -23,7 +23,7 @@ def get_postgres_url() -> URL:
         # if docker-compose is used, then the host is the name of the service, else localhost
         host=os.environ.get("PG_HOST", "localhost"),
         database=os.environ.get("PG_DATABASE", "langchain"),
-        port=5432,
+        port=os.environ.get("PG_PORT", 5432),
     )
     return url 
 

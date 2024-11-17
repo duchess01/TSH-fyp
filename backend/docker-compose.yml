@@ -173,7 +173,7 @@ services:
       - my-network
     volumes:
       - ./services/user/src/scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
-      - db-user_data:/var/lib/postgresql/data
+      - db-user-data:/var/lib/postgresql/data
     restart: always
 
   #################################
@@ -191,7 +191,7 @@ services:
       - my-network
     volumes:
       - ./services/chat/src/scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
-      - db-chat_data:/var/lib/postgresql/data
+      - db-chat-data:/var/lib/postgresql/data
     restart: always
 
   #################################
