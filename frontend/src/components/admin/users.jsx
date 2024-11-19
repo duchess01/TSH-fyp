@@ -24,11 +24,13 @@ const Users = () => {
   ];
   const roleOptions = ["Operator", "Supervisor", "Manager", "Admin"];
 
+  const USER_BASE_URL = process.env.APP_USER_URL || "http://localhost:3000/api/v1";
+
   // Fetch users from API
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/v1/users");
+        const response = await fetch(USER_BASE_URL + "/users");
         const data = await response.json();
         setUsers(data);
         setFilteredUsers(data);
@@ -82,7 +84,7 @@ const Users = () => {
     const token = sessionStorage.getItem("token");
     try {
       const response = await fetch(
-        `http://localhost:3000/api/v1/users/update/${editUser.id}`,
+        USER_BASE_URL + `/users/update/${editUser.id}`,
         {
           method: "PUT",
           headers: {
@@ -116,7 +118,7 @@ const Users = () => {
     const token = sessionStorage.getItem("token");
     try {
       const response = await fetch(
-        `http://localhost:3000/api/v1/users/delete/${userId}`,
+        USER_BASE_URL + `/users/delete/${userId}`,
         {
           method: "DELETE",
           headers: {
@@ -149,7 +151,7 @@ const Users = () => {
         return;
       }
 
-      const response = await fetch("http://localhost:3000/api/v1/users/add", {
+      const response = await fetch(USER_BASE_URL + "/users/add", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

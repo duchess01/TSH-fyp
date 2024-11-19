@@ -30,21 +30,85 @@ az login
 echo "🔄 Setting Azure subscription..."
 az account set --subscription $AZURE_SUBSCRIPTION_ID
 
-# Create Container Apps environment if it doesn't exist
-# echo "🌍 Creating/Checking Container Apps environment..."
-# az containerapp env create \
-#     --name "$AZURE_ENVIRONMENT" \
-#     --resource-group "$AZURE_RESOURCE_GROUP" \
-#     --location "$AZURE_REGION"
+echo "📦 Creating Resource Group..."
+az group create \
+    --name "$AZURE_RESOURCE_GROUP" \
+    --location "$AZURE_REGION"
 
-# Get ACR access token
-echo "🔑 Getting ACR access token..."
-ACR_TOKEN=$(az acr login -n $AZURE_CONTAINER_REGISTRY --expose-token --output tsv --query accessToken)
-ACR_LOGIN_SERVER=$(az acr show -n $AZURE_CONTAINER_REGISTRY --query loginServer -o tsv)
+# # Create Container Apps environment if it doesn't exist
+az network vnet create \
+    --resource-group "$AZURE_RESOURCE_GROUP" \
+    --name "fyp-vnet" \
+    --address-prefix "10.0.0.0/16" \
+    --subnet-name "apps-subnet" \
+    --subnet-prefix "10.0.0.0/21" \
+    --location "$AZURE_REGION"
+
+# Update subnet to enable SQL service endpoint
+az network vnet subnet update \
+    --resource-group "$AZURE_RESOURCE_GROUP" \
+    --vnet-name "fyp-vnet" \
+    --name "apps-subnet" \
+    --service-endpoints "Microsoft.SQL" \
+    --delegations "Microsoft.App/environments" \
+    --disable-private-endpoint-network-policies true
+
+
+# Create NAT Gateway with static IP
+echo "🔌 Creating NAT Gateway..."
+az network public-ip create \
+    --resource-group "$AZURE_RESOURCE_GROUP" \
+    --name "fyp-nat-ip" \
+    --sku "Standard" \
+    --allocation-method "Static"
+
+az network nat gateway create \
+    --resource-group "$AZURE_RESOURCE_GROUP" \
+    --name "fyp-nat" \
+    --public-ip-addresses "fyp-nat-ip" \
+    --idle-timeout 10
+
+# Associate NAT Gateway with subnet
+echo "🔗 Associating NAT Gateway with subnet..."
+az network vnet subnet update \
+    --resource-group "$AZURE_RESOURCE_GROUP" \
+    --vnet-name "fyp-vnet" \
+    --name "apps-subnet" \
+    --nat-gateway "fyp-nat"
+
+# Create/Update Container Apps Environment with VNet
+echo "🔄 Updating Container Apps Environment with VNet..."
+# Get the subnet ID without any path manipulation
+SUBNET_ID=$(az network vnet subnet show \
+    --resource-group "fyp" \
+    --vnet-name "fyp-vnet" \
+    --name "apps-subnet" \
+    --query "id" \
+    --output tsv)
+
+echo "Found Subnet ID: $SUBNET_ID"
+
+# Use the raw subnet ID (no variable expansion in path)
+az containerapp env create \
+    --name $AZURE_ENVIRONMENT \
+    --resource-group $AZURE_RESOURCE_GROUP \
+    --location $AZURE_REGION \
+    --infrastructure-subnet-resource-id /subscriptions/1a4ed35e-fe00-4a7d-84f9-1fcf08db75b1/resourceGroups/fyp/providers/Microsoft.Network/virtualNetworks/fyp-vnet/subnets/apps-subnet
+# create container registry if it doesn't exist
+echo "🔧 Creating Container Registry..."
+
+# az acr create --resource-group $AZURE_RESOURCE_GROUP --name $AZURE_CONTAINER_REGISTRY --sku Basic --admin-enabled true
+
+# # Get ACR access token
+echo "🔑 Getting ACR admin credentials..."
+ACR_LOGIN_SERVER="${AZURE_CONTAINER_REGISTRY}.azurecr.io"
+ACR_USERNAME=$(az acr credential show -n $AZURE_CONTAINER_REGISTRY --query "username" -o tsv)
+ACR_PASSWORD1=$(az acr credential show -n $AZURE_CONTAINER_REGISTRY --query "passwords[0].value" -o tsv)
+ACR_PASSWORD2=$(az acr credential show -n $AZURE_CONTAINER_REGISTRY --query "passwords[1].value" -o tsv)
 
 # Login to ACR using the token
 echo "🔑 Logging in to ACR using token..."
-docker login $ACR_LOGIN_SERVER -u 00000000-0000-0000-0000-000000000000 -p $ACR_TOKEN
+docker login $ACR_LOGIN_SERVER -u $ACR_USERNAME --password $ACR_PASSWORD1
 
 # Build and tag images using docker-compose
 echo "🏗️ Building Docker images..."
@@ -177,6 +241,8 @@ fi
 
 
 
+
+
 # List repositories to verify images
 echo "📋 Verifying images in ACR..."
 az acr repository list --name $AZURE_CONTAINER_REGISTRY --output table
@@ -203,7 +269,7 @@ az containerapp create \
         PG_DATABASE="${AZURE_USER_DB_NAME}" \
         PG_USER="${AZURE_POSTGRES_USER}" \
         PG_PASSWORD="${AZURE_POSTGRES_PASSWORD}" \
-        DOCKER_ENV="true"
+        DOCKER_ENV="true" \
 
 # Deploy Chat service
 echo "💬 Deploying Chat service..."
@@ -223,7 +289,7 @@ az containerapp create \
         DB_NAME="${AZURE_CHAT_DB_NAME}" \
         DB_USER="${AZURE_POSTGRES_USER}" \
         DB_PASSWORD="${AZURE_POSTGRES_PASSWORD}" \
-        DOCKER_ENV="true"
+        DOCKER_ENV="true" \
 
         
 
@@ -245,7 +311,6 @@ az containerapp create \
         PG_DATABASE="${AZURE_NER_DB_NAME}" \
         PG_USER="${AZURE_POSTGRES_USER}" \
         PG_PASSWORD="${AZURE_POSTGRES_PASSWORD}" \
- 
 # Deploy Upload service
 echo "📤 Deploying Upload service..."
 az containerapp create \
@@ -260,8 +325,7 @@ az containerapp create \
     --max-replicas 5 \
     --env-vars \
         NER_LLM_URL="https://${AZURE_APP_NAME}-ner-llm.azurecontainerapps.io" \
-        DOCKER_ENV="true"
-
+        DOCKER_ENV="true" \
 # Deploy Analytics service
 echo "📊 Deploying Analytics service..."
 az containerapp create \
@@ -276,7 +340,8 @@ az containerapp create \
     --max-replicas 5 \
     --env-vars \
         DOCKER_ENV="true"
-
+        NODE_ENV="production"
+        CHAT_SERVICE_URL="https://${AZURE_APP_NAME}-chat.azurecontainerapps.io" \
 # Deploy QnA service
 echo "❓ Deploying QnA service..."
 az containerapp create \
@@ -295,8 +360,7 @@ az containerapp create \
         DB_NAME="${AZURE_QNA_DB_NAME}" \
         DB_USER="${AZURE_POSTGRES_USER}" \
         DB_PASSWORD="${AZURE_POSTGRES_PASSWORD}" \
-        DOCKER_ENV="true"
-
+        DOCKER_ENV="true" \
 # Deploy Langchain service
 echo "🔗 Deploying Langchain service..."
 az containerapp create \
@@ -311,7 +375,6 @@ az containerapp create \
     --max-replicas 5 \
     --env-vars \
         ENVIRONMENT="docker" \
-
 
 # Get all service URLs
 echo "🌐 Getting service URLs..."
@@ -391,3 +454,19 @@ az containerapp update \
         FIREWORKS_API_KEY=secretref:fireworks-api-key
 
 echo "✅ Container App secrets updated!"
+
+
+
+
+
+# Get the static outbound IP
+STATIC_IP=$(az network public-ip show \
+    --resource-group "$AZURE_RESOURCE_GROUP" \
+    --name "fyp-nat-ip" \
+    --query "ipAddress" \
+    -o tsv)
+
+echo "✅ VNet setup completed!"
+echo "🌍 Static outbound IP: $STATIC_IP"
+
+

@@ -1,7 +1,8 @@
 import axios from "axios";
 import { BiLeftTopArrowCircle } from "react-icons/bi";
 
-const CHAT_BASE_URL = "http://localhost:3001";
+const CHAT_BASE_URL = process.env.APP_CHAT_URL || "http://localhost:3001";
+const NER_BASE_URL = process.env.APP_NER_URL || "http://localhost:8000";
 
 export async function sendMessageAPI(chatSessionId, userId, message, machine) {
   try {
@@ -75,9 +76,7 @@ export async function changeRating(msgId, rating) {
 
 export async function getAllMachinesAPI() {
   try {
-    const response = await axios.get(
-      "http://localhost:8000/manual/machine-mappings"
-    );
+    const response = await axios.get(NER_BASE_URL + "/manual/machine-mappings");
     return response;
   } catch (error) {
     console.log("Error in getting machines from backend: ", error);

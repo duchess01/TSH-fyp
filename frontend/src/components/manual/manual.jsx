@@ -38,6 +38,9 @@ const DeleteModal = ({ isOpen, onClose, onConfirm, manualName }) => {
   );
 };
 
+const NER_BASE_URL = process.env.APP_NER_URL || "http://localhost:8000";
+const UPLOAD_BASE_URL = process.env.APP_UPLOAD_URL || "http://localhost:8002";
+
 const ManualUpload = () => {
   const [manuals, setManuals] = useState([]);
   const [uploading, setUploading] = useState(false);
@@ -62,7 +65,7 @@ const ManualUpload = () => {
 
   const fetchManuals = async () => {
     try {
-      const response = await fetch('http://localhost:8000/manual/allstatus');
+      const response = await fetch(NER_BASE_URL + '/manual/allstatus');
       if (!response.ok) throw new Error('Failed to fetch manuals');
       const result = await response.json();
       
@@ -129,7 +132,7 @@ const ManualUpload = () => {
     formData.append('machine_name', machineName);
 
     try {
-      const response = await fetch('http://localhost:8002/upload', {
+      const response = await fetch(UPLOAD_BASE_URL + '/upload', {
         method: 'POST',
         body: formData,
       });
@@ -162,7 +165,7 @@ const ManualUpload = () => {
     setSuccessMessage(null);
 
     try {
-      const response = await fetch(`http://localhost:8000/manual/delete/${manualName}`, {
+      const response = await fetch(NER_BASE_URL + `/manual/delete/${manualName}`, {
         method: 'DELETE',
       });
 
