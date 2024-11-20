@@ -157,7 +157,6 @@ function Chat() {
   }, []);
 
   const handleManualSelect = (e) => {
-    setManualSelected(e.target.value);
     setPreviousTitles(
       getUniqueTitles([...previousChats, { title: "", id: chatSessionId }])
     );
@@ -503,14 +502,22 @@ function Chat() {
               <h3>Choose a machine from the dropdown below to start</h3>
               <select
                 className="p-1 rounded-lg text-black"
-                onChange={(e) => setSelectedMachine(e.target.value)}
+                onChange={(e) => {
+                  setSelectedMachine(e.target.value);
+                  setManualSelected(
+                    manualMachineMapping.filter(
+                      (machine) => machine.machine_name === e.target.value
+                    )[0].manual_names[0]
+                  );
+                  handleManualSelect(e);
+                }}
               >
                 <option>Select a machine</option>
                 {machines.map((machine, idx) => {
                   return <option key={idx}>{machine}</option>;
                 })}
               </select>
-              <select
+              {/* <select
                 className="p-1 rounded-lg text-black"
                 onChange={handleManualSelect}
               >
@@ -523,7 +530,7 @@ function Chat() {
                     .manual_names.map((manual, idx) => {
                       return <option key={idx}>{manual}</option>;
                     })}
-              </select>
+              </select> */}
             </div>
           )}
 
@@ -550,8 +557,8 @@ function Chat() {
                       <span className="role-title pl-2">TSH GPT</span>
                     </div>
                     <p>
-                      Selected machine: {selectedMachine}, Selected manual:{" "}
-                      {manualSelected}. Please ask a question.
+                      Selected machine: {selectedMachine}. Please ask a
+                      question.
                     </p>
                   </div>
                 </li>
