@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const isDocker = process.env.DOCKER_ENV === "true";
+const isProd = process.env.ENVIRONMENT === "production";
 
 const config = {
   db: {
@@ -16,6 +17,13 @@ const config = {
     password: isDocker
       ? process.env.DB_PASSWORD_DOCKER
       : process.env.DB_PASSWORD_LOCAL,
+
+    ssl: isProd
+      ? {
+          rejectedUnauthorized: false,
+          require: true,
+        }
+      : false,
   },
   port: process.env.PORT || 3000,
 };

@@ -36,13 +36,13 @@ az group create \
     --location "$AZURE_REGION"
 
 # # Create Container Apps environment if it doesn't exist
-az network vnet create \
-    --resource-group "$AZURE_RESOURCE_GROUP" \
-    --name "fyp-vnet" \
-    --address-prefix "10.0.0.0/16" \
-    --subnet-name "apps-subnet" \
-    --subnet-prefix "10.0.0.0/21" \
-    --location "$AZURE_REGION"
+# az network vnet create \
+#     --resource-group "$AZURE_RESOURCE_GROUP" \
+#     --name "fyp-vnet" \
+#     --address-prefix "10.0.0.0/16" \
+#     --subnet-name "apps-subnet" \
+#     --subnet-prefix "10.0.0.0/21" \
+#     --location "$AZURE_REGION"
 
 # Update subnet to enable SQL service endpoint
 az network vnet subnet update \
@@ -105,6 +105,7 @@ ACR_LOGIN_SERVER="${AZURE_CONTAINER_REGISTRY}.azurecr.io"
 ACR_USERNAME=$(az acr credential show -n $AZURE_CONTAINER_REGISTRY --query "username" -o tsv)
 ACR_PASSWORD1=$(az acr credential show -n $AZURE_CONTAINER_REGISTRY --query "passwords[0].value" -o tsv)
 ACR_PASSWORD2=$(az acr credential show -n $AZURE_CONTAINER_REGISTRY --query "passwords[1].value" -o tsv)
+
 
 # Login to ACR using the token
 echo "🔑 Logging in to ACR using token..."
@@ -264,11 +265,11 @@ az containerapp create \
     --min-replicas 1 \
     --max-replicas 5 \
     --env-vars \
-        PG_HOST="${AZURE_POSTGRES_HOST}" \
-        PG_PORT="5432" \
-        PG_DATABASE="${AZURE_USER_DB_NAME}" \
-        PG_USER="${AZURE_POSTGRES_USER}" \
-        PG_PASSWORD="${AZURE_POSTGRES_PASSWORD}" \
+        DB_HOST_DOCKER="${AZURE_POSTGRES_HOST}" \
+        DB_PORT_DOCKER="5432" \
+        DB_NAME_DOCKER="${AZURE_USER_DB_NAME}" \
+        DB_USER_DOCKER="${AZURE_POSTGRES_USER}" \
+        DB_PASSWORD_DOCKER="${AZURE_POSTGRES_PASSWORD}" \
         DOCKER_ENV="true" \
 
 # Deploy Chat service
@@ -284,11 +285,11 @@ az containerapp create \
     --min-replicas 1 \
     --max-replicas 5 \
     --env-vars \
-        DB_HOST="${AZURE_POSTGRES_HOST}" \
-        DB_PORT="5432" \
-        DB_NAME="${AZURE_CHAT_DB_NAME}" \
-        DB_USER="${AZURE_POSTGRES_USER}" \
-        DB_PASSWORD="${AZURE_POSTGRES_PASSWORD}" \
+        DB_HOST_DOCKER="${AZURE_POSTGRES_HOST}" \
+        DB_PORT_DOCKER="5432" \
+        DB_NAME_DOCKER="${AZURE_CHAT_DB_NAME}" \
+        DB_USER_DOCKER="${AZURE_POSTGRES_USER}" \
+        DB_PASSWORD_DOCKER="${AZURE_POSTGRES_PASSWORD}" \
         DOCKER_ENV="true" \
 
         
@@ -355,11 +356,11 @@ az containerapp create \
     --min-replicas 1 \
     --max-replicas 5 \
     --env-vars \
-        DB_HOST="${AZURE_POSTGRES_HOST}" \
-        DB_PORT="5432" \
-        DB_NAME="${AZURE_QNA_DB_NAME}" \
-        DB_USER="${AZURE_POSTGRES_USER}" \
-        DB_PASSWORD="${AZURE_POSTGRES_PASSWORD}" \
+        DB_HOST_DOCKER="${AZURE_POSTGRES_HOST}" \
+        DB_PORT_DOCKER="5432" \
+        DB_NAME_DOCKER="${AZURE_QNA_DB_NAME}" \
+        DB_USER_DOCKER="${AZURE_POSTGRES_USER}" \
+        DB_PASSWORD_DOCKER="${AZURE_POSTGRES_PASSWORD}" \
         DOCKER_ENV="true" \
 # Deploy Langchain service
 echo "🔗 Deploying Langchain service..."
