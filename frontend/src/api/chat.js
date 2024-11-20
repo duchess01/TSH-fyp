@@ -1,8 +1,10 @@
 import axios from "axios";
 import { BiLeftTopArrowCircle } from "react-icons/bi";
 
-const CHAT_BASE_URL = process.env.APP_CHAT_URL || "http://localhost:3001";
-const NER_BASE_URL = process.env.APP_NER_URL || "http://localhost:8000";
+const CHAT_BASE_URL =
+  import.meta.env.VITE_APP_CHAT_URL || "http://localhost:3001";
+const NER_BASE_URL =
+  import.meta.env.VITE_APP_NER_URL || "http://localhost:8000";
 
 export async function sendMessageAPI(chatSessionId, userId, message, machine) {
   try {

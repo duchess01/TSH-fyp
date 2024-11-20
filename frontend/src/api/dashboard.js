@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const ANALYTICS_BASE_URL = process.env.APP_ANALYTICS_URL || "http://localhost:3002";
+const ANALYTICS_BASE_URL =
+  import.meta.env.APP_ANALYTICS_URL || "http://localhost:3002";
 
 export async function getTopicDistribution() {
   try {

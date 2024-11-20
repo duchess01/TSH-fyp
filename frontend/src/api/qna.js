@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const USER_BASE_URL = process.env.APP_USER_URL || "http://localhost:3003/api/v1";
+const USER_BASE_URL =
+  import.meta.env.VITE_APP_USER_URL || "http://localhost:3003/api/v1";
 
 export async function unique(token) {
   try {

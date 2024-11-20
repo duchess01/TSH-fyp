@@ -1,7 +1,9 @@
 import axios from "axios";
 
-const USER_BASE_URL = process.env.APP_USER_URL || "http://localhost:3000/api/v1";
+const USER_BASE_URL =
+  import.meta.env.VITE_APP_USER_URL || "http://localhost:3000/api/v1";
 
+console.log("USER_BASE_URL", USER_BASE_URL);
 export async function login(email, password) {
   try {
     const config = {
