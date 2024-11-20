@@ -10,10 +10,6 @@ import UploadPage from "./Pages/manualupload";
 import "./styles/tailwind.css";
 import QnA from "./Pages/QnA";
 
-import dotenv from "dotenv";
-
-dotenv.config();
-
 function App() {
   return (
     <Router>
