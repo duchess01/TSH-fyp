@@ -1,7 +1,7 @@
 import axios from "axios";
 import { BiLeftTopArrowCircle } from "react-icons/bi";
 
-const CHAT_BASE_URL = "http://localhost:3001";
+const CHAT_BASE_URL = "http://35.224.187.206:3001";
 
 export async function sendMessageAPI(chatSessionId, userId, message, machine) {
   try {
@@ -76,7 +76,7 @@ export async function changeRating(msgId, rating) {
 export async function getAllMachinesAPI() {
   try {
     const response = await axios.get(
-      "http://localhost:8000/manual/machine-mappings"
+      "http://35.224.187.206:8000/manual/machine-mappings"
     );
     return response;
   } catch (error) {

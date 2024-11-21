@@ -28,7 +28,7 @@ const Users = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch("http://localhost:3000/api/v1/users");
+        const response = await fetch("http://35.224.187.206:3000/api/v1/users");
         const data = await response.json();
         setUsers(data);
         setFilteredUsers(data);
@@ -82,7 +82,7 @@ const Users = () => {
     const token = sessionStorage.getItem("token");
     try {
       const response = await fetch(
-        `http://localhost:3000/api/v1/users/update/${editUser.id}`,
+        `http://35.224.187.206:3000/api/v1/users/update/${editUser.id}`,
         {
           method: "PUT",
           headers: {
@@ -116,7 +116,7 @@ const Users = () => {
     const token = sessionStorage.getItem("token");
     try {
       const response = await fetch(
-        `http://localhost:3000/api/v1/users/delete/${userId}`,
+        `http://35.224.187.206:3000/api/v1/users/delete/${userId}`,
         {
           method: "DELETE",
           headers: {
@@ -144,23 +144,36 @@ const Users = () => {
   const handleAddUser = async () => {
     const token = sessionStorage.getItem("token");
     try {
-      if (!newUser.name || !newUser.email || !newUser.password || !newUser.role || newUser.privileges.length === 0) {
-        alert("All fields are required and at least one privilege must be selected.");
+      if (
+        !newUser.name ||
+        !newUser.email ||
+        !newUser.password ||
+        !newUser.role ||
+        newUser.privileges.length === 0
+      ) {
+        alert(
+          "All fields are required and at least one privilege must be selected."
+        );
         return;
       }
 
-      const response = await fetch("http://localhost:3000/api/v1/users/add", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(newUser),
-      });
+      const response = await fetch(
+        "http://35.224.187.206:3000/api/v1/users/add",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(newUser),
+        }
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
+        throw new Error(
+          `HTTP error! Status: ${response.status} - ${errorText}`
+        );
       }
 
       const addedUser = await response.json();
@@ -184,18 +197,18 @@ const Users = () => {
   // New handler for privilege checkboxes
   const handlePrivilegeChange = (privilege, isAdd = true) => {
     if (isAdd) {
-      setNewUser(prev => ({
+      setNewUser((prev) => ({
         ...prev,
         privileges: prev.privileges.includes(privilege)
-          ? prev.privileges.filter(p => p !== privilege)
-          : [...prev.privileges, privilege]
+          ? prev.privileges.filter((p) => p !== privilege)
+          : [...prev.privileges, privilege],
       }));
     } else {
-      setEditUser(prev => ({
+      setEditUser((prev) => ({
         ...prev,
         privileges: prev.privileges.includes(privilege)
-          ? prev.privileges.filter(p => p !== privilege)
-          : [...prev.privileges, privilege]
+          ? prev.privileges.filter((p) => p !== privilege)
+          : [...prev.privileges, privilege],
       }));
     }
   };
@@ -265,7 +278,10 @@ const Users = () => {
       </div>
 
       {/* User List/Table */}
-      <div className="mt-6 bg-white rounded-lg shadow-md overflow-y-auto" style={{ maxHeight: "650px" }}>
+      <div
+        className="mt-6 bg-white rounded-lg shadow-md overflow-y-auto"
+        style={{ maxHeight: "650px" }}
+      >
         {/* Mobile View */}
         <div className="lg:hidden">
           {filteredUsers.map((user, index) => (
@@ -350,14 +366,18 @@ const Users = () => {
               type="email"
               placeholder="Email"
               value={newUser.email}
-              onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+              onChange={(e) =>
+                setNewUser({ ...newUser, email: e.target.value })
+              }
               className="border border-gray-300 rounded-md py-2 px-4 w-full mb-4"
             />
             <input
               type="password"
               placeholder="Password"
               value={newUser.password}
-              onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+              onChange={(e) =>
+                setNewUser({ ...newUser, password: e.target.value })
+              }
               className="border border-gray-300 rounded-md py-2 px-4 w-full mb-4"
             />
             <select
@@ -367,12 +387,16 @@ const Users = () => {
             >
               <option value="">Select Role</option>
               {roleOptions.map((option, index) => (
-                <option key={index} value={option}>{option}</option>
+                <option key={index} value={option}>
+                  {option}
+                </option>
               ))}
             </select>
-            
+
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Privileges</label>
+              <label className="block text-sm font-medium mb-2">
+                Privileges
+              </label>
               <div className="space-y-2">
                 {privilegeOptions.map((privilege, index) => (
                   <div key={index} className="flex items-center">
@@ -383,7 +407,9 @@ const Users = () => {
                       onChange={() => handlePrivilegeChange(privilege, true)}
                       className="mr-2"
                     />
-                    <label htmlFor={`add-privilege-${privilege}`}>{privilege}</label>
+                    <label htmlFor={`add-privilege-${privilege}`}>
+                      {privilege}
+                    </label>
                   </div>
                 ))}
               </div>
@@ -415,27 +441,37 @@ const Users = () => {
             <input
               type="text"
               value={editUser.name}
-              onChange={(e) => setEditUser({ ...editUser, name: e.target.value })}
+              onChange={(e) =>
+                setEditUser({ ...editUser, name: e.target.value })
+              }
               className="border border-gray-300 rounded-md py-2 px-4 w-full mb-4"
             />
             <input
               type="email"
               value={editUser.email}
-              onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
+              onChange={(e) =>
+                setEditUser({ ...editUser, email: e.target.value })
+              }
               className="border border-gray-300 rounded-md py-2 px-4 w-full mb-4"
             />
             <select
               value={editUser.role}
-              onChange={(e) => setEditUser({ ...editUser, role: e.target.value })}
+              onChange={(e) =>
+                setEditUser({ ...editUser, role: e.target.value })
+              }
               className="border border-gray-300 rounded-md py-2 px-4 w-full mb-4"
             >
               {roleOptions.map((option, index) => (
-                <option key={index} value={option}>{option}</option>
+                <option key={index} value={option}>
+                  {option}
+                </option>
               ))}
             </select>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Privileges</label>
+              <label className="block text-sm font-medium mb-2">
+                Privileges
+              </label>
               <div className="space-y-2">
                 {privilegeOptions.map((privilege, index) => (
                   <div key={index} className="flex items-center">
@@ -446,7 +482,9 @@ const Users = () => {
                       onChange={() => handlePrivilegeChange(privilege, false)}
                       className="mr-2"
                     />
-                    <label htmlFor={`edit-privilege-${privilege}`}>{privilege}</label>
+                    <label htmlFor={`edit-privilege-${privilege}`}>
+                      {privilege}
+                    </label>
                   </div>
                 ))}
               </div>
