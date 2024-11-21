@@ -1,4 +1,4 @@
-import express from "express";
+import express, { query } from "express";
 import { Router } from "express";
 import db from "../../db/db.js";
 import multer from "multer";
@@ -26,7 +26,8 @@ router.post(
   verifyToken,
   upload.single("image"),
   async (req, res) => {
-    const { user_id, question, solution, query_ids, machine } = req.body;
+    let { user_id, chat_id, question, solution, query_ids, machine, topic } =
+      req.body;
     const image = req.file ? req.file.buffer : null;
     const imageType = req.file ? req.file.mimetype : null;
 
@@ -34,51 +35,154 @@ router.post(
       ? query_ids
       : JSON.parse(query_ids || "[]");
 
-    if (!user_id || !question || !machine) {
-      return res.status(400).json({ error: "All fields are required" });
+    // Validations
+    if (user_id == null && chat_id == null) {
+      return res.status(400).json({
+        error: "Either user_id or chat_id must be provided.",
+      });
     }
+
+    if (!question || !machine) {
+      return res
+        .status(400)
+        .json({ error: "Question and Machine must be provided." });
+    }
+
     if (!solution && image == null) {
       return res
         .status(400)
         .json({ error: "At least solution or image needs to be filled." });
     }
 
-    let newRow;
-    let newThread = true;
-    try {
-      if (idsToUse.length === 0) {
-        const existingQueryResult = await db.query(
-          "SELECT id FROM qna WHERE question = $1",
-          [question]
+    // Fetch unique topics from the database based on the machine
+    if (!topic) {
+      let topicArr = [];
+      try {
+        const topicResult = await db.query(
+          "SELECT DISTINCT topic FROM qna WHERE machine = $1",
+          [machine]
         );
-        if (existingQueryResult.rows.length !== 0) {
-          newThread = false;
-        }
-        idsToUse = existingQueryResult.rows.map((row) => row.id);
+        topicArr = topicResult.rows.map((row) => row.topic);
+      } catch (e) {
+        console.error("Error fetching unique topics from db:", e);
+        return res
+          .status(500)
+          .json({ error: "Error while fetching existing topics." });
       }
 
-      const result = await db.query(
-        "INSERT INTO qna (user_id, topic, question, solution, solution_image, solution_image_type, machine) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
-        [user_id, "topic", question, solution, image, imageType, machine]
-      );
-
-      newRow = result.rows[0];
-      idsToUse.push(newRow.id);
-
-      // Send the request to LangChain
-      const lmmResponse = await axios.post(
-        "http://langchain:8001/langchain/qna/upsert",
-        {
-          query: question,
-          ids: idsToUse.map(String),
+      // Get Topic of request
+      try {
+        const topicResponse = await axios.post(
+          "http://langchain:8001/langchain/qna/getTopic",
+          null,
+          {
+            params: {
+              query: question,
+              topics: topicArr,
+            },
+          }
+        );
+        if (topicResponse.data.status === "success") {
+          topic = topicResponse.data.topic;
         }
-      );
-
-      if (lmmResponse.data.status !== "success") {
-        await db.query("DELETE FROM qna WHERE id = $1", [newRow.id]);
+      } catch (e) {
+        console.error("Topic Retrieval failed:", e);
         return res
-          .status(400)
-          .json({ error: "Upsert failed, created data has been deleted." });
+          .status(500)
+          .json({ error: "Error while getting topic of request." });
+      }
+    }
+
+    // If it is a chatbot's response, check if existing chatbot's response with same topic already exists.
+    try {
+      if (user_id == null && chat_id != null) {
+        const existingChatbotQueryResultByChatId = await db.query(
+          "SELECT id FROM qna WHERE chat_id = $1",
+          [chat_id]
+        );
+
+        if (existingChatbotQueryResultByChatId.rows.length !== 0) {
+          return res
+            .status(200)
+            .json({ message: "ChatBot's Response already exists in QnA." });
+        }
+
+        const existingChatbotQueryResult = await db.query(
+          "SELECT id FROM qna WHERE chat_id IS NOT NULL AND user_id IS NULL AND machine = $1 AND topic = $2",
+          [machine, topic]
+        );
+
+        if (existingChatbotQueryResult.rows.length !== 0) {
+          return res
+            .status(200)
+            .json({ message: "ChatBot's Response already exists in QnA." });
+        }
+      }
+    } catch (error) {
+      return res.status(500).json({
+        error:
+          "Error while checking if ChatBot's Response already exists in QnA.",
+      });
+    }
+
+    try {
+      let newThread = true;
+      // Insert new row and check if result is valid
+      const result = await db.query(
+        "INSERT INTO qna (user_id, chat_id, topic, question, solution, solution_image, solution_image_type, machine) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
+        [user_id, chat_id, topic, question, solution, image, imageType, machine]
+      );
+      if (!result || !result.rows || result.rows.length === 0) {
+        return res
+          .status(500)
+          .json({ error: "Failed to insert the solution." });
+      }
+
+      if (chat_id == null) {
+        // Check existing thread
+        if (idsToUse.length === 0) {
+          const existingQueryResult = await db.query(
+            "SELECT id FROM qna WHERE chat_id IS NULL AND question = $1 AND machine = $2 AND topic = $3",
+            [question, machine, topic]
+          );
+          if (existingQueryResult.rows.length > 1) {
+            newThread = false;
+          }
+          idsToUse = existingQueryResult.rows.map((row) => row.id);
+        }
+
+        let newRow = result.rows[0];
+        idsToUse.push(newRow.id);
+        idsToUse = Array.from(new Set(idsToUse));
+
+        idsToUse = idsToUse.filter(
+          (id) => !isNaN(id) && typeof id === "number"
+        );
+
+        if (idsToUse.length === 0) {
+          return res.status(400).json({ error: "Invalid or empty IDs array." });
+        }
+
+        try {
+          const lmmResponse = await axios.post(
+            "http://langchain:8001/langchain/qna/upsert",
+            {
+              query: question,
+              ids: idsToUse.map(String),
+            }
+          );
+          if (lmmResponse.data.status !== "success") {
+            await db.query("DELETE FROM qna WHERE id = $1", [newRow.id]);
+            return res
+              .status(500)
+              .json({ error: "Upsert failed, created data has been deleted." });
+          }
+        } catch (error) {
+          await db.query("DELETE FROM qna WHERE id = $1", [newRow.id]);
+          return res
+            .status(500)
+            .json({ error: "Upsert failed, created data has been deleted." });
+        }
       }
 
       const message = newThread
@@ -102,13 +206,14 @@ router.get("/unique", verifyToken, async (req, res) => {
     const { rows } = await db.query(`
       SELECT 
         question, 
-        machine, 
+        machine,
+        topic, 
         COUNT(*) AS count, 
         MAX(created_at) AS latest_date
       FROM 
         qna
       GROUP BY 
-        question, machine
+        question, machine, topic
       ORDER BY 
         latest_date DESC
     `);
@@ -126,16 +231,20 @@ router.get("/unique", verifyToken, async (req, res) => {
 
 // Handle fetching Q&A data based on machine and question
 router.post("/machinequestion", verifyToken, async (req, res) => {
-  const { machine, question } = req.body;
+  const { machine, question, topic } = req.body; // Include 'topic' in the request body
 
-  if (!machine || !question) {
-    return res.status(400).json({ error: "Machine and question are required" });
+  if (!machine || !question || !topic) {
+    // Ensure 'topic' is also required
+    return res
+      .status(400)
+      .json({ error: "Machine, question, and topic are required" });
   }
 
   const authHeader = req.header("Authorization");
   const token = authHeader && authHeader.split(" ")[1];
 
   try {
+    // Updated query to include 'topic' in the WHERE clause
     const { rows } = await db.query(
       `
       SELECT 
@@ -149,11 +258,11 @@ router.post("/machinequestion", verifyToken, async (req, res) => {
       LEFT JOIN 
         ratings r ON qna.id = r.qna_id
       WHERE 
-        qna.machine = $1 AND qna.question = $2
+        qna.machine = $1 AND qna.question = $2 AND qna.topic = $3  -- Added topic condition
       GROUP BY 
         qna.id
     `,
-      [machine, question]
+      [machine, question, topic] // Pass topic as a parameter
     );
 
     if (rows.length === 0) {
@@ -199,6 +308,7 @@ router.post("/machinequestion", verifyToken, async (req, res) => {
           liked_by: likedUsers.filter((user) => user !== null),
           disliked_by: dislikedUsers.filter((user) => user !== null),
           user: creatorDetails, // Include user details in the response
+          topic: row.topic, // Include the topic in the response
         };
       })
     );
@@ -341,30 +451,33 @@ router.get("/ratings/:id", verifyToken, async (req, res) => {
 // Integration with Chatbot + retrieveQna
 router.post("/chatbot", async (req, res) => {
   const { query } = req.body;
-
+  const authHeader = req.header("Authorization");
+  const token = authHeader && authHeader.split(" ")[1];
   try {
     const retrieveQna = await axios.post(
       "http://langchain:8001/langchain/qna/retrieveQna",
       { query: query }
     );
-    // let retrieveQna = {
-    //   data: {
-    //     ids: [],
-    //   },
-    // };
-    console.log("this is reponse from langchain qna", retrieveQna.data);
 
     if (retrieveQna && retrieveQna.data && retrieveQna.data.ids) {
       const idsArray = retrieveQna.data.ids;
       const results = [];
 
+      // Loop through each array of ids and process them
       for (const ids of idsArray) {
         if (ids.length > 0) {
-          const data = await fetchQnaDataByIds(ids);
-          // Store data as an array in results
-          results.push(data);
+          const validIds = ids
+            .map((id) => Number(id))
+            .filter((id) => Number.isInteger(id));
+
+          if (validIds.length > 0) {
+            const data = await fetchQnaDataByIds(validIds); // Fetch data for valid IDs
+            results.push(data);
+          } else {
+            results.push([]); // No valid IDs, push an empty array
+          }
         } else {
-          results.push([]); // Retain empty array for empty IDs
+          results.push([]); // Empty ids array, push an empty array
         }
       }
 
@@ -373,7 +486,7 @@ router.post("/chatbot", async (req, res) => {
         results.map(async (dataArray) => {
           return await Promise.all(
             dataArray.map(async (item) => {
-              return await fetchQnaLikesDislikes(req, item.id);
+              return await fetchQnaLikesDislikes(token, item.id);
             })
           );
         })
@@ -392,6 +505,8 @@ router.post("/chatbot", async (req, res) => {
 // API to return the data by ids
 router.post("/getByIds", async (req, res) => {
   let { ids } = req.body;
+  const authHeader = req.header("Authorization");
+  const token = authHeader && authHeader.split(" ")[1];
   // loop through ids and only return the valid numbers
   ids = ids.filter((id) => {
     let intid = parseInt(id);
@@ -408,7 +523,7 @@ router.post("/getByIds", async (req, res) => {
     // Fetch likes and dislikes for each Q&A item in the results
     const enrichedResults = await Promise.all(
       data.map(async (dataArray) => {
-        return await fetchQnaLikesDislikes(req, dataArray.id);
+        return await fetchQnaLikesDislikes(token, dataArray.id);
       })
     );
     res.status(200).json(enrichedResults);
@@ -421,7 +536,6 @@ router.post("/getByIds", async (req, res) => {
 // Function to fetch QnA data by IDs
 async function fetchQnaDataByIds(ids) {
   const idList = ids.map((id) => parseInt(id, 10));
-
   const placeholders = idList.map((_, index) => `$${index + 1}`).join(",");
   const query = `SELECT * FROM qna WHERE id IN (${placeholders})`;
 
@@ -435,10 +549,7 @@ async function fetchQnaDataByIds(ids) {
 }
 
 // Function to fetch likes and dislikes for a given Q&A ID
-async function fetchQnaLikesDislikes(req, qnaId) {
-  const authHeader = req.header("Authorization");
-  const token = authHeader && authHeader.split(" ")[1];
-
+async function fetchQnaLikesDislikes(token, qnaId) {
   try {
     const { rows } = await db.query(
       `
@@ -461,29 +572,29 @@ async function fetchQnaLikesDislikes(req, qnaId) {
     );
 
     if (rows.length === 0) {
-      return null; // Or handle the case where no Q&A found
+      return null; // No Q&A found, return null
     }
 
-    const row = rows[0];
+    const row = rows[0]; // First row, since we're querying by ID
 
     // Fetch user details for liked and disliked users
     const likedUsers = await Promise.all(
       row.liked_user_ids
         .filter((id) => id !== null)
-        .map((id) => fetchUserDetails(token, id))
+        .map((id) => fetchUserDetails(token, id)) // Pass token to fetchUserDetails
     );
     const dislikedUsers = await Promise.all(
       row.disliked_user_ids
         .filter((id) => id !== null)
-        .map((id) => fetchUserDetails(token, id))
+        .map((id) => fetchUserDetails(token, id)) // Pass token to fetchUserDetails
     );
 
     const { liked_user_ids, disliked_user_ids, ...rest } = row;
 
     return {
       ...rest,
-      liked_by: likedUsers.filter((user) => user !== null),
-      disliked_by: dislikedUsers.filter((user) => user !== null),
+      liked_by: likedUsers.filter((user) => user !== null), // Filter out null values
+      disliked_by: dislikedUsers.filter((user) => user !== null), // Filter out null values
     };
   } catch (error) {
     console.error("Error fetching likes and dislikes:", error);
@@ -492,21 +603,23 @@ async function fetchQnaLikesDislikes(req, qnaId) {
 }
 
 // Function to fetch user details
+// Function to fetch user details
 async function fetchUserDetails(token, userId) {
   if (!userId) return null;
+
   try {
     const response = await axios.get(
-      `http://user:3000/api/v1/users/getUserDetails/${userId}`,
+      `http://user:3000/api/v1/users/getUserDetails/${userId}`, // Assuming user service is hosted here
       {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`, // Use the token in the Authorization header
         },
       }
     );
-    return response.data;
+    return response.data; // Return the user details from the API response
   } catch (error) {
     console.error(`Error fetching user details for ID ${userId}:`, error);
-    return null;
+    return null; // Return null in case of error
   }
 }
 

@@ -68,13 +68,16 @@ const DashboardPage = () => {
           <div className="fixed h-screen">
             <SideNavBar />
           </div>
-          <div className="flex-1 ml-64 p-10">
+          <div className="flex-1 ml-72 p-10">
             {" "}
             {/* Adjust ml-64 based on your sidebar width */}
             <div className="bg-white w-full min-h-full rounded-lg p-5">
-              <FAQSection faqs={faqs} />
+              {/* <FAQSection faqs={faqs} /> */}
+              <h2 className="text-black text-3xl mb-2">
+                Analytics on Questions Asked
+              </h2>
               <div className="grid grid-cols-2 grid-rows-2 gap-4 mt-5">
-                <TopicBarChart />
+                {/* <TopicBarChart /> */}
                 <MachineBarChart />
                 <QuestionsReceivedLineGraph />
               </div>
