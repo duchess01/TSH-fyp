@@ -14,7 +14,7 @@ import { Tooltip } from "@mui/material";
 import { format } from "date-fns";
 import { deleteQnA } from "../../api/qna";
 
-function QNAModal({ closeModal, machine, question }) {
+function QNAModal({ closeModal, machine, question, topic }) {
   const [data, setData] = useState([]);
   const [userSolution, setUserSolution] = useState("");
   const [imageFile, setImageFile] = useState(null);
@@ -29,7 +29,7 @@ function QNAModal({ closeModal, machine, question }) {
       console.error("No token found in sessionStorage");
       return;
     }
-    const response = await machinequestion(machine, question, token);
+    const response = await machinequestion(machine, question, topic, token);
     console.log(response);
     if (response && response.data) {
       if (response.status == 200) {
@@ -95,16 +95,18 @@ function QNAModal({ closeModal, machine, question }) {
 
   const handleSubmit = async () => {
     setLoading(true);
-    const query_ids = data.map((item) => item.user_id);
+    const query_ids = data.map((item) => item.id);
     const user_id = user.id;
     const response = await addSolution(
       user_id,
+      null,
       question,
       userSolution,
       query_ids,
       imageFile,
       machine,
-      sessionStorage.getItem("token")
+      sessionStorage.getItem("token"),
+      topic
     );
 
     if (response.status === 201) {
@@ -223,7 +225,11 @@ function QNAModal({ closeModal, machine, question }) {
               <div key={item.id} className="mb-4 border-b pb-2">
                 <div className="flex justify-between items-center">
                   <p className="font-bold underline">
-                    {item.user ? item.user.name : "Deleted User"}
+                    {item.user
+                      ? item.user.name
+                      : item.chat_id
+                        ? "ChatBot's Response"
+                        : "Deleted User"}
                   </p>
                   <span className="text-gray-400 font-normal">
                     {formatDate(item.created_at)}

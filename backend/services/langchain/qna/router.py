@@ -1,6 +1,6 @@
 import inspect
 from fastapi import APIRouter, Query, HTTPException
-from typing import List
+from typing import List, Optional
 import os
 from resources.tools.pinecone.utils import get_embedding, initialize_pinecone_index, TopicExtractor
 
@@ -73,11 +73,11 @@ async def query_qna(query: QueryQnA):
         raise Exception(
             500, "Pinecone QnA query failed", str(error))
 
-@qna_router.get(
+@qna_router.post(
     "/getTopic",
     description="get topic of query"
 )
-def get_topic(query: str = Query(...), topics: List[str] = Query(...)):
+def get_topic(query: str = Query(...), topics: List[Optional[str]] = Query([])):
     try:
         topic_extractor = TopicExtractor()
         topic = topic_extractor.extract_topic(query,topics)

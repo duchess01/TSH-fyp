@@ -36,7 +36,7 @@ const Sidebar = () => {
             } transition duration-300 ease-in-out transform hover:scale-105`}
           >
             <FaHome size={32} />
-            {isOpen && <span className="text-xl font-semibold">Dashboard</span>}
+            {isOpen && <span className="text-xl font-semibold">Data Dashboard</span>}
           </Link>
           <Link
             to="/Admin"
@@ -55,6 +55,15 @@ const Sidebar = () => {
           >
             <FaLink size={32} />
             {isOpen && <span className="text-xl font-semibold">QnA page</span>}
+          </Link>
+          <Link
+            to="/"
+            className={`flex items-center ${isOpen ? 'space-x-4' : 'justify-center'} ${
+              isActivePath('/') ? 'text-blue-600 font-semibold' : 'hover:text-blue-600'
+            } transition duration-300 ease-in-out transform hover:scale-105`}
+          >
+            <FaHome size={32} />
+            {isOpen && <span className="text-xl font-semibold">Chatbot</span>}
           </Link>
           <Link
             to="/Upload"

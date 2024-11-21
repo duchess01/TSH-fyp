@@ -23,7 +23,7 @@ export async function unique(token) {
   }
 }
 
-export async function machinequestion(machine, question, token) {
+export async function machinequestion(machine, question, topic, token) {
   try {
     const config = {
       headers: {
@@ -35,6 +35,7 @@ export async function machinequestion(machine, question, token) {
     const body = {
       machine: machine,
       question: question,
+      topic: topic,
     };
 
     let url = USER_BASE_URL + "/qna/machinequestion";
@@ -77,18 +78,25 @@ export async function rate(qna_id, user_id, rating_value, token) {
 }
 
 export async function addSolution(
-  user_id,
-  question,
-  solution,
-  query_ids,
-  imageFile,
-  machine,
-  token
+  user_id = null,
+  chat_id = null,
+  question = "",
+  solution = "", // Default value for solution
+  query_ids = [], // Default value for query_ids
+  imageFile = null, // Default value for imageFile
+  machine = "",
+  token = "",
+  topic = ""
 ) {
   try {
     const formData = new FormData();
-
-    formData.append("user_id", user_id);
+    if (user_id !== null) {
+      formData.append("user_id", user_id);
+    }
+    if (chat_id !== null) {
+      formData.append("chat_id", chat_id);
+    }
+    formData.append("topic", topic.trim());
     formData.append("question", question.trim());
     formData.append("solution", solution.trim());
     formData.append("query_ids", JSON.stringify(query_ids));
