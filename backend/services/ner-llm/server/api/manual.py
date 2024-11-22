@@ -177,10 +177,7 @@ async def deleteManual(manual_name: str, session: Session = Depends(get_session)
             print(f"[DEBUG] Current manual status: {manual_status.status}")
             print(manual_status.status, "manual_status.status")
         
-        # If manual status is FAILED, we should proceed with deletion of whatever resources exist
-        if manual_status and manual_status.status == UploadStatus.FAILED:
-            print("[DEBUG] Manual status is FAILED, proceeding with deletion of existing resources")
-            pass
+     
 
         # If no manual status or it's in any other state, only raise 404 if nothing exists
         elif not manual and not file_exists and not pinecone_index_exists and not manual_status:
@@ -212,7 +209,7 @@ async def deleteManual(manual_name: str, session: Session = Depends(get_session)
         if manual:
             print("[DEBUG] Deleting database entries")
             # Delete associated ManualStatus if it exists
-            if manual_status:
+            if manual_status and manual_status.status != UploadStatus.FAILED:
                 print("[DEBUG] Deleting manual status")
                 session.delete(manual_status)
 
@@ -342,7 +339,7 @@ def getAllManualStatuses(session: Session = Depends(get_session)) -> GenericResp
                 "status": status.status,
                 "created_at": status.created_at,
                 "updated_at": status.updated_at,
-                "machine_name" : status.manual_mapping.machine_name if status.manual_mapping else None
+                "machine_name" : status.machine_name
             }
             for status in manual_statuses
         ]

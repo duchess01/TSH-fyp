@@ -379,6 +379,8 @@ async def upsert_content_pinecone(extracted_content, pdf_file):
         index_name = pdf_file.split("\\")[-1].split(".")[0].lower().replace("_", "-")
 
     print("INDEX NAME", index_name)
+
+    print("[DEBUG] Creating Index")
     
     pc.create_index(
         name=index_name,
@@ -390,9 +392,13 @@ async def upsert_content_pinecone(extracted_content, pdf_file):
         ) 
     )
 
+    print("[DEBUG] Index Created")
+
     index = pc.Index(index_name) 
 
     # Upsert all embeddings into Pinecone
+    print("[DEBUG] Upserting Embeddings")
+    print("[DEBUG] Output Dict:", output_dict.keys())
     try:
         upsert_embeddings(output_dict, extracted_content, index)
     except Exception as e:
