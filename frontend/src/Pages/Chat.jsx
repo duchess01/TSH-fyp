@@ -824,6 +824,31 @@ function Chat() {
 
                                             <br />
                                             {response.solution}
+                                            {response.solution_image && (
+                                              <div className="mt-2">
+                                                <a
+                                                  href={URL.createObjectURL(
+                                                    new Blob(
+                                                      [
+                                                        new Uint8Array(
+                                                          response.solution_image.data
+                                                        ),
+                                                      ],
+                                                      {
+                                                        type:
+                                                          response.solution_image_type ||
+                                                          "application/octet-stream",
+                                                      }
+                                                    )
+                                                  )}
+                                                  download={`Attachment.${response.solution_image_type === "image/png" ? "png" : response.solution_image_type === "image/jpeg" ? "jpg" : response.solution_image_type === "application/pdf" ? "pdf" : "bin"}`}
+                                                  className="text-blue-500 underline"
+                                                  aria-label="Download attachment"
+                                                >
+                                                  Attachment
+                                                </a>
+                                              </div>
+                                            )}
                                           </div>
                                         );
                                       })}
