@@ -92,8 +92,7 @@ services:
     ports:
       - "8002:8002"
     depends_on:
-      db_ner_llm:
-        condition: service_healthy
+      - ner-llm
     volumes:
       - ./services/upload:/usr/src/app/upload
     networks:

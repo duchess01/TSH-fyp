@@ -57,3 +57,4 @@ class ManualMappingRequest(BaseModel):
 class ManualStatusRequest(BaseModel):
     manual_name: str = Field(..., description="The name of the manual to track the status of", examples=["manual1", "manual2"])
     status: UploadStatus = Field(..., description = "The status of the manual upload", examples=["in_progress","pending",  "completed", "failed"])
+    machine_name: str = Field(..., description="The name of the machine the manual is for", examples=["machine1", "machine2"])

@@ -33,7 +33,7 @@ async def uploadPdf(
    
     tmp_dir = None
     try:
-        print(f"[DEBUG] Starting file upload process for: {file.filename}")
+        print(f"[DEBUG] Starting file upload process for: {file.filename}, MACHINE NAME: {machine_name}")
         # PROCESS UPLOADED FILE AS A TMP FILE
         tmp_dir = tempfile.mkdtemp()
         tmp_file_path = os.path.join(tmp_dir, file.filename)
@@ -56,12 +56,17 @@ async def uploadPdf(
         print(f"[DEBUG] Processed PDF filename: {pdf_file}")
         
         ner_llm_url = os.getenv("NER_LLM_URL", "http://localhost:8000")
+
+        print(f"[DEBUG] machine name: {machine_name}")
         
         url = f"{ner_llm_url}/manual/status" 
         data = {
             "manual_name": pdf_file,
-            "status": "in_progress"
+            "status": "in_progress",
+            "machine_name" : machine_name
         }
+
+        print(f"[DEBUG] machine name: {data['machine_name']}")
         print(f"[DEBUG] Sending status update request to: {url}")
         response = requests.put(url, json=data)
         print(f"[DEBUG] Status update response code: {response.status_code}")
@@ -102,11 +107,16 @@ async def uploadPdf(
         # update database to status = success
         print("pdf_file:", pdf_file, "create manual in db")
         url = f"{ner_llm_url}/manual/create" 
+
+
+
         data = {
             "manual_name": pdf_file,
             "manual_mappings": processed_output,
             "machine_name" : machine_name
         }
+
+        # print(f"[DEBUG] Sending create manual request to: {url} DATA: {data}")
         
         headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
         response = requests.post(url, json=data, headers=headers)

@@ -165,6 +165,8 @@ async def update_status_in_database(pdf_file, status):
             pdf_file = pdf_file.split("/")[-1].split(".")[0]
         else :
             pdf_file = pdf_file.split("\\")[-1].split(".")[0]
+
+        print(f"[DEBUG] machine name: {pdf_file}")
         
         url = f"{NER_LLM_URL}/manual/status"  # Consider making this URL configurable
         data = {
@@ -299,7 +301,6 @@ async def read_pdf(pdf_file):
         raise Exception("No messages found")
     # Process the response content
     message_content = messages[0].content[0].text
-    # print("MESSAGE CONTENT", message_content)
 
     return message_content.value
 

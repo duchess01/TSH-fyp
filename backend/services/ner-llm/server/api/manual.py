@@ -98,10 +98,12 @@ def createManualMapping(
             raise HTTPException(
                 status_code=400, detail=f"Manual '{manual_request.manual_name}' is not in the correct state for mapping"
             )
+        
+        print(f"[DEBUG] Manual status is valid, proceeding with mapping creation. ")
 
         # Create new ManualMapping
         new_manual = ManualMapping(manual_name=manual_request.manual_name, machine_name = manual_request.machine_name )
-        print(f"[DEBUG] Created new manual mapping object")
+        print(f"[DEBUG] Created new manual mapping object. DATA: {new_manual}")
 
         # Associate existing KeywordMappings with the new ManualMapping
         print(f"[DEBUG] Processing {len(manual_request.manual_mappings)} sections")
@@ -164,7 +166,7 @@ async def deleteManual(manual_name: str, session: Session = Depends(get_session)
         # Check if Pinecone index exists
         print("[DEBUG] Checking Pinecone indexes...")
         print(pc.list_indexes().names(), "pc.list_indexes().names()")
-        pinecone_index_exists = manual_name in pc.list_indexes().names()
+        pinecone_index_exists = manual_name.lower() in pc.list_indexes().names()
         print(f"[DEBUG] Pinecone index exists for {manual_name}: {pinecone_index_exists}")
         
         print(pinecone_index_exists, "pinecone_index_exists")
@@ -270,7 +272,8 @@ def createManualStatus(
         # Create new ManualStatus
         new_status = ManualStatus(
             manual_name=manual_status_request.manual_name,
-            status=manual_status_request.status
+            status=manual_status_request.status,
+            machine_name=manual_status_request.machine_name
         )
         status_data = {
             "manual_name": new_status.manual_name,
@@ -296,19 +299,23 @@ def updateManualStatus(
         # Check if the manual status exists
         manual_status = session.query(ManualStatus).filter(ManualStatus.manual_name == manual_status_request.manual_name).first()
         
+
         if not manual_status:
             # Create a new ManualStatus if it doesn't exist
+            print(f"[DEBUG] Creating new manual status for: {manual_status_request.manual_name}, MACHINE NAME: {manual_status_request.machine_name}")
             manual_status = ManualStatus(
                 manual_name=manual_status_request.manual_name,
-                status=manual_status_request.status
+                status=manual_status_request.status,
+                machine_name=manual_status_request.machine_name
             )
             session.add(manual_status)
             message = f"Manual status for '{manual_status_request.manual_name}' created successfully"
         else:
             # Update the existing status
+            print(f"[DEBUG] Updating existing manual status for: {manual_status_request.manual_name}, MACHINE NAME: {manual_status_request.machine_name}")
             manual_status.status = manual_status_request.status
             message = f"Manual status for '{manual_status_request.manual_name}' updated successfully"
-
+            
         session.commit()
 
         return GenericResponse(

@@ -109,6 +109,6 @@ class ManualStatus(TimestampedModel) :
     manual_mapping_id = Column(UUID(as_uuid=True), ForeignKey('manual_mapping.uuid'), nullable=True)
     # FK -> ManualMapping
     manual_mapping = relationship("ManualMapping", back_populates="status")
-
+    machine_name = Column(String(255), nullable=False, comment="Name of the machine the manual is for")
 
 

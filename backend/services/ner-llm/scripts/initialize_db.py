@@ -52,7 +52,8 @@ def insert_manuals_and_keywords():
                     manual_name = manual_name,
                 
                     status=UploadStatus.COMPLETED,
-                    manual_mapping=manual_mapping
+                    manual_mapping=manual_mapping,
+                    machine_name = "FANUC Series 30i/300"
                 )
 
                 # The relationship will automatically set manual_mapping.status
