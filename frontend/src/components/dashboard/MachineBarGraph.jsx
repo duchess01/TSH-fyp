@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import BarChart from "../common/BarChart";
 import { getMachineDistribution } from "../../api/dashboard";
 import { COLORS } from "../../constants/index.js";
+import { getAllMachinesAPI } from "../../api/chat";
 
 export default function MachineBarChart({}) {
   const [barChartData, setBarChartData] = useState(null);
@@ -16,13 +17,29 @@ export default function MachineBarChart({}) {
         setErrorMessage(response.data);
         return;
       }
-      let labels = Object.keys(response.data);
+      let graphData = {};
+      const machineResponse = await getAllMachinesAPI();
+      if (response.status === 200) {
+        for (let machine in machineResponse.data.data) {
+          for (let manual in response.data) {
+            if (
+              machineResponse.data.data[machine].manual_names.includes(manual)
+            ) {
+              graphData[machineResponse.data.data[machine].machine_name] =
+                response.data[manual];
+            } else {
+              graphData[manual] = response.data[manual];
+            }
+          }
+        }
+      }
+      let labels = Object.keys(graphData);
       let data = {
         labels,
         datasets: [
           {
             label: "Questions Machine Category",
-            data: labels.map((label) => response.data[label] || 0),
+            data: labels.map((label) => graphData[label] || 0),
             backgroundColor: COLORS[1],
           },
         ],
