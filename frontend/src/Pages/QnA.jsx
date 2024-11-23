@@ -19,6 +19,9 @@ import { useNavigate } from "react-router-dom";
 import QNAModal from "../components/chat/QNAModal";
 import PostQuestionModal from "../components/chat/PostQuestionModal";
 import { unique } from "../api/qna";
+import FloatingFilter from "@/components/chat/FloatingFilter";
+import Filter from "@/components/chat/Filter";
+import { getAllMachinesAPI } from "../api/chat";
 
 const QnA = () => {
   const navigate = useNavigate();
@@ -27,6 +30,8 @@ const QnA = () => {
   const [isShowSidebar, setIsShowSidebar] = useState(false);
   const [selectedRowData, setSelectedRowData] = useState(null);
   const [rowData, setRowData] = useState([]);
+  const [allMachines, setAllMachines] = useState([]);
+  const [colDefs, setColDefs] = useState([]);
 
   const toggleSidebar = useCallback(() => {
     setIsShowSidebar((prev) => !prev);
@@ -46,36 +51,45 @@ const QnA = () => {
 
   const gridRef = useRef();
 
-  const colDefs = useMemo(
-    () => [
-      {
-        field: "Machine",
-        filter: "agTextColumnFilter",
-        flex: 2,
-      },
-      {
-        field: "Topic",
-        filter: "agTextColumnFilter",
-        flex: 2,
-      },
-      {
-        field: "Question",
-        filter: "agTextColumnFilter",
-      },
-      {
-        field: "Answers",
-        filter: "agNumberColumnFilter",
-        flex: 1,
-      },
-      {
-        headerName: "Last Updated",
-        valueGetter: (p) => p.data.Last_Updated,
-        filter: "agDateColumnFilter",
-        flex: 1,
-      },
-    ],
-    []
-  );
+  useEffect(() => {
+    if (allMachines.length > 0) {
+      setColDefs([
+        {
+          field: "Machine",
+          filter: Filter,
+          flex: 2,
+          floatingFilter: true,
+          floatingFilterComponent: FloatingFilter,
+          floatingFilterComponentParams: {
+            machines: allMachines,
+          },
+          filterParams: {
+            machines: allMachines,
+          },
+        },
+        {
+          field: "Topic",
+          filter: "agTextColumnFilter",
+          flex: 2,
+        },
+        {
+          field: "Question",
+          filter: "agTextColumnFilter",
+        },
+        {
+          field: "Answers",
+          filter: "agNumberColumnFilter",
+          flex: 1,
+        },
+        {
+          headerName: "Last Updated",
+          valueGetter: (p) => p.data.Last_Updated,
+          filter: "agDateColumnFilter",
+          flex: 1,
+        },
+      ]);
+    }
+  }, [allMachines]);
 
   const defaultColDef = useMemo(
     () => ({
@@ -108,6 +122,16 @@ const QnA = () => {
     }
   };
 
+  const fetchMachines = async () => {
+    const response = await getAllMachinesAPI();
+    if (response.status === 200) {
+      const machines = response.data.data.map(
+        (machine) => machine.machine_name
+      );
+      setAllMachines(machines);
+    }
+  };
+
   const closeModal = () => {
     setModelOpen(false);
     fetchUniqueQnA();
@@ -125,6 +149,7 @@ const QnA = () => {
       navigate("/login");
     }
     fetchUniqueQnA();
+    fetchMachines();
   }, []);
 
   const handleRowClick = (row) => {
