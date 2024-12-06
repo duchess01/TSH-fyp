@@ -13,7 +13,7 @@ export default function MachineBarChart({}) {
     const getData = async () => {
       let response = await getMachineDistribution();
       if (response.status != 200) {
-        console.log("error getting data", response.data);
+        console.error("error getting data", response.data);
         setErrorMessage(response.data);
         return;
       }

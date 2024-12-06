@@ -30,9 +30,6 @@ export default ({ model, onModelChange, filterParams }) => {
         }}
       >
         <option value="All Machines">All Machines</option>
-        <option value="Machine A">Machine A</option>
-        <option value="Machine B">Machine B</option>
-        <option value="Machine C">Machine C</option>
         {filterParams.colDef.filterParams.machines.map((machine) => (
           <option key={machine} value={machine}>
             {machine}

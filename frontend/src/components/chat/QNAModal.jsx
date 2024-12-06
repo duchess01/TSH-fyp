@@ -30,7 +30,6 @@ function QNAModal({ closeModal, machine, question, topic }) {
       return;
     }
     const response = await machinequestion(machine, question, topic, token);
-    console.log(response);
     if (response && response.data) {
       if (response.status == 200) {
         setData(response.data);
@@ -59,7 +58,7 @@ function QNAModal({ closeModal, machine, question, topic }) {
       sessionStorage.getItem("token")
     );
     if (response.status !== 200) {
-      console.log("Error when rating.");
+      console.error("Error when rating.");
     }
     await fetchMachineQuestion();
   };

@@ -14,7 +14,7 @@ export default function QuestionsReceivedLineGraph({}) {
       let datasets = [];
       const response = await getLineGraphData();
       if (response.status != 200) {
-        console.log("Error in fetching data", response.data);
+        console.error("Error in fetching data", response.data);
         setChartData({});
         setChartOptions({});
         setErrorMessage(response.data);

@@ -32,9 +32,6 @@ export default ({ model, onModelChange, getValue, colDef, title }) => {
           style={{ width: "100%" }}
         >
           <option value="All Machines">All Machines</option>
-          <option value="Machine A">Machine A</option>
-          <option value="Machine B">Machine B</option>
-          <option value="Machine C">Machine C</option>
           {colDef.filterParams.machines.map((machine) => (
             <option key={machine} value={machine}>
               {machine}
