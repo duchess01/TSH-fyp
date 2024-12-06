@@ -31,7 +31,6 @@ const DashboardPage = () => {
   useEffect(() => {
     const token = sessionStorage.getItem("token");
     const user = JSON.parse(sessionStorage.getItem("user"));
-    console.log("user", user);
 
     if (
       !token ||

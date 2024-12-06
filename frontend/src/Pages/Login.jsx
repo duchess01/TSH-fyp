@@ -17,7 +17,6 @@ const Login = () => {
 
     try {
       const response = await login(email, password);
-      console.log("Login response:", response); // Debug log
 
       if (response.status !== 200) {
         throw new Error(response.data?.error || "Invalid email or password");

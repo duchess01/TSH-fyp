@@ -1,9 +1,10 @@
 import { PhotoIcon } from "@heroicons/react/24/solid";
 import { RxCross2 } from "react-icons/rx";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { addSolution } from "../../api/qna";
 import Swal from "sweetalert2";
 import { MACHIINES } from "../../constants";
+import { getAllMachinesAPI } from "../../api/chat";
 
 function PostQuestionModal({ closeModal }) {
   const [selectedMachine, setSelectedMachine] = useState("");
@@ -12,6 +13,7 @@ function PostQuestionModal({ closeModal }) {
   const [imageFile, setImageFile] = useState(null);
   const [imageFileName, setImageFileName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [allMachines, setAllMachines] = useState([]);
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -80,7 +82,21 @@ function PostQuestionModal({ closeModal }) {
     }
   };
 
-  const machines = MACHIINES;
+  const fetchMachines = async () => {
+    const response = await getAllMachinesAPI();
+    if (response.status === 200) {
+      const machines = response.data.data.map(
+        (machine) => machine.machine_name
+      );
+      setAllMachines(machines);
+    }
+  };
+
+  useEffect(() => {
+    fetchMachines();
+  }, []);
+
+  // const machines = MACHIINES;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
@@ -115,7 +131,7 @@ function PostQuestionModal({ closeModal }) {
             <option value="" disabled>
               Select a machine
             </option>
-            {machines.map((machine, index) => (
+            {allMachines.map((machine, index) => (
               <option key={index} value={machine}>
                 {machine}
               </option>

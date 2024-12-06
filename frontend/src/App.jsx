@@ -22,7 +22,6 @@ function App() {
           <Route path="/Admin" element={<AdminPage />} />
           <Route path="/qna" element={<QnA />} />
           <Route path="/Upload" element={<UploadPage />} />
-          {/* <Route path="*" element={<NotFound />} /> */}
         </Routes>
       </div>
     </Router>
